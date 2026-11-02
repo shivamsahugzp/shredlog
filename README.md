@@ -1,0 +1,32 @@
+# ShredLog
+
+Free, private, installable fitness tracker for Indian food and Indian gym life. No account, no ads, no server. Runs as a web app on iPhone (and Android).
+
+## Install on iPhone
+
+1. Open the site in **Safari**.
+2. Tap **Share** → **Add to Home Screen** → **Add**.
+3. Open ShredLog from the icon from then on. The Safari tab and the icon keep separate data.
+4. Export a backup from Settings every few weeks (Files → iCloud Drive). Deleting the icon deletes the data.
+
+## What it tracks
+
+| Area | What you get |
+|---|---|
+| Food | 400 Indian foods with katori / roti / cup / glass servings, per-100 g scaling, oil & ghee teaspoon stepper, text logging ("2 roti, 1 katori dal"), pot-recipe builder (cook once, log by katori), saved meals and starter plates, custom foods, copy yesterday, partial-day flag |
+| Macros & micros | Calories, protein, carbs, fat, fibre, sugar plus 10 micronutrients (iron, calcium, D, B12, C, zinc, magnesium, potassium, folate, sodium) against ICMR-NIN RDAs, with Indian food fixes and meal ideas for your gaps |
+| Targets | Mifflin-St Jeor start, then an adaptive estimate of your real burn from your own food + weight logs (MacroFactor-style), weekly budget view |
+| Training | Set × reps × weight logger with last-session ghost values, auto rest timer that survives backgrounding, PR detection, double-progression suggestions, plateau and deload alerts, weekly hard sets per muscle, routine templates, plate calculator, warm-up generator, 198 exercises with form cues and common mistakes |
+| Habits | One-tap chai (with sugar), cigarettes (time since last, money, baseline streak, health milestones), water, sleep, steps |
+| Body & feel | Post-meal tags (bloating, gas, acidity, cramps, sleepy, garmi), evening check-in (energy, mood, hunger, cravings, stool, skin, sleep), measurements, and food-to-symptom pattern detection with statistical gates and plain-language guardrails |
+| Budget | Protein per rupee ranking filtered by your diet (veg / egg / non-veg / vegan / Jain) and budget |
+
+## Data & privacy
+
+Everything is stored on the device (IndexedDB with a localStorage mirror). Export/import is a single JSON file. Nothing is sent anywhere.
+
+## Development
+
+Static files, no build step. Serve the folder (`python3 -m http.server`) and open `index.html`. Regenerate the service worker precache with `python3 scripts/build-sw.py`. Headless smoke test: `node test/smoke.mjs`.
+
+Food values are based on the Indian Food Composition Tables (NIN 2017) and typical home recipes. They are estimates. Nothing here is medical advice.
