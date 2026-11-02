@@ -1,0 +1,16 @@
+{
+  "name": "ShredLog",
+  "short_name": "ShredLog",
+  "description": "Calories, macros, workouts, chai and cigarettes in one daily ledger. Understands Indian food.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F1322",
+  "theme_color": "#1B2140",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

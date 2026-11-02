@@ -1,0 +1,74 @@
+/* ShredLog: Train tab. Reuses app.css tokens, .set-row, .rest-banner and .pr-tag. Sheets live outside the screen root, so no selector is scoped under .tr. */
+
+/* ---- active workout header ---- */
+.tr-head { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 8px; margin: calc(-1 * (var(--sat) + 8px)) -16px 0; padding: calc(var(--sat) + 8px) 16px 8px; background: color-mix(in srgb, var(--bg) 92%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.tr-name { flex: 1; min-width: 0; background: transparent; border: 0; border-bottom: 1px dashed var(--line); border-radius: 0; padding: 6px 0; font: 800 22px/1.2 var(--display); letter-spacing: -0.01em; }
+.tr-meta { display: flex; align-items: center; gap: 6px; margin: 2px 0 14px; font-size: 14px; font-weight: 600; color: var(--ink-2); }
+.tr-meta svg { color: var(--muted); }
+.tr.tr-has-rest { padding-bottom: 84px; }
+.tr-add { margin-top: 12px; }
+body:has(.rest-banner:not(.hide)) #toasts { bottom: calc(var(--tab-h) + var(--sab) + 84px); }
+.rest-banner .time { transition: color .2s; min-width: 0; }
+.tr-rest-col { flex: 1; min-width: 0; }
+.tr-rest-col .micro { opacity: .7; }
+.rest-banner.soon .time { color: var(--accent); }
+
+/* ---- exercise card ---- */
+.tr-ex + .tr-ex { margin-top: 12px; }
+.tr-ex-head { display: flex; align-items: center; gap: 4px; }
+.tr-ex-name { flex: 1; min-width: 0; text-align: left; font: 700 17px/1.25 var(--display); color: var(--ink); padding: 4px 0; }
+.tr-hint { margin-top: 8px; }
+.tr-hint .pill { white-space: normal; border-radius: 12px; line-height: 1.3; }
+.tr-note { margin: 10px 0 8px; height: 36px; padding: 6px 10px; font-size: 14px; border-style: dashed; background: transparent; }
+.tr-sets { margin-bottom: 4px; }
+.set-row.head > div { text-align: center; }
+
+/* ---- set rows ---- */
+.tr-set { position: relative; }
+.tr-set .n, .tr-set .prev { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.tr-set .prev { display: flex; align-items: center; justify-content: center; min-height: 32px; }
+.tr-tag { height: 34px; border-radius: 9px; background: var(--card-2); border: 1px solid var(--line); font: 700 14px var(--display); color: var(--ink-2); display: grid; place-items: center; }
+.tr-tag.mini { width: 24px; height: 24px; border-radius: 7px; font-size: 12px; flex: none; }
+.tr-tag.t-w { color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, transparent); border-color: transparent; }
+.tr-tag.t-d { color: var(--p); background: var(--p-soft); border-color: transparent; }
+.tr-tag.t-f { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); border-color: transparent; }
+.tr-x { display: none; position: absolute; left: -9px; top: -3px; width: 18px; height: 18px; border-radius: 50%; background: var(--card); color: var(--muted); border: 1px solid var(--line); box-shadow: var(--shadow); place-items: center; z-index: 1; }
+.tr-x:active { background: var(--bad); color: #fff; border-color: var(--bad); }
+.tr-x::before { content: ''; position: absolute; inset: -12px; }
+.tr-blank .tr-x { display: grid; }
+.tr-set .done svg { width: 20px; height: 20px; }
+
+/* ---- home ---- */
+.tr-next { margin-top: 14px; }
+.tr-dots { display: flex; gap: 5px; margin: 12px 0 10px; }
+.tr-dots i { flex: 1; height: 5px; border-radius: 3px; background: var(--line); }
+.tr-dots i.past { background: color-mix(in srgb, var(--good) 55%, var(--line)); }
+.tr-dots i.on { background: var(--accent); }
+.tr-lines { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.tr-line { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.tr-line > span:first-child { min-width: 0; }
+.tr-line > span:last-child { flex: none; font-size: 13px; }
+.tr-routine { display: block; width: 100%; text-align: left; }
+.tr-day { border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px; background: var(--card-2); }
+.tr-pick { display: flex; align-items: center; }
+.tr-pick + .tr-pick { border-top: 1px solid var(--line); }
+.tr-pick .list-item { flex: 1; min-width: 0; }
+.tr-pick .icon-btn { flex: none; margin-right: 6px; }
+.search input[type=search] { -webkit-appearance: none; appearance: none; }
+.search input[type=search]::-webkit-search-cancel-button { -webkit-appearance: none; }
+.tr-sumset { display: flex; align-items: center; gap: 10px; padding: 3px 0; font-size: 14px; }
+.tr-danger, .tr-danger .title { color: var(--bad); }
+
+/* ---- plate calculator ---- */
+.tr-bar { display: flex; align-items: center; height: 96px; padding: 0 8px; background: var(--card-2); border-radius: var(--r-md); overflow-x: auto; }
+.tr-rod { flex: none; width: 36px; height: 10px; background: linear-gradient(var(--muted), var(--ink-2)); border-radius: 3px 0 0 3px; }
+.tr-plate { flex: none; width: 15px; margin-right: 2px; border-radius: 4px; display: grid; place-items: center; font: 700 9px var(--body); color: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+.tr-plate.p25 { background: #D13B3B; }
+.tr-plate.p20 { background: #3457D5; }
+.tr-plate.p15 { background: #E0B100; color: #1B1F2E; }
+.tr-plate.p10 { background: #1F9D5B; }
+.tr-plate.p5 { background: #F1F2F6; color: #1B1F2E; }
+.tr-plate.p2_5 { background: #2B3045; }
+.tr-plate.p1_25 { background: #9AA0B3; color: #1B1F2E; }
+.tr-collar { flex: none; width: 8px; height: 18px; margin-left: 2px; background: var(--ink-2); border-radius: 3px; }
+.tr-plate { writing-mode: vertical-rl; }

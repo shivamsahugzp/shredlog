@@ -1,0 +1,5314 @@
+[
+  {
+    "id": "barbell_bench_press",
+    "name": "Barbell Bench Press",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "triceps",
+      "front delts"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Pin shoulder blades back and down",
+      "Lower bar to mid-chest, forearms vertical",
+      "Drive feet into floor and press up"
+    ],
+    "mistakes": [
+      "Flaring elbows out to 90 degrees",
+      "Bouncing the bar off the chest"
+    ],
+    "kw": [
+      "flat bench",
+      "bb bench",
+      "bench press"
+    ]
+  },
+  {
+    "id": "incline_barbell_bench_press",
+    "name": "Incline Barbell Bench Press",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "front delts",
+      "triceps"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Set bench to about 30 degrees",
+      "Lower bar to upper chest below collarbone",
+      "Keep wrists stacked over elbows"
+    ],
+    "mistakes": [
+      "Setting incline too steep, turning it into shoulders",
+      "Lifting hips off the bench"
+    ],
+    "kw": [
+      "incline bench",
+      "incline bb press",
+      "upper chest"
+    ]
+  },
+  {
+    "id": "decline_barbell_bench_press",
+    "name": "Decline Barbell Bench Press",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "triceps",
+      "front delts"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Lock feet securely under the pads",
+      "Lower bar to lower chest with control",
+      "Press up and slightly back over shoulders"
+    ],
+    "mistakes": [
+      "Skipping a spotter on heavy sets",
+      "Letting the bar drift toward the neck"
+    ],
+    "kw": [
+      "decline bench",
+      "decline press"
+    ]
+  },
+  {
+    "id": "dumbbell_bench_press",
+    "name": "Dumbbell Bench Press",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "triceps",
+      "front delts"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Start dumbbells over chest, palms facing forward",
+      "Lower until elbows reach just below bench level",
+      "Press up and slightly in with control"
+    ],
+    "mistakes": [
+      "Clanging dumbbells together at the top",
+      "Dropping elbows too deep, stressing shoulders"
+    ],
+    "kw": [
+      "db bench",
+      "flat dumbbell press",
+      "db press"
+    ]
+  },
+  {
+    "id": "incline_dumbbell_press",
+    "name": "Incline Dumbbell Press",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "front delts",
+      "triceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Set bench at 30 degrees, back flat",
+      "Press up and slightly in over upper chest",
+      "Lower slowly until you feel a chest stretch"
+    ],
+    "mistakes": [
+      "Using a steep incline that overloads shoulders",
+      "Letting wrists bend back under the weight"
+    ],
+    "kw": [
+      "incline db press",
+      "incline dumbbell bench",
+      "upper chest"
+    ]
+  },
+  {
+    "id": "dumbbell_fly",
+    "name": "Dumbbell Fly",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "front delts"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Keep a soft, fixed bend in your elbows",
+      "Open arms in a wide arc to chest level",
+      "Squeeze chest to bring weights together"
+    ],
+    "mistakes": [
+      "Straightening arms and turning it into a press",
+      "Lowering far past shoulder level"
+    ],
+    "kw": [
+      "db fly",
+      "flat fly",
+      "chest fly",
+      "flyes"
+    ]
+  },
+  {
+    "id": "incline_dumbbell_fly",
+    "name": "Incline Dumbbell Fly",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "front delts"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Set bench to 30 degrees, press weights over chest",
+      "Open arms wide with soft elbows",
+      "Hug the weights together over upper chest"
+    ],
+    "mistakes": [
+      "Lowering too deep and straining the shoulders",
+      "Bending elbows more on every rep"
+    ],
+    "kw": [
+      "incline fly",
+      "incline db fly",
+      "upper chest fly"
+    ]
+  },
+  {
+    "id": "machine_chest_press",
+    "name": "Machine Chest Press",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "triceps",
+      "front delts"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Adjust seat so handles align with mid-chest",
+      "Keep shoulder blades pinned against the pad",
+      "Press out without locking elbows hard"
+    ],
+    "mistakes": [
+      "Seat set too high, shifting load to shoulders",
+      "Letting shoulders roll forward at the end"
+    ],
+    "kw": [
+      "chest press machine",
+      "seated chest press"
+    ]
+  },
+  {
+    "id": "pec_deck",
+    "name": "Pec Deck Fly",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "front delts"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Keep upper back flat against the pad",
+      "Lead with elbows, bring arms together in front",
+      "Pause and squeeze chest, return slowly"
+    ],
+    "mistakes": [
+      "Using momentum to swing the handles",
+      "Letting elbows travel far behind the body"
+    ],
+    "kw": [
+      "pec fly",
+      "machine fly",
+      "butterfly"
+    ]
+  },
+  {
+    "id": "cable_fly_mid",
+    "name": "Cable Fly (Mid)",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "front delts"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Set pulleys at chest height, step forward",
+      "Hug a big tree with a soft elbow bend",
+      "Squeeze chest hard as hands meet"
+    ],
+    "mistakes": [
+      "Standing too upright, losing tension at the stretch",
+      "Bending elbows more on every rep"
+    ],
+    "kw": [
+      "cable crossover",
+      "cable fly",
+      "mid cable fly"
+    ]
+  },
+  {
+    "id": "cable_fly_high",
+    "name": "Cable Fly (High to Low)",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "front delts"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Set pulleys above head, lean slightly forward",
+      "Sweep hands down and together toward your hips",
+      "Squeeze lower chest at the bottom"
+    ],
+    "mistakes": [
+      "Pulling with arms instead of chest",
+      "Shrugging shoulders up toward ears"
+    ],
+    "kw": [
+      "high cable fly",
+      "high to low fly",
+      "cable crossover high"
+    ]
+  },
+  {
+    "id": "cable_fly_low",
+    "name": "Cable Fly (Low to High)",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "front delts"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Set pulleys low, hinge slightly forward",
+      "Sweep hands up and together to chin height",
+      "Keep a slight bend, lead with the elbows"
+    ],
+    "mistakes": [
+      "Swinging the torso to lift the weight",
+      "Letting hands rise above face height"
+    ],
+    "kw": [
+      "low cable fly",
+      "low to high fly",
+      "upper chest fly"
+    ]
+  },
+  {
+    "id": "push_up",
+    "name": "Push-Up",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "triceps",
+      "front delts",
+      "abs"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.8,
+    "cues": [
+      "Keep body in a straight line, head to heels",
+      "Lower chest to floor with elbows at 45 degrees",
+      "Push the floor away, squeeze glutes tight"
+    ],
+    "mistakes": [
+      "Sagging hips or piking them up",
+      "Flaring elbows straight out to the sides"
+    ],
+    "kw": [
+      "pushup",
+      "press up",
+      "press-ups"
+    ]
+  },
+  {
+    "id": "decline_push_up",
+    "name": "Decline Push-Up",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "front delts",
+      "triceps"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 4,
+    "cues": [
+      "Place feet on a bench, hands under shoulders",
+      "Brace core to hold a rigid straight line",
+      "Lower chest to floor and press up"
+    ],
+    "mistakes": [
+      "Letting the lower back sag under the angle",
+      "Moving the head forward instead of the chest"
+    ],
+    "kw": [
+      "feet elevated push up",
+      "decline pushup"
+    ]
+  },
+  {
+    "id": "knee_push_up",
+    "name": "Knee Push-Up",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "triceps",
+      "front delts"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Keep a straight line from knees to head",
+      "Lower chest to the floor, elbows at 45 degrees",
+      "Press up fully without locking elbows hard"
+    ],
+    "mistakes": [
+      "Bending at the hips instead of the knees",
+      "Dropping head and neck toward the floor"
+    ],
+    "kw": [
+      "kneeling push up",
+      "modified push up",
+      "beginner push up"
+    ]
+  },
+  {
+    "id": "incline_push_up",
+    "name": "Incline Push-Up",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "front delts",
+      "triceps"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Place hands on a bench, body in a straight line",
+      "Lower chest to the edge of the bench",
+      "Press away while keeping core braced"
+    ],
+    "mistakes": [
+      "Letting hips sag toward the bench",
+      "Shrugging shoulders up to the ears"
+    ],
+    "kw": [
+      "hands elevated push up",
+      "bench push up"
+    ]
+  },
+  {
+    "id": "chest_dips",
+    "name": "Chest Dips",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "triceps",
+      "front delts"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 5,
+    "cues": [
+      "Lean torso forward about 30 degrees",
+      "Lower until upper arms are parallel to floor",
+      "Press up without shrugging your shoulders"
+    ],
+    "mistakes": [
+      "Staying upright, shifting load to triceps",
+      "Dropping too deep, straining the shoulders"
+    ],
+    "kw": [
+      "dips",
+      "parallel bar dips",
+      "chest dip"
+    ]
+  },
+  {
+    "id": "dumbbell_pullover",
+    "name": "Dumbbell Pullover",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "lats",
+      "triceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Lie across a bench holding one dumbbell overhead",
+      "Keep elbows slightly bent and arc weight behind head",
+      "Pull back over the chest, ribs down"
+    ],
+    "mistakes": [
+      "Bending elbows so it becomes a tricep extension",
+      "Arching the lower back at the stretch"
+    ],
+    "kw": [
+      "pullover",
+      "db pullover"
+    ]
+  },
+  {
+    "id": "smith_machine_bench_press",
+    "name": "Smith Machine Bench Press",
+    "cat": "Chest",
+    "muscles": [
+      "chest",
+      "triceps",
+      "front delts"
+    ],
+    "equipment": "smith",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Position bench so bar lands at mid-chest",
+      "Retract shoulder blades and keep feet planted",
+      "Press up and rack by rotating the bar"
+    ],
+    "mistakes": [
+      "Placing the bench too far forward or back",
+      "Locking elbows hard at the top"
+    ],
+    "kw": [
+      "smith bench",
+      "smith press"
+    ]
+  },
+  {
+    "id": "conventional_deadlift",
+    "name": "Deadlift (Conventional)",
+    "cat": "Back",
+    "muscles": [
+      "lower back",
+      "glutes",
+      "hamstrings",
+      "traps",
+      "lats",
+      "forearms"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Set bar over mid-foot, shoulders just ahead of bar",
+      "Brace core and pull slack out of the bar",
+      "Push the floor away, then lock hips and knees"
+    ],
+    "mistakes": [
+      "Rounding the lower back off the floor",
+      "Jerking the bar instead of pulling smoothly"
+    ],
+    "kw": [
+      "deadlift",
+      "dl",
+      "conventional dl",
+      "barbell deadlift"
+    ]
+  },
+  {
+    "id": "rack_pull",
+    "name": "Rack Pull",
+    "cat": "Back",
+    "muscles": [
+      "upper back",
+      "traps",
+      "lower back",
+      "glutes",
+      "forearms"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Set pins just below the knees",
+      "Keep the bar dragging up your thighs",
+      "Squeeze shoulder blades together at lockout"
+    ],
+    "mistakes": [
+      "Leaning back past vertical at the top",
+      "Letting the bar drift away from the legs"
+    ],
+    "kw": [
+      "rack deadlift",
+      "block pull",
+      "partial deadlift"
+    ]
+  },
+  {
+    "id": "trap_bar_deadlift",
+    "name": "Trap Bar Deadlift",
+    "cat": "Back",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings",
+      "traps",
+      "lower back"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Stand centered in the bar, grip handles firmly",
+      "Keep chest up and push the floor away",
+      "Stand tall and squeeze glutes at the top"
+    ],
+    "mistakes": [
+      "Squatting too deep, losing hip drive",
+      "Shrugging shoulders up before the bar moves"
+    ],
+    "kw": [
+      "hex bar deadlift",
+      "trap bar dl",
+      "hex deadlift"
+    ]
+  },
+  {
+    "id": "barbell_bent_over_row",
+    "name": "Barbell Bent-Over Row",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "upper back",
+      "rear delts",
+      "biceps",
+      "lower back"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Hinge to about 45 degrees, spine neutral",
+      "Pull the bar toward your lower ribs",
+      "Lead with elbows, squeeze shoulder blades together"
+    ],
+    "mistakes": [
+      "Standing up and heaving the weight with momentum",
+      "Rounding the upper back under load"
+    ],
+    "kw": [
+      "bent over row",
+      "bb row",
+      "barbell row"
+    ]
+  },
+  {
+    "id": "pendlay_row",
+    "name": "Pendlay Row",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "upper back",
+      "rear delts",
+      "biceps",
+      "lower back"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Start every rep with the bar on the floor",
+      "Keep torso parallel to the floor, back flat",
+      "Explode the bar to your lower chest"
+    ],
+    "mistakes": [
+      "Letting the torso rise during the pull",
+      "Resting too long on the floor between reps"
+    ],
+    "kw": [
+      "pendlay",
+      "dead stop row",
+      "strict row"
+    ]
+  },
+  {
+    "id": "dumbbell_row",
+    "name": "One-Arm Dumbbell Row",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "upper back",
+      "biceps",
+      "rear delts"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Brace one hand and knee on a bench",
+      "Pull the dumbbell toward your hip, not shoulder",
+      "Lower fully for a deep lat stretch"
+    ],
+    "mistakes": [
+      "Twisting the torso to swing the weight up",
+      "Shrugging instead of driving the elbow back"
+    ],
+    "kw": [
+      "db row",
+      "single arm row",
+      "one arm row"
+    ]
+  },
+  {
+    "id": "chest_supported_dumbbell_row",
+    "name": "Chest-Supported Dumbbell Row",
+    "cat": "Back",
+    "muscles": [
+      "upper back",
+      "lats",
+      "rear delts",
+      "biceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Lie chest-down on an incline bench",
+      "Pull elbows back and up toward the ceiling",
+      "Squeeze shoulder blades and lower slowly"
+    ],
+    "mistakes": [
+      "Lifting chest off the pad to cheat",
+      "Using a short range of motion"
+    ],
+    "kw": [
+      "incline bench row",
+      "seal row db",
+      "chest supported row"
+    ]
+  },
+  {
+    "id": "t_bar_row",
+    "name": "T-Bar Row",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "upper back",
+      "rear delts",
+      "biceps"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Hinge forward with a flat back, chest on pad",
+      "Pull handles toward your lower chest",
+      "Squeeze upper back and control the descent"
+    ],
+    "mistakes": [
+      "Rounding the lower back to move more weight",
+      "Jerking the weight with the hips"
+    ],
+    "kw": [
+      "t bar",
+      "tbar row",
+      "landmine row"
+    ]
+  },
+  {
+    "id": "seated_cable_row",
+    "name": "Seated Cable Row",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "upper back",
+      "rear delts",
+      "biceps"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Sit tall with a slight knee bend",
+      "Pull the handle to your belly button",
+      "Pause and squeeze shoulder blades together"
+    ],
+    "mistakes": [
+      "Rocking back and forth with the torso",
+      "Letting shoulders round forward on the return"
+    ],
+    "kw": [
+      "cable row",
+      "low row",
+      "seated row"
+    ]
+  },
+  {
+    "id": "machine_seated_row",
+    "name": "Seated Row Machine",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "upper back",
+      "rear delts",
+      "biceps"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Adjust the chest pad so arms reach fully",
+      "Pull handles back, driving elbows behind you",
+      "Hold briefly, then return under control"
+    ],
+    "mistakes": [
+      "Shrugging shoulders toward ears while pulling",
+      "Leaning back to finish the rep"
+    ],
+    "kw": [
+      "row machine",
+      "hammer strength row",
+      "machine row"
+    ]
+  },
+  {
+    "id": "single_arm_cable_row",
+    "name": "Single-Arm Cable Row",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "upper back",
+      "biceps",
+      "rear delts"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Stagger your stance and brace your core",
+      "Pull the handle to your ribs, elbow tucked",
+      "Rotate slightly at the end for full squeeze"
+    ],
+    "mistakes": [
+      "Over-rotating the torso to cheat the weight",
+      "Pulling with the biceps instead of the back"
+    ],
+    "kw": [
+      "one arm cable row",
+      "unilateral cable row"
+    ]
+  },
+  {
+    "id": "lat_pulldown_wide",
+    "name": "Lat Pulldown (Wide Grip)",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "upper back",
+      "biceps",
+      "rear delts"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Grip wider than shoulders, thumbs wrapped",
+      "Lean back slightly and pull bar to upper chest",
+      "Drive elbows down and back toward your hips"
+    ],
+    "mistakes": [
+      "Pulling the bar behind the neck",
+      "Swinging the torso to yank the weight"
+    ],
+    "kw": [
+      "wide grip pulldown",
+      "lat pulldown",
+      "pulldown"
+    ]
+  },
+  {
+    "id": "lat_pulldown_close",
+    "name": "Lat Pulldown (Close Grip)",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "biceps",
+      "upper back"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Use a V-handle or shoulder-width neutral grip",
+      "Pull the handle to your upper chest",
+      "Squeeze lats and control the weight back up"
+    ],
+    "mistakes": [
+      "Letting the arms do all the pulling",
+      "Rounding the shoulders forward at the top"
+    ],
+    "kw": [
+      "close grip pulldown",
+      "v bar pulldown",
+      "neutral pulldown"
+    ]
+  },
+  {
+    "id": "reverse_grip_lat_pulldown",
+    "name": "Reverse-Grip Lat Pulldown",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "biceps",
+      "upper back"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Grip underhand at shoulder width",
+      "Pull the bar to your upper chest",
+      "Keep elbows close and chest lifted"
+    ],
+    "mistakes": [
+      "Leaning back too far like a row",
+      "Letting elbows flare out to the sides"
+    ],
+    "kw": [
+      "underhand pulldown",
+      "supinated pulldown",
+      "reverse pulldown"
+    ]
+  },
+  {
+    "id": "single_arm_lat_pulldown",
+    "name": "Single-Arm Cable Lat Pulldown",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "biceps",
+      "upper back"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Sit tall facing the high pulley",
+      "Pull elbow down toward your hip",
+      "Stretch fully at the top, squeeze lat at the bottom"
+    ],
+    "mistakes": [
+      "Tilting the torso sideways to move the weight",
+      "Cutting the stretch short at the top"
+    ],
+    "kw": [
+      "one arm pulldown",
+      "single arm pulldown",
+      "cable pulldown"
+    ]
+  },
+  {
+    "id": "straight_arm_pulldown",
+    "name": "Straight-Arm Pulldown",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "triceps"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Hinge slightly and keep arms nearly straight",
+      "Sweep the bar down to your thighs",
+      "Squeeze lats and return slowly overhead"
+    ],
+    "mistakes": [
+      "Bending elbows and turning it into a pushdown",
+      "Using body momentum to move the bar"
+    ],
+    "kw": [
+      "straight arm pushdown",
+      "lat pushdown",
+      "stiff arm pulldown"
+    ]
+  },
+  {
+    "id": "pull_up",
+    "name": "Pull-Up",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "upper back",
+      "biceps",
+      "forearms"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 5,
+    "cues": [
+      "Start from a dead hang, shoulders packed down",
+      "Drive elbows to your ribs, chin over bar",
+      "Lower slowly to a full hang"
+    ],
+    "mistakes": [
+      "Kipping or swinging to gain momentum",
+      "Stopping short of a full hang"
+    ],
+    "kw": [
+      "pullup",
+      "pull ups",
+      "overhand pull up"
+    ]
+  },
+  {
+    "id": "chin_up",
+    "name": "Chin-Up",
+    "cat": "Back",
+    "muscles": [
+      "biceps",
+      "lats",
+      "upper back"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 5,
+    "cues": [
+      "Grip underhand at shoulder width",
+      "Pull chest toward the bar, elbows tucked",
+      "Lower under control to straight arms"
+    ],
+    "mistakes": [
+      "Craning the neck to get the chin over",
+      "Half reps without reaching full extension"
+    ],
+    "kw": [
+      "chinup",
+      "underhand pull up",
+      "supinated pull up"
+    ]
+  },
+  {
+    "id": "neutral_grip_pull_up",
+    "name": "Neutral-Grip Pull-Up",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "biceps",
+      "upper back"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 5,
+    "cues": [
+      "Grip parallel handles, palms facing each other",
+      "Pull elbows down and back, chest to handles",
+      "Control the descent to a full hang"
+    ],
+    "mistakes": [
+      "Letting shoulders shrug up near the ears",
+      "Swinging the legs to create momentum"
+    ],
+    "kw": [
+      "hammer grip pull up",
+      "parallel grip pull up"
+    ]
+  },
+  {
+    "id": "assisted_pull_up",
+    "name": "Assisted Pull-Up (Machine)",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "biceps",
+      "upper back"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Choose assistance that allows a full range",
+      "Pull chest toward the handles, elbows down",
+      "Lower slowly, resisting the weight stack"
+    ],
+    "mistakes": [
+      "Using too much assistance and never progressing",
+      "Bouncing out of the bottom position"
+    ],
+    "kw": [
+      "assisted pullup",
+      "gravitron",
+      "pull up machine"
+    ]
+  },
+  {
+    "id": "inverted_row",
+    "name": "Inverted Row",
+    "cat": "Back",
+    "muscles": [
+      "lats",
+      "upper back",
+      "rear delts",
+      "biceps"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 4,
+    "cues": [
+      "Keep body rigid from heels to head",
+      "Pull chest to the bar, squeeze shoulder blades",
+      "Lower under control to straight arms"
+    ],
+    "mistakes": [
+      "Sagging hips toward the floor",
+      "Leading with the chin instead of the chest"
+    ],
+    "kw": [
+      "bodyweight row",
+      "australian pull up",
+      "body row"
+    ]
+  },
+  {
+    "id": "back_extension",
+    "name": "Back Extension",
+    "cat": "Back",
+    "muscles": [
+      "lower back",
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "machine",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Set pad just below your hip crease",
+      "Hinge forward with a neutral spine",
+      "Squeeze glutes to rise to a straight line"
+    ],
+    "mistakes": [
+      "Hyperextending the lower back at the top",
+      "Using momentum to swing up"
+    ],
+    "kw": [
+      "hyperextension",
+      "roman chair",
+      "45 degree back extension"
+    ]
+  },
+  {
+    "id": "superman",
+    "name": "Superman",
+    "cat": "Back",
+    "muscles": [
+      "lower back",
+      "glutes",
+      "upper back"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Lie face down, arms extended overhead",
+      "Lift arms and legs together using back and glutes",
+      "Hold one second, then lower with control"
+    ],
+    "mistakes": [
+      "Cranking the neck up to look forward",
+      "Using momentum instead of squeezing the back"
+    ],
+    "kw": [
+      "back raise",
+      "superman hold",
+      "floor back extension"
+    ]
+  },
+  {
+    "id": "band_pull_apart",
+    "name": "Band Pull-Apart",
+    "cat": "Back",
+    "muscles": [
+      "rear delts",
+      "upper back"
+    ],
+    "equipment": "band",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Hold the band at shoulder height, arms straight",
+      "Pull hands apart until the band touches your chest",
+      "Squeeze shoulder blades together, return slowly"
+    ],
+    "mistakes": [
+      "Shrugging shoulders up as you pull",
+      "Arching the lower back to finish"
+    ],
+    "kw": [
+      "band pull apart",
+      "band rear delt",
+      "resistance band pull apart"
+    ]
+  },
+  {
+    "id": "barbell_shrug",
+    "name": "Barbell Shrug",
+    "cat": "Back",
+    "muscles": [
+      "traps",
+      "forearms"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Hold the bar at your thighs, arms straight",
+      "Lift shoulders straight up toward your ears",
+      "Pause at the top, lower slowly"
+    ],
+    "mistakes": [
+      "Rolling the shoulders in circles",
+      "Bending the elbows to lift the bar"
+    ],
+    "kw": [
+      "bb shrug",
+      "shrugs",
+      "trap shrug"
+    ]
+  },
+  {
+    "id": "dumbbell_shrug",
+    "name": "Dumbbell Shrug",
+    "cat": "Back",
+    "muscles": [
+      "traps",
+      "forearms"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Hold dumbbells at your sides, arms straight",
+      "Lift shoulders straight up, no rolling",
+      "Pause at the top, lower under control"
+    ],
+    "mistakes": [
+      "Rolling shoulders instead of lifting straight up",
+      "Using momentum from the knees"
+    ],
+    "kw": [
+      "db shrug",
+      "dumbbell shrugs",
+      "trap raise"
+    ]
+  },
+  {
+    "id": "overhead_press",
+    "name": "Overhead Press (Barbell)",
+    "cat": "Shoulders",
+    "muscles": [
+      "front delts",
+      "side delts",
+      "triceps",
+      "upper back"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Squeeze glutes and brace your core hard",
+      "Press the bar straight up, head moves through",
+      "Lock out overhead with ribs down"
+    ],
+    "mistakes": [
+      "Leaning back and turning it into an incline press",
+      "Flaring ribs by overarching the lower back"
+    ],
+    "kw": [
+      "ohp",
+      "military press",
+      "standing press",
+      "barbell shoulder press"
+    ]
+  },
+  {
+    "id": "seated_dumbbell_shoulder_press",
+    "name": "Seated Dumbbell Shoulder Press",
+    "cat": "Shoulders",
+    "muscles": [
+      "front delts",
+      "side delts",
+      "triceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Sit with back supported, dumbbells at shoulder height",
+      "Press up until arms are straight above shoulders",
+      "Lower to ear level under control"
+    ],
+    "mistakes": [
+      "Arching the back to push the weight",
+      "Flaring elbows too wide behind the body"
+    ],
+    "kw": [
+      "db shoulder press",
+      "seated db press",
+      "dumbbell overhead press"
+    ]
+  },
+  {
+    "id": "arnold_press",
+    "name": "Arnold Press",
+    "cat": "Shoulders",
+    "muscles": [
+      "front delts",
+      "side delts",
+      "triceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Start with palms facing you at chest height",
+      "Rotate palms outward as you press overhead",
+      "Reverse the rotation smoothly while lowering"
+    ],
+    "mistakes": [
+      "Rushing the rotation and losing control",
+      "Leaning back to press heavier weights"
+    ],
+    "kw": [
+      "arnold dumbbell press",
+      "rotating press"
+    ]
+  },
+  {
+    "id": "machine_shoulder_press",
+    "name": "Machine Shoulder Press",
+    "cat": "Shoulders",
+    "muscles": [
+      "front delts",
+      "side delts",
+      "triceps"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Adjust seat so handles start at shoulder level",
+      "Press up without locking elbows hard",
+      "Lower slowly until upper arms are parallel"
+    ],
+    "mistakes": [
+      "Shrugging shoulders up to the ears",
+      "Lifting the back off the pad"
+    ],
+    "kw": [
+      "shoulder press machine",
+      "seated shoulder press machine"
+    ]
+  },
+  {
+    "id": "smith_shoulder_press",
+    "name": "Smith Machine Shoulder Press",
+    "cat": "Shoulders",
+    "muscles": [
+      "front delts",
+      "side delts",
+      "triceps"
+    ],
+    "equipment": "smith",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Place bench so bar travels just in front of face",
+      "Press up until arms extend fully overhead",
+      "Lower bar to chin level with control"
+    ],
+    "mistakes": [
+      "Sitting too far forward, pushing the bar out",
+      "Arching the lower back off the seat"
+    ],
+    "kw": [
+      "smith overhead press",
+      "smith ohp"
+    ]
+  },
+  {
+    "id": "push_press",
+    "name": "Barbell Push Press",
+    "cat": "Shoulders",
+    "muscles": [
+      "front delts",
+      "triceps",
+      "quads",
+      "side delts"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Dip slightly at knees, keeping torso vertical",
+      "Drive up with legs and press the bar overhead",
+      "Lock out and stand tall before lowering"
+    ],
+    "mistakes": [
+      "Dipping forward instead of straight down",
+      "Pressing before the leg drive finishes"
+    ],
+    "kw": [
+      "bb push press",
+      "leg drive press"
+    ]
+  },
+  {
+    "id": "landmine_press",
+    "name": "Landmine Press",
+    "cat": "Shoulders",
+    "muscles": [
+      "front delts",
+      "chest",
+      "triceps",
+      "abs"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Hold the bar end at shoulder height",
+      "Press up and forward along the arc",
+      "Keep ribs down and core braced"
+    ],
+    "mistakes": [
+      "Leaning back to push the bar",
+      "Shrugging shoulders up at lockout"
+    ],
+    "kw": [
+      "landmine shoulder press",
+      "single arm landmine press"
+    ]
+  },
+  {
+    "id": "dumbbell_lateral_raise",
+    "name": "Dumbbell Lateral Raise",
+    "cat": "Shoulders",
+    "muscles": [
+      "side delts"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Lead with elbows, keep a slight bend",
+      "Raise arms to shoulder height, no higher",
+      "Lower slowly and keep tension on delts"
+    ],
+    "mistakes": [
+      "Swinging the torso to heave the weights",
+      "Shrugging traps instead of lifting with delts"
+    ],
+    "kw": [
+      "side raise",
+      "lateral raise",
+      "side delt raise",
+      "db lateral raise"
+    ]
+  },
+  {
+    "id": "cable_lateral_raise",
+    "name": "Cable Lateral Raise",
+    "cat": "Shoulders",
+    "muscles": [
+      "side delts"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Stand side-on to a low pulley",
+      "Raise arm out to shoulder height, elbow leading",
+      "Resist the cable on the way down"
+    ],
+    "mistakes": [
+      "Leaning away to swing the weight up",
+      "Letting the cable slack at the bottom"
+    ],
+    "kw": [
+      "single arm cable lateral",
+      "cable side raise"
+    ]
+  },
+  {
+    "id": "dumbbell_front_raise",
+    "name": "Dumbbell Front Raise",
+    "cat": "Shoulders",
+    "muscles": [
+      "front delts"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Raise dumbbells in front to shoulder height",
+      "Keep a slight bend, palms facing down",
+      "Lower slowly without swinging"
+    ],
+    "mistakes": [
+      "Leaning back to heave the weights up",
+      "Raising above shoulder level, adding strain"
+    ],
+    "kw": [
+      "front raise",
+      "db front raise"
+    ]
+  },
+  {
+    "id": "plate_front_raise",
+    "name": "Plate Front Raise",
+    "cat": "Shoulders",
+    "muscles": [
+      "front delts",
+      "chest"
+    ],
+    "equipment": "plate",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Hold a plate at your thighs with both hands",
+      "Raise it in front to eye level",
+      "Lower under control, keeping ribs down"
+    ],
+    "mistakes": [
+      "Rocking the torso to build momentum",
+      "Letting the shoulders shrug at the top"
+    ],
+    "kw": [
+      "plate raise",
+      "front plate raise"
+    ]
+  },
+  {
+    "id": "dumbbell_rear_delt_fly",
+    "name": "Dumbbell Rear Delt Fly",
+    "cat": "Shoulders",
+    "muscles": [
+      "rear delts",
+      "upper back"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Hinge forward with a flat back",
+      "Raise arms out wide with elbows slightly bent",
+      "Squeeze shoulder blades and lower slowly"
+    ],
+    "mistakes": [
+      "Using heavy weights that force momentum",
+      "Shrugging traps instead of using rear delts"
+    ],
+    "kw": [
+      "reverse fly",
+      "bent over lateral raise",
+      "rear delt raise"
+    ]
+  },
+  {
+    "id": "reverse_pec_deck",
+    "name": "Reverse Pec Deck",
+    "cat": "Shoulders",
+    "muscles": [
+      "rear delts",
+      "upper back"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Sit facing the pad, chest supported",
+      "Sweep arms back wide, elbows leading",
+      "Pause and squeeze, return slowly"
+    ],
+    "mistakes": [
+      "Gripping tight and pulling with the biceps",
+      "Using momentum to swing arms back"
+    ],
+    "kw": [
+      "rear delt machine",
+      "reverse fly machine",
+      "rear delt fly machine"
+    ]
+  },
+  {
+    "id": "cable_rear_delt_fly",
+    "name": "Cable Rear Delt Fly",
+    "cat": "Shoulders",
+    "muscles": [
+      "rear delts",
+      "upper back"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Cross cables and grab the opposite handles",
+      "Pull arms apart at shoulder height",
+      "Squeeze rear delts without shrugging"
+    ],
+    "mistakes": [
+      "Bending elbows into a row",
+      "Standing too close, shortening the range"
+    ],
+    "kw": [
+      "cable reverse fly",
+      "cable crossover rear"
+    ]
+  },
+  {
+    "id": "cable_face_pull",
+    "name": "Face Pull",
+    "cat": "Shoulders",
+    "muscles": [
+      "rear delts",
+      "upper back",
+      "traps"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Set rope at forehead height, thumbs back",
+      "Pull rope toward your face, elbows high",
+      "Squeeze and rotate hands outward at the end"
+    ],
+    "mistakes": [
+      "Going too heavy and leaning back",
+      "Pulling to the chest instead of the face"
+    ],
+    "kw": [
+      "face pulls",
+      "rope face pull",
+      "rear delt pull"
+    ]
+  },
+  {
+    "id": "upright_row",
+    "name": "Upright Row",
+    "cat": "Shoulders",
+    "muscles": [
+      "side delts",
+      "traps",
+      "biceps"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Use a shoulder-width grip, bar close to body",
+      "Lead with elbows to about chest height",
+      "Lower slowly without letting the bar drift out"
+    ],
+    "mistakes": [
+      "Pulling elbows far above shoulder height",
+      "Using a very narrow grip that stresses wrists"
+    ],
+    "kw": [
+      "barbell upright row",
+      "ez bar upright row"
+    ]
+  },
+  {
+    "id": "pike_push_up",
+    "name": "Pike Push-Up",
+    "cat": "Shoulders",
+    "muscles": [
+      "front delts",
+      "side delts",
+      "triceps"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 4,
+    "cues": [
+      "Form an inverted V with hips high",
+      "Lower the top of your head toward the floor",
+      "Press back up keeping hips elevated"
+    ],
+    "mistakes": [
+      "Letting hips sink into a regular push-up",
+      "Flaring elbows wide, stressing shoulders"
+    ],
+    "kw": [
+      "pike pushup",
+      "shoulder push up",
+      "inverted v push up"
+    ]
+  },
+  {
+    "id": "barbell_curl",
+    "name": "Barbell Curl",
+    "cat": "Biceps",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Keep elbows pinned to your sides",
+      "Curl the bar up without swinging",
+      "Lower slowly to full arm extension"
+    ],
+    "mistakes": [
+      "Swinging the torso to lift heavier",
+      "Letting elbows drift forward during the curl"
+    ],
+    "kw": [
+      "bb curl",
+      "standing curl",
+      "straight bar curl"
+    ]
+  },
+  {
+    "id": "ez_bar_curl",
+    "name": "EZ-Bar Curl",
+    "cat": "Biceps",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Grip the angled bars, elbows at your sides",
+      "Curl up and squeeze biceps at the top",
+      "Lower for two seconds to straight arms"
+    ],
+    "mistakes": [
+      "Leaning back to cheat the weight up",
+      "Cutting reps short at the bottom"
+    ],
+    "kw": [
+      "ez curl",
+      "curl bar",
+      "ez bar bicep curl"
+    ]
+  },
+  {
+    "id": "dumbbell_curl",
+    "name": "Dumbbell Curl",
+    "cat": "Biceps",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Stand tall, palms forward, elbows at your sides",
+      "Curl one arm at a time, palm up",
+      "Lower under control without swinging"
+    ],
+    "mistakes": [
+      "Swinging hips to start the movement",
+      "Moving the elbows forward as you curl"
+    ],
+    "kw": [
+      "db curl",
+      "alternating curl",
+      "bicep curl"
+    ]
+  },
+  {
+    "id": "hammer_curl",
+    "name": "Hammer Curl",
+    "cat": "Biceps",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Hold dumbbells with palms facing each other",
+      "Curl up keeping elbows fixed at your sides",
+      "Lower slowly, don't let weights swing"
+    ],
+    "mistakes": [
+      "Swinging the dumbbells with the shoulders",
+      "Letting wrists bend during the curl"
+    ],
+    "kw": [
+      "hammer curls",
+      "neutral grip curl",
+      "db hammer curl"
+    ]
+  },
+  {
+    "id": "incline_dumbbell_curl",
+    "name": "Incline Dumbbell Curl",
+    "cat": "Biceps",
+    "muscles": [
+      "biceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Set bench to 60 degrees, arms hang behind torso",
+      "Curl up without moving the upper arm",
+      "Lower slowly to feel the biceps stretch"
+    ],
+    "mistakes": [
+      "Letting elbows travel forward during the curl",
+      "Setting the bench too upright, losing the stretch"
+    ],
+    "kw": [
+      "incline curl",
+      "incline db curl",
+      "incline bicep curl"
+    ]
+  },
+  {
+    "id": "concentration_curl",
+    "name": "Concentration Curl",
+    "cat": "Biceps",
+    "muscles": [
+      "biceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Brace upper arm against your inner thigh",
+      "Curl the dumbbell toward your shoulder, no swinging",
+      "Squeeze at the top and lower slowly"
+    ],
+    "mistakes": [
+      "Rocking the torso to lift the weight",
+      "Letting the elbow slide off the thigh"
+    ],
+    "kw": [
+      "seated concentration curl",
+      "conc curl"
+    ]
+  },
+  {
+    "id": "cable_curl",
+    "name": "Cable Curl",
+    "cat": "Biceps",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Stand close to a low pulley, elbows at sides",
+      "Curl the bar up and squeeze biceps",
+      "Resist the cable on the way down"
+    ],
+    "mistakes": [
+      "Leaning back to start the curl",
+      "Letting elbows creep forward as you lift"
+    ],
+    "kw": [
+      "cable bicep curl",
+      "low cable curl",
+      "rope curl"
+    ]
+  },
+  {
+    "id": "preacher_curl",
+    "name": "Preacher Curl",
+    "cat": "Biceps",
+    "muscles": [
+      "biceps",
+      "forearms"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Rest the back of your upper arms on the pad",
+      "Curl smoothly without lifting elbows off the pad",
+      "Lower until arms are almost straight"
+    ],
+    "mistakes": [
+      "Dropping fast into the bottom stretch",
+      "Lifting hips or chest off the bench"
+    ],
+    "kw": [
+      "preacher",
+      "ez preacher curl",
+      "scott curl"
+    ]
+  },
+  {
+    "id": "spider_curl",
+    "name": "Spider Curl",
+    "cat": "Biceps",
+    "muscles": [
+      "biceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Lie chest-down on an incline bench",
+      "Let arms hang straight down, curl without swinging",
+      "Squeeze biceps hard at the top"
+    ],
+    "mistakes": [
+      "Letting the upper arms swing backward",
+      "Using momentum from the shoulders"
+    ],
+    "kw": [
+      "incline spider curl",
+      "prone curl"
+    ]
+  },
+  {
+    "id": "bayesian_cable_curl",
+    "name": "Bayesian Cable Curl",
+    "cat": "Biceps",
+    "muscles": [
+      "biceps"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Face away from a low pulley, arm behind you",
+      "Curl the handle up, keeping elbow behind torso",
+      "Control the stretch back to a straight arm"
+    ],
+    "mistakes": [
+      "Letting the elbow drift forward early",
+      "Leaning forward and shortening the range"
+    ],
+    "kw": [
+      "bayesian curl",
+      "behind the body cable curl"
+    ]
+  },
+  {
+    "id": "close_grip_bench_press",
+    "name": "Close-Grip Bench Press",
+    "cat": "Triceps",
+    "muscles": [
+      "triceps",
+      "chest",
+      "front delts"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Grip just inside shoulder width",
+      "Tuck elbows close to your ribs",
+      "Lower to lower chest, press straight up"
+    ],
+    "mistakes": [
+      "Gripping too narrow and straining the wrists",
+      "Letting elbows flare wide"
+    ],
+    "kw": [
+      "cgbp",
+      "close grip bench",
+      "narrow grip bench"
+    ]
+  },
+  {
+    "id": "skull_crusher",
+    "name": "Skull Crusher",
+    "cat": "Triceps",
+    "muscles": [
+      "triceps"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Keep upper arms vertical and still",
+      "Lower the bar toward your forehead slowly",
+      "Extend elbows fully without flaring them"
+    ],
+    "mistakes": [
+      "Letting elbows flare out to the sides",
+      "Moving the upper arms like a pullover"
+    ],
+    "kw": [
+      "lying tricep extension",
+      "ez bar skullcrusher",
+      "french press"
+    ]
+  },
+  {
+    "id": "tricep_pushdown_rope",
+    "name": "Tricep Pushdown (Rope)",
+    "cat": "Triceps",
+    "muscles": [
+      "triceps"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Pin elbows at your sides, slight forward lean",
+      "Push down and split the rope at the bottom",
+      "Return slowly until forearms are parallel"
+    ],
+    "mistakes": [
+      "Leaning over the stack to push the weight",
+      "Letting elbows drift forward during the push"
+    ],
+    "kw": [
+      "rope pushdown",
+      "tricep rope pushdown",
+      "rope extension"
+    ]
+  },
+  {
+    "id": "tricep_pushdown_bar",
+    "name": "Tricep Pushdown (Bar)",
+    "cat": "Triceps",
+    "muscles": [
+      "triceps"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Grip the bar shoulder-width, elbows tight to ribs",
+      "Press down until arms fully extend",
+      "Control the bar back up to chest level"
+    ],
+    "mistakes": [
+      "Using body weight to shove the bar down",
+      "Flaring the elbows out wide"
+    ],
+    "kw": [
+      "pushdown",
+      "straight bar pushdown",
+      "v bar pushdown",
+      "cable pushdown"
+    ]
+  },
+  {
+    "id": "overhead_cable_tricep_extension",
+    "name": "Overhead Cable Tricep Extension",
+    "cat": "Triceps",
+    "muscles": [
+      "triceps"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Face away from the pulley, elbows by your ears",
+      "Extend arms forward until fully straight",
+      "Lower slowly behind the head to stretch"
+    ],
+    "mistakes": [
+      "Flaring elbows wide as you extend",
+      "Arching the lower back during the press"
+    ],
+    "kw": [
+      "overhead rope extension",
+      "cable overhead extension",
+      "cable french press"
+    ]
+  },
+  {
+    "id": "dumbbell_overhead_tricep_extension",
+    "name": "Dumbbell Overhead Tricep Extension",
+    "cat": "Triceps",
+    "muscles": [
+      "triceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Hold one dumbbell overhead with both hands",
+      "Lower behind the head, elbows pointing forward",
+      "Extend up and squeeze triceps at the top"
+    ],
+    "mistakes": [
+      "Letting elbows flare out to the sides",
+      "Arching the lower back as the weight rises"
+    ],
+    "kw": [
+      "overhead extension",
+      "db tricep extension",
+      "french press db"
+    ]
+  },
+  {
+    "id": "dumbbell_tricep_kickback",
+    "name": "Dumbbell Tricep Kickback",
+    "cat": "Triceps",
+    "muscles": [
+      "triceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Hinge forward, upper arm parallel to the floor",
+      "Extend forearm back until the arm is straight",
+      "Squeeze triceps, then lower without swinging"
+    ],
+    "mistakes": [
+      "Dropping the elbow as you extend",
+      "Swinging the weight with momentum"
+    ],
+    "kw": [
+      "kickbacks",
+      "tricep kickback",
+      "db kickback"
+    ]
+  },
+  {
+    "id": "tricep_dips",
+    "name": "Tricep Dips",
+    "cat": "Triceps",
+    "muscles": [
+      "triceps",
+      "chest",
+      "front delts"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 5,
+    "cues": [
+      "Keep torso upright and elbows tucked back",
+      "Lower until upper arms are parallel to floor",
+      "Press up and lock out without shrugging"
+    ],
+    "mistakes": [
+      "Flaring elbows wide, stressing the shoulders",
+      "Leaning forward and loading the chest"
+    ],
+    "kw": [
+      "parallel bar dips",
+      "dips",
+      "tricep dip"
+    ]
+  },
+  {
+    "id": "bench_dips",
+    "name": "Bench Dips",
+    "cat": "Triceps",
+    "muscles": [
+      "triceps",
+      "front delts"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Place hands on the bench behind you",
+      "Lower hips until elbows reach 90 degrees",
+      "Press up and squeeze triceps at the top"
+    ],
+    "mistakes": [
+      "Sliding hips far away from the bench",
+      "Dropping too deep, straining the shoulders"
+    ],
+    "kw": [
+      "bench tricep dips",
+      "chair dips"
+    ]
+  },
+  {
+    "id": "diamond_push_up",
+    "name": "Diamond Push-Up",
+    "cat": "Triceps",
+    "muscles": [
+      "triceps",
+      "chest",
+      "front delts"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 4,
+    "cues": [
+      "Make a diamond with thumbs and index fingers",
+      "Keep elbows close to ribs as you lower",
+      "Press up while holding a straight body line"
+    ],
+    "mistakes": [
+      "Letting elbows flare out wide",
+      "Sagging hips toward the floor"
+    ],
+    "kw": [
+      "close grip push up",
+      "triangle push up",
+      "diamond pushup"
+    ]
+  },
+  {
+    "id": "wrist_curl",
+    "name": "Wrist Curl",
+    "cat": "Forearms",
+    "muscles": [
+      "forearms"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Rest forearms on your thighs, palms up",
+      "Curl the weight up using only the wrists",
+      "Lower slowly to a full stretch"
+    ],
+    "mistakes": [
+      "Lifting forearms off the thighs",
+      "Using too heavy a weight with a short range"
+    ],
+    "kw": [
+      "forearm curl",
+      "barbell wrist curl",
+      "dumbbell wrist curl"
+    ]
+  },
+  {
+    "id": "reverse_wrist_curl",
+    "name": "Reverse Wrist Curl",
+    "cat": "Forearms",
+    "muscles": [
+      "forearms"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Rest forearms on thighs, palms facing down",
+      "Lift the back of the hands toward the ceiling",
+      "Lower slowly and keep forearms still"
+    ],
+    "mistakes": [
+      "Using heavy weights that limit range",
+      "Letting elbows lift off the legs"
+    ],
+    "kw": [
+      "wrist extension",
+      "reverse forearm curl"
+    ]
+  },
+  {
+    "id": "reverse_curl",
+    "name": "Reverse Curl",
+    "cat": "Forearms",
+    "muscles": [
+      "forearms",
+      "biceps"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Use an overhand grip at shoulder width",
+      "Curl the bar up without swinging",
+      "Lower slowly keeping wrists straight"
+    ],
+    "mistakes": [
+      "Letting the wrists bend backward",
+      "Swinging the torso to lift the bar"
+    ],
+    "kw": [
+      "reverse barbell curl",
+      "overhand curl",
+      "reverse ez curl"
+    ]
+  },
+  {
+    "id": "farmers_walk",
+    "name": "Farmer's Walk",
+    "cat": "Forearms",
+    "muscles": [
+      "forearms",
+      "traps",
+      "abs",
+      "glutes"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Pick up heavy weights and stand tall",
+      "Walk with short, quick steps, shoulders back",
+      "Keep the core braced and weights steady"
+    ],
+    "mistakes": [
+      "Letting shoulders round forward under the load",
+      "Shrugging up and leaning side to side"
+    ],
+    "kw": [
+      "farmer walk",
+      "farmers carry",
+      "loaded carry",
+      "suitcase carry"
+    ]
+  },
+  {
+    "id": "dead_hang",
+    "name": "Dead Hang",
+    "cat": "Forearms",
+    "muscles": [
+      "forearms",
+      "lats",
+      "upper back"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 3.5,
+    "cues": [
+      "Grip the bar slightly wider than shoulders",
+      "Pack shoulders down, don't shrug to your ears",
+      "Breathe steadily and hold until grip fades"
+    ],
+    "mistakes": [
+      "Swinging the body during the hold",
+      "Letting shoulders collapse up into the ears"
+    ],
+    "kw": [
+      "bar hang",
+      "passive hang",
+      "hang hold"
+    ]
+  },
+  {
+    "id": "barbell_back_squat",
+    "name": "Barbell Back Squat",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings",
+      "lower back"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Brace core, bar on upper traps, chest up",
+      "Push knees out over toes as you descend",
+      "Drive through mid-foot, stand up tall"
+    ],
+    "mistakes": [
+      "Knees caving inward on the way up",
+      "Letting heels lift or the lower back round"
+    ],
+    "kw": [
+      "squat",
+      "back squat",
+      "bb squat",
+      "barbell squat"
+    ]
+  },
+  {
+    "id": "front_squat",
+    "name": "Barbell Front Squat",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "abs",
+      "upper back"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Rest bar on front delts, elbows high",
+      "Keep torso upright as you sit between hips",
+      "Drive up leading with the chest"
+    ],
+    "mistakes": [
+      "Letting elbows drop and the bar roll forward",
+      "Rounding the upper back at the bottom"
+    ],
+    "kw": [
+      "front squats",
+      "bb front squat"
+    ]
+  },
+  {
+    "id": "goblet_squat",
+    "name": "Goblet Squat",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "abs"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Hold the weight at your chest, elbows down",
+      "Sit between your hips, knees tracking toes",
+      "Stand up driving through the whole foot"
+    ],
+    "mistakes": [
+      "Letting the chest fall forward",
+      "Rising up onto the toes at the bottom"
+    ],
+    "kw": [
+      "db goblet squat",
+      "goblet",
+      "dumbbell squat"
+    ]
+  },
+  {
+    "id": "bulgarian_split_squat",
+    "name": "Bulgarian Split Squat",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings",
+      "adductors"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Rear foot on bench, front foot a long step out",
+      "Lower straight down, front knee tracks the toes",
+      "Drive through the front heel to stand"
+    ],
+    "mistakes": [
+      "Standing too close, pushing the knee far forward",
+      "Leaning the torso too far forward"
+    ],
+    "kw": [
+      "rear foot elevated split squat",
+      "rfess",
+      "bulgarian",
+      "split squat"
+    ]
+  },
+  {
+    "id": "walking_lunge",
+    "name": "Walking Lunge",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Step long and drop the back knee toward floor",
+      "Keep torso upright, front knee over the ankle",
+      "Push through the front heel into the next step"
+    ],
+    "mistakes": [
+      "Taking short steps that overload the knee",
+      "Letting the front knee cave inward"
+    ],
+    "kw": [
+      "walking lunges",
+      "db walking lunge",
+      "lunge walk"
+    ]
+  },
+  {
+    "id": "reverse_lunge",
+    "name": "Reverse Lunge",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Step back and lower the rear knee toward floor",
+      "Keep chest up, weight in the front heel",
+      "Push off the front foot to return"
+    ],
+    "mistakes": [
+      "Letting the front knee collapse inward",
+      "Pushing off the back foot instead of the front"
+    ],
+    "kw": [
+      "reverse lunges",
+      "back lunge",
+      "db reverse lunge"
+    ]
+  },
+  {
+    "id": "step_up",
+    "name": "Dumbbell Step-Up",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Place the whole foot on the box",
+      "Drive through the front heel to stand up",
+      "Lower slowly, don't drop down"
+    ],
+    "mistakes": [
+      "Pushing off the back foot to help",
+      "Using a box too high, rounding the back"
+    ],
+    "kw": [
+      "step ups",
+      "box step up",
+      "db step up"
+    ]
+  },
+  {
+    "id": "leg_press",
+    "name": "Leg Press",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Place feet shoulder-width, mid-platform",
+      "Lower until knees reach roughly 90 degrees",
+      "Press through whole foot, don't lock knees"
+    ],
+    "mistakes": [
+      "Letting the lower back lift off the pad",
+      "Locking the knees hard at the top"
+    ],
+    "kw": [
+      "leg press machine",
+      "45 degree leg press",
+      "sled leg press"
+    ]
+  },
+  {
+    "id": "hack_squat",
+    "name": "Hack Squat",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Place shoulders under pads, feet shoulder-width",
+      "Lower deep with knees tracking over the toes",
+      "Press through your whole foot to stand"
+    ],
+    "mistakes": [
+      "Heels lifting off the platform",
+      "Bouncing out of the bottom position"
+    ],
+    "kw": [
+      "hack squat machine",
+      "machine hack squat"
+    ]
+  },
+  {
+    "id": "leg_extension",
+    "name": "Leg Extension",
+    "cat": "Quads",
+    "muscles": [
+      "quads"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Align knees with the machine pivot point",
+      "Extend legs until quads fully contract",
+      "Lower slowly, don't let the stack crash"
+    ],
+    "mistakes": [
+      "Swinging the weight with momentum",
+      "Lifting hips off the seat at the top"
+    ],
+    "kw": [
+      "quad extension",
+      "leg ext",
+      "knee extension"
+    ]
+  },
+  {
+    "id": "smith_machine_squat",
+    "name": "Smith Machine Squat",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "smith",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Place feet slightly forward of the bar",
+      "Sit back and down keeping chest up",
+      "Drive through the heels to stand"
+    ],
+    "mistakes": [
+      "Feet too far forward, stressing the knees",
+      "Rounding the lower back at the bottom"
+    ],
+    "kw": [
+      "smith squat",
+      "smith machine squats"
+    ]
+  },
+  {
+    "id": "bodyweight_squat",
+    "name": "Bodyweight Squat",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Stand shoulder-width, toes slightly out",
+      "Sit hips back and down, chest tall",
+      "Drive through whole foot to stand up"
+    ],
+    "mistakes": [
+      "Knees collapsing inward on the way up",
+      "Heels lifting off the floor"
+    ],
+    "kw": [
+      "air squat",
+      "squat",
+      "bw squat"
+    ]
+  },
+  {
+    "id": "pistol_squat",
+    "name": "Pistol Squat",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 5,
+    "cues": [
+      "Extend one leg forward, arms out for balance",
+      "Sit down on the standing leg slowly",
+      "Drive through the heel to stand up"
+    ],
+    "mistakes": [
+      "Heel lifting off the floor at the bottom",
+      "Dropping quickly into the bottom position"
+    ],
+    "kw": [
+      "single leg squat",
+      "one leg squat",
+      "pistol"
+    ]
+  },
+  {
+    "id": "wall_sit",
+    "name": "Wall Sit",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 3.5,
+    "cues": [
+      "Back flat on the wall, thighs parallel",
+      "Keep knees stacked over ankles",
+      "Press through heels and breathe steadily"
+    ],
+    "mistakes": [
+      "Letting hips sink above parallel",
+      "Resting hands on the thighs"
+    ],
+    "kw": [
+      "wall squat",
+      "isometric squat"
+    ]
+  },
+  {
+    "id": "jump_squat",
+    "name": "Jump Squat",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 6,
+    "cues": [
+      "Squat to parallel, then explode upward",
+      "Land softly on the mid-foot with bent knees",
+      "Reset your stance before the next jump"
+    ],
+    "mistakes": [
+      "Landing with locked knees",
+      "Letting knees collapse inward on landing"
+    ],
+    "kw": [
+      "squat jump",
+      "jumping squat",
+      "plyo squat"
+    ]
+  },
+  {
+    "id": "lateral_lunge",
+    "name": "Lateral Lunge",
+    "cat": "Quads",
+    "muscles": [
+      "quads",
+      "glutes",
+      "adductors"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 4,
+    "cues": [
+      "Step wide to the side, sit hips back",
+      "Keep the trailing leg straight, feet flat",
+      "Push off the bent leg to return"
+    ],
+    "mistakes": [
+      "Rounding the back as you sit",
+      "Lifting the heel of the bent leg"
+    ],
+    "kw": [
+      "side lunge",
+      "lateral lunges",
+      "cossack"
+    ]
+  },
+  {
+    "id": "romanian_deadlift",
+    "name": "Romanian Deadlift (Barbell)",
+    "cat": "Hamstrings",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lower back"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Keep soft knees, push hips straight back",
+      "Keep the bar sliding along your legs",
+      "Squeeze glutes to stand once hamstrings stretch"
+    ],
+    "mistakes": [
+      "Rounding the back to reach lower",
+      "Bending knees into a squat"
+    ],
+    "kw": [
+      "rdl",
+      "barbell rdl",
+      "romanian dl"
+    ]
+  },
+  {
+    "id": "dumbbell_rdl",
+    "name": "Dumbbell Romanian Deadlift",
+    "cat": "Hamstrings",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lower back"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Hold dumbbells at thighs, soft knees",
+      "Push hips back until hamstrings stretch",
+      "Keep weights close, then drive hips forward"
+    ],
+    "mistakes": [
+      "Rounding the upper back at the bottom",
+      "Letting dumbbells drift away from the legs"
+    ],
+    "kw": [
+      "db rdl",
+      "dumbbell romanian deadlift"
+    ]
+  },
+  {
+    "id": "stiff_leg_deadlift",
+    "name": "Stiff-Leg Deadlift",
+    "cat": "Hamstrings",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lower back"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Keep legs nearly straight with a slight bend",
+      "Hinge at hips, bar close to legs",
+      "Lower until hamstrings stretch, then stand"
+    ],
+    "mistakes": [
+      "Rounding the lower back to go deeper",
+      "Locking knees hard and hyperextending"
+    ],
+    "kw": [
+      "sldl",
+      "stiff leg dl",
+      "straight leg deadlift"
+    ]
+  },
+  {
+    "id": "good_morning",
+    "name": "Good Morning",
+    "cat": "Hamstrings",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lower back"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Bar on upper back, soft knees, chest up",
+      "Push hips back until torso is near parallel",
+      "Squeeze glutes to return to standing"
+    ],
+    "mistakes": [
+      "Rounding the back as you bend forward",
+      "Bending knees and turning it into a squat"
+    ],
+    "kw": [
+      "good mornings",
+      "bb good morning"
+    ]
+  },
+  {
+    "id": "seated_leg_curl",
+    "name": "Seated Leg Curl",
+    "cat": "Hamstrings",
+    "muscles": [
+      "hamstrings",
+      "calves"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Adjust pad just above your heels",
+      "Curl heels toward your glutes fully",
+      "Return slowly without letting the stack drop"
+    ],
+    "mistakes": [
+      "Lifting hips off the seat to cheat",
+      "Rushing the lowering phase"
+    ],
+    "kw": [
+      "seated hamstring curl",
+      "leg curl machine"
+    ]
+  },
+  {
+    "id": "lying_leg_curl",
+    "name": "Lying Leg Curl",
+    "cat": "Hamstrings",
+    "muscles": [
+      "hamstrings",
+      "calves"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Align knees just off the bench edge",
+      "Curl heels toward glutes, hips pressed down",
+      "Lower slowly until legs nearly straighten"
+    ],
+    "mistakes": [
+      "Lifting the hips to swing the weight",
+      "Using momentum with a short range"
+    ],
+    "kw": [
+      "prone leg curl",
+      "hamstring curl",
+      "lying hamstring curl"
+    ]
+  },
+  {
+    "id": "nordic_curl",
+    "name": "Nordic Curl",
+    "cat": "Hamstrings",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "calves"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 5,
+    "cues": [
+      "Anchor your ankles and kneel tall",
+      "Lower forward slowly, hips and body in line",
+      "Use hands to push back up if needed"
+    ],
+    "mistakes": [
+      "Bending at the hips as you lower",
+      "Dropping fast with no control"
+    ],
+    "kw": [
+      "nordic hamstring curl",
+      "nordics",
+      "nordic"
+    ]
+  },
+  {
+    "id": "single_leg_rdl",
+    "name": "Single-Leg Romanian Deadlift",
+    "cat": "Hamstrings",
+    "muscles": [
+      "hamstrings",
+      "glutes",
+      "lower back",
+      "abs"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Hinge on one leg, back leg extends behind",
+      "Keep hips square and spine neutral",
+      "Drive hips forward to stand tall"
+    ],
+    "mistakes": [
+      "Opening the hips toward the ceiling",
+      "Rounding the back to reach lower"
+    ],
+    "kw": [
+      "single leg romanian deadlift",
+      "sl rdl",
+      "one leg rdl"
+    ]
+  },
+  {
+    "id": "hip_thrust",
+    "name": "Hip Thrust (Barbell)",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Upper back on bench, bar over hip crease",
+      "Drive through heels, ribs down, chin tucked",
+      "Squeeze glutes hard at full hip extension"
+    ],
+    "mistakes": [
+      "Overarching the lower back at the top",
+      "Pushing through the toes, loading quads"
+    ],
+    "kw": [
+      "barbell hip thrust",
+      "bb hip thrust",
+      "glute thrust"
+    ]
+  },
+  {
+    "id": "glute_bridge",
+    "name": "Glute Bridge",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Lie on your back, feet flat near glutes",
+      "Drive hips up by squeezing your glutes",
+      "Hold the top, then lower with control"
+    ],
+    "mistakes": [
+      "Arching the lower back instead of squeezing",
+      "Pushing through toes instead of heels"
+    ],
+    "kw": [
+      "bridge",
+      "floor bridge",
+      "hip bridge"
+    ]
+  },
+  {
+    "id": "single_leg_glute_bridge",
+    "name": "Single-Leg Glute Bridge",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Extend one leg, plant the other foot flat",
+      "Drive hips up, keeping them level",
+      "Squeeze the glute and lower slowly"
+    ],
+    "mistakes": [
+      "Letting hips rotate or drop sideways",
+      "Overarching the back at the top"
+    ],
+    "kw": [
+      "one leg bridge",
+      "single leg bridge"
+    ]
+  },
+  {
+    "id": "cable_pull_through",
+    "name": "Cable Pull-Through",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes",
+      "hamstrings",
+      "lower back"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Face away from the cable, rope between legs",
+      "Push hips back with soft knees",
+      "Drive hips forward and squeeze glutes"
+    ],
+    "mistakes": [
+      "Squatting instead of hinging at the hips",
+      "Pulling with the arms rather than hips"
+    ],
+    "kw": [
+      "pull through",
+      "cable pullthrough",
+      "rope pull through"
+    ]
+  },
+  {
+    "id": "hip_abductor_machine",
+    "name": "Hip Abductor Machine",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Sit back with pads on outer thighs",
+      "Push knees outward in a smooth arc",
+      "Pause, then return slowly under control"
+    ],
+    "mistakes": [
+      "Using momentum to bounce the pads",
+      "Leaning forward to cut the range"
+    ],
+    "kw": [
+      "abductor machine",
+      "outer thigh machine",
+      "hip abduction"
+    ]
+  },
+  {
+    "id": "hip_adductor_machine",
+    "name": "Hip Adductor Machine",
+    "cat": "Glutes",
+    "muscles": [
+      "adductors"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Sit tall, pads on inner thighs",
+      "Squeeze legs together smoothly",
+      "Return slowly without slamming the weight stack"
+    ],
+    "mistakes": [
+      "Using too much weight with a short range",
+      "Rocking the torso to push the pads"
+    ],
+    "kw": [
+      "adductor machine",
+      "inner thigh machine",
+      "hip adduction"
+    ]
+  },
+  {
+    "id": "cable_glute_kickback",
+    "name": "Cable Glute Kickback",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Attach cuff to ankle, hinge slightly forward",
+      "Kick the leg straight back, squeezing the glute",
+      "Control the return without arching the back"
+    ],
+    "mistakes": [
+      "Swinging the leg and arching the lower back",
+      "Rotating the hips open to lift higher"
+    ],
+    "kw": [
+      "glute kickback",
+      "cable kickback",
+      "cable donkey kick"
+    ]
+  },
+  {
+    "id": "donkey_kick",
+    "name": "Donkey Kick",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes",
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Start on hands and knees, core braced",
+      "Lift one bent leg toward the ceiling",
+      "Squeeze glute at top, lower without dropping"
+    ],
+    "mistakes": [
+      "Arching the lower back to lift higher",
+      "Letting the hips twist sideways"
+    ],
+    "kw": [
+      "donkey kicks",
+      "quadruped kickback",
+      "glute kick"
+    ]
+  },
+  {
+    "id": "banded_lateral_walk",
+    "name": "Banded Lateral Walk",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes",
+      "adductors"
+    ],
+    "equipment": "band",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Place the band above knees, slight squat",
+      "Step sideways keeping tension on the band",
+      "Keep toes forward and knees pushed out"
+    ],
+    "mistakes": [
+      "Letting knees cave in as you step",
+      "Standing too tall and losing tension"
+    ],
+    "kw": [
+      "band walk",
+      "monster walk",
+      "lateral band walk"
+    ]
+  },
+  {
+    "id": "sumo_deadlift",
+    "name": "Deadlift (Sumo)",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes",
+      "adductors",
+      "hamstrings",
+      "quads",
+      "lower back"
+    ],
+    "equipment": "barbell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Take a wide stance, toes pointed out",
+      "Pull slack out, chest up, shins vertical",
+      "Push the floor apart and stand tall"
+    ],
+    "mistakes": [
+      "Hips shooting up before the bar moves",
+      "Knees caving inward off the floor"
+    ],
+    "kw": [
+      "sumo dl",
+      "wide stance deadlift",
+      "sumo"
+    ]
+  },
+  {
+    "id": "dumbbell_sumo_squat",
+    "name": "Dumbbell Sumo Squat",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes",
+      "adductors",
+      "quads"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Take a wide stance, toes out, hold one dumbbell low",
+      "Sit straight down, knees follow your toes",
+      "Squeeze glutes and inner thighs to stand"
+    ],
+    "mistakes": [
+      "Letting knees cave inward",
+      "Leaning forward and rounding the back"
+    ],
+    "kw": [
+      "sumo squat",
+      "db sumo squat",
+      "plie squat"
+    ]
+  },
+  {
+    "id": "curtsy_lunge",
+    "name": "Curtsy Lunge",
+    "cat": "Glutes",
+    "muscles": [
+      "glutes",
+      "quads",
+      "adductors"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Step one leg diagonally behind the other",
+      "Lower until the front thigh is parallel",
+      "Drive through the front heel to return"
+    ],
+    "mistakes": [
+      "Letting the front knee collapse inward",
+      "Twisting the torso as you step back"
+    ],
+    "kw": [
+      "curtsey lunge",
+      "cross behind lunge"
+    ]
+  },
+  {
+    "id": "standing_calf_raise",
+    "name": "Standing Calf Raise",
+    "cat": "Calves",
+    "muscles": [
+      "calves"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Place balls of feet on the platform edge",
+      "Lower heels for a deep calf stretch",
+      "Rise onto toes and pause at the top"
+    ],
+    "mistakes": [
+      "Bouncing out of the bottom of the rep",
+      "Bending knees to lift the weight"
+    ],
+    "kw": [
+      "calf raise",
+      "machine calf raise",
+      "standing calf"
+    ]
+  },
+  {
+    "id": "seated_calf_raise",
+    "name": "Seated Calf Raise",
+    "cat": "Calves",
+    "muscles": [
+      "calves"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Pad on lower thighs, balls of feet on platform",
+      "Lower heels fully for a deep stretch",
+      "Press up high and squeeze for a second"
+    ],
+    "mistakes": [
+      "Cutting range short at the bottom",
+      "Bouncing instead of pausing at the top"
+    ],
+    "kw": [
+      "seated calves",
+      "soleus raise",
+      "seated calf"
+    ]
+  },
+  {
+    "id": "bodyweight_calf_raise",
+    "name": "Bodyweight Calf Raise",
+    "cat": "Calves",
+    "muscles": [
+      "calves"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Stand on the edge of a step",
+      "Lower heels below the step for a stretch",
+      "Rise as high as possible and pause"
+    ],
+    "mistakes": [
+      "Rushing reps with a half range",
+      "Rolling to the outsides of the feet"
+    ],
+    "kw": [
+      "calf raises",
+      "step calf raise",
+      "bw calf raise"
+    ]
+  },
+  {
+    "id": "single_leg_calf_raise",
+    "name": "Single-Leg Calf Raise",
+    "cat": "Calves",
+    "muscles": [
+      "calves"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Hold a wall for balance, one foot on a step",
+      "Lower heel fully, then rise onto the big toe",
+      "Squeeze at the top, lower slowly"
+    ],
+    "mistakes": [
+      "Bending the knee to cheat the lift",
+      "Rolling the ankle outward at the top"
+    ],
+    "kw": [
+      "one leg calf raise",
+      "single calf raise"
+    ]
+  },
+  {
+    "id": "leg_press_calf_raise",
+    "name": "Leg Press Calf Raise",
+    "cat": "Calves",
+    "muscles": [
+      "calves"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Place balls of feet low on the platform",
+      "Press through the toes with knees nearly straight",
+      "Lower heels slowly for a full stretch"
+    ],
+    "mistakes": [
+      "Locking knees hard under heavy load",
+      "Using short, bouncy reps"
+    ],
+    "kw": [
+      "calf press",
+      "leg press calves",
+      "calf raise on leg press"
+    ]
+  },
+  {
+    "id": "plank",
+    "name": "Plank",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "obliques",
+      "lower back"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 3.5,
+    "cues": [
+      "Place elbows under shoulders, body in a straight line",
+      "Squeeze glutes and brace abs hard",
+      "Breathe steadily, keep neck neutral"
+    ],
+    "mistakes": [
+      "Letting hips sag toward the floor",
+      "Piking hips up to ease the load"
+    ],
+    "kw": [
+      "front plank",
+      "forearm plank",
+      "plank hold"
+    ]
+  },
+  {
+    "id": "side_plank",
+    "name": "Side Plank",
+    "cat": "Core",
+    "muscles": [
+      "obliques",
+      "abs",
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 3.5,
+    "cues": [
+      "Stack feet, elbow directly under the shoulder",
+      "Lift hips so the body forms a straight line",
+      "Keep hips from rotating forward or back"
+    ],
+    "mistakes": [
+      "Letting the hips sag toward the floor",
+      "Rolling the chest down or up"
+    ],
+    "kw": [
+      "side bridge",
+      "lateral plank",
+      "oblique plank"
+    ]
+  },
+  {
+    "id": "hanging_leg_raise",
+    "name": "Hanging Leg Raise",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 4,
+    "cues": [
+      "Hang with shoulders packed, avoid swinging",
+      "Raise straight legs until parallel or higher",
+      "Lower slowly without letting the body swing"
+    ],
+    "mistakes": [
+      "Swinging with momentum from the hips",
+      "Using hip flexors only with no ab curl"
+    ],
+    "kw": [
+      "hanging leg raises",
+      "hlr",
+      "toes to bar progression"
+    ]
+  },
+  {
+    "id": "hanging_knee_raise",
+    "name": "Hanging Knee Raise",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 4,
+    "cues": [
+      "Hang with shoulders active, legs together",
+      "Lift knees to chest, curling the pelvis up",
+      "Lower with control, no swinging"
+    ],
+    "mistakes": [
+      "Kipping with the legs to lift higher",
+      "Dropping down quickly after each rep"
+    ],
+    "kw": [
+      "knee raise",
+      "hanging knee tuck",
+      "hanging knee raises"
+    ]
+  },
+  {
+    "id": "crunch",
+    "name": "Crunch",
+    "cat": "Core",
+    "muscles": [
+      "abs"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Lie back, knees bent, hands by your temples",
+      "Curl ribs toward hips, lifting shoulder blades",
+      "Lower slowly without resting your head"
+    ],
+    "mistakes": [
+      "Pulling on the neck with your hands",
+      "Using momentum rather than the abs"
+    ],
+    "kw": [
+      "ab crunch",
+      "floor crunch",
+      "crunches"
+    ]
+  },
+  {
+    "id": "bicycle_crunch",
+    "name": "Bicycle Crunch",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "obliques"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.8,
+    "cues": [
+      "Hands behind head, lower back pressed down",
+      "Rotate elbow toward opposite knee as legs cycle",
+      "Extend the other leg low, move slowly"
+    ],
+    "mistakes": [
+      "Pulling on the neck to rotate",
+      "Rushing reps so the obliques don't work"
+    ],
+    "kw": [
+      "bicycle crunches",
+      "bicycles",
+      "cycle crunch"
+    ]
+  },
+  {
+    "id": "russian_twist",
+    "name": "Russian Twist",
+    "cat": "Core",
+    "muscles": [
+      "obliques",
+      "abs"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.8,
+    "cues": [
+      "Lean back with a flat spine, feet up",
+      "Rotate torso so hands touch each side",
+      "Move through the ribs, not just the arms"
+    ],
+    "mistakes": [
+      "Rounding the back to hold the position",
+      "Swinging arms without rotating the torso"
+    ],
+    "kw": [
+      "russian twists",
+      "seated twist",
+      "oblique twist"
+    ]
+  },
+  {
+    "id": "mountain_climbers",
+    "name": "Mountain Climbers",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors",
+      "quads",
+      "front delts"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 8,
+    "cues": [
+      "Start in a high plank, hands under shoulders",
+      "Drive knees toward chest alternately and quickly",
+      "Keep hips low and core braced"
+    ],
+    "mistakes": [
+      "Bouncing hips up high like a pike",
+      "Letting hands drift forward of the shoulders"
+    ],
+    "kw": [
+      "mountain climber",
+      "climbers",
+      "running plank"
+    ]
+  },
+  {
+    "id": "lying_leg_raise",
+    "name": "Lying Leg Raise",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Lie flat, press lower back into the floor",
+      "Raise straight legs to vertical",
+      "Lower slowly, stopping just above the floor"
+    ],
+    "mistakes": [
+      "Arching the lower back as legs lower",
+      "Dropping legs quickly without control"
+    ],
+    "kw": [
+      "leg raises",
+      "lying leg raises",
+      "flat leg raise"
+    ]
+  },
+  {
+    "id": "dead_bug",
+    "name": "Dead Bug",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Press lower back into the floor throughout",
+      "Lower opposite arm and leg slowly together",
+      "Exhale as you extend, keep ribs down"
+    ],
+    "mistakes": [
+      "Letting the lower back arch off the floor",
+      "Moving fast and losing core tension"
+    ],
+    "kw": [
+      "dead bugs",
+      "deadbug"
+    ]
+  },
+  {
+    "id": "bird_dog",
+    "name": "Bird Dog",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "lower back",
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Start on all fours, spine neutral",
+      "Extend opposite arm and leg without rotating",
+      "Hold a beat, then return under control"
+    ],
+    "mistakes": [
+      "Rotating the hips as the leg lifts",
+      "Arching the lower back at full extension"
+    ],
+    "kw": [
+      "bird dogs",
+      "quadruped",
+      "opposite arm leg raise"
+    ]
+  },
+  {
+    "id": "hollow_hold",
+    "name": "Hollow Hold",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 3.5,
+    "cues": [
+      "Press lower back into the floor",
+      "Lift shoulders and legs a few inches up",
+      "Reach arms overhead, keep ribs pulled down"
+    ],
+    "mistakes": [
+      "Letting the lower back peel off the floor",
+      "Holding breath and tensing the neck"
+    ],
+    "kw": [
+      "hollow body hold",
+      "hollow body",
+      "hollow rock"
+    ]
+  },
+  {
+    "id": "ab_wheel_rollout",
+    "name": "Ab Wheel Rollout",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "lats",
+      "front delts"
+    ],
+    "equipment": "other",
+    "type": "bodyweight",
+    "met": 4,
+    "cues": [
+      "Kneel, tuck your pelvis and brace the abs",
+      "Roll out slowly while keeping the back flat",
+      "Pull back using abs, not the hips"
+    ],
+    "mistakes": [
+      "Sagging the lower back as you extend",
+      "Rolling out further than you can control"
+    ],
+    "kw": [
+      "ab roller",
+      "ab wheel",
+      "rollout",
+      "wheel rollout"
+    ]
+  },
+  {
+    "id": "l_sit",
+    "name": "L-Sit",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors",
+      "triceps"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 4,
+    "cues": [
+      "Press the floor away, shoulders over hands",
+      "Lock knees and lift legs parallel to the floor",
+      "Keep ribs tight and hold the position"
+    ],
+    "mistakes": [
+      "Shrugging shoulders up toward the ears",
+      "Letting the legs sink below parallel"
+    ],
+    "kw": [
+      "l sit hold",
+      "l-sit",
+      "parallette l sit"
+    ]
+  },
+  {
+    "id": "cable_crunch",
+    "name": "Cable Crunch",
+    "cat": "Core",
+    "muscles": [
+      "abs"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Kneel under the rope, hands by your head",
+      "Curl ribs toward hips, rounding the spine",
+      "Hold the squeeze, return without sitting back"
+    ],
+    "mistakes": [
+      "Pulling with arms instead of the abs",
+      "Sitting back on the heels to cheat"
+    ],
+    "kw": [
+      "kneeling cable crunch",
+      "rope crunch",
+      "cable ab crunch"
+    ]
+  },
+  {
+    "id": "ab_crunch_machine",
+    "name": "Ab Crunch Machine",
+    "cat": "Core",
+    "muscles": [
+      "abs"
+    ],
+    "equipment": "machine",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Adjust seat so pads sit across the chest",
+      "Curl torso forward by contracting the abs",
+      "Pause at the bottom, return slowly"
+    ],
+    "mistakes": [
+      "Pushing with hips or legs to move weight",
+      "Moving too fast with no squeeze"
+    ],
+    "kw": [
+      "ab machine",
+      "crunch machine",
+      "seated ab crunch"
+    ]
+  },
+  {
+    "id": "cable_woodchop",
+    "name": "Cable Woodchop",
+    "cat": "Core",
+    "muscles": [
+      "obliques",
+      "abs"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Set cable high, stand side-on, feet planted",
+      "Rotate through the torso, pulling diagonally down",
+      "Pivot the back foot, keep arms mostly straight"
+    ],
+    "mistakes": [
+      "Pulling with arms rather than rotating the torso",
+      "Twisting the lower back instead of the hips"
+    ],
+    "kw": [
+      "woodchopper",
+      "wood chop",
+      "cable chop"
+    ]
+  },
+  {
+    "id": "pallof_press",
+    "name": "Pallof Press",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "obliques"
+    ],
+    "equipment": "cable",
+    "type": "strength",
+    "met": 3.5,
+    "cues": [
+      "Stand side-on, handle at chest, feet braced",
+      "Press arms straight out without twisting",
+      "Hold two seconds, then return to chest"
+    ],
+    "mistakes": [
+      "Letting the torso rotate toward the cable",
+      "Leaning away to counter the load"
+    ],
+    "kw": [
+      "pallof",
+      "anti rotation press",
+      "cable pallof"
+    ]
+  },
+  {
+    "id": "reverse_crunch",
+    "name": "Reverse Crunch",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Lie back, knees bent at 90 degrees",
+      "Curl hips off the floor toward your ribs",
+      "Lower slowly without swinging the legs"
+    ],
+    "mistakes": [
+      "Swinging legs to lift the hips",
+      "Dropping hips down quickly"
+    ],
+    "kw": [
+      "reverse crunches",
+      "hip lift crunch"
+    ]
+  },
+  {
+    "id": "v_up",
+    "name": "V-Up",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 4,
+    "cues": [
+      "Lie flat with arms overhead and legs straight",
+      "Lift legs and torso together to form a V",
+      "Lower slowly, keeping legs straight"
+    ],
+    "mistakes": [
+      "Throwing the arms to build momentum",
+      "Bending the knees to make it easier"
+    ],
+    "kw": [
+      "v ups",
+      "v sit up",
+      "jackknife"
+    ]
+  },
+  {
+    "id": "flutter_kicks",
+    "name": "Flutter Kicks",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 3.5,
+    "cues": [
+      "Lie back, lower back pressed into the floor",
+      "Lift legs slightly, kick alternately in small arcs",
+      "Keep abs tight and breathe steadily"
+    ],
+    "mistakes": [
+      "Letting the lower back arch off the floor",
+      "Kicking too high, losing core tension"
+    ],
+    "kw": [
+      "flutter kick",
+      "scissor kicks",
+      "leg flutters"
+    ]
+  },
+  {
+    "id": "decline_sit_up",
+    "name": "Decline Sit-Up",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "hip flexors"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.8,
+    "cues": [
+      "Hook feet under pads, arms crossed on chest",
+      "Curl up by contracting the abs",
+      "Lower slowly to the bench without collapsing"
+    ],
+    "mistakes": [
+      "Pulling on the neck with the hands",
+      "Using hip flexors to throw the torso up"
+    ],
+    "kw": [
+      "decline situp",
+      "decline bench sit up",
+      "sit ups"
+    ]
+  },
+  {
+    "id": "plank_shoulder_taps",
+    "name": "Plank Shoulder Taps",
+    "cat": "Core",
+    "muscles": [
+      "abs",
+      "obliques",
+      "front delts"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 4,
+    "cues": [
+      "Start in a high plank, feet wider than hips",
+      "Tap the opposite shoulder, keep hips level",
+      "Brace abs so the body does not rock"
+    ],
+    "mistakes": [
+      "Rocking hips side to side as you tap",
+      "Letting hips pike up"
+    ],
+    "kw": [
+      "shoulder taps",
+      "plank taps",
+      "high plank taps"
+    ]
+  },
+  {
+    "id": "heel_touches",
+    "name": "Heel Touches",
+    "cat": "Core",
+    "muscles": [
+      "obliques",
+      "abs"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 3.5,
+    "cues": [
+      "Lie with knees bent, shoulders slightly lifted",
+      "Reach to touch one heel, then the other",
+      "Keep shoulders off the floor and ribs tight"
+    ],
+    "mistakes": [
+      "Pulling the neck forward to reach",
+      "Dropping shoulders flat between touches"
+    ],
+    "kw": [
+      "alternating heel touch",
+      "heel taps",
+      "oblique crunch"
+    ]
+  },
+  {
+    "id": "burpees",
+    "name": "Burpees",
+    "cat": "Full Body",
+    "muscles": [
+      "quads",
+      "chest",
+      "triceps",
+      "abs",
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 8,
+    "cues": [
+      "Drop hands down, jump feet back to plank",
+      "Lower chest to the floor, then press up",
+      "Jump feet in and leap up explosively"
+    ],
+    "mistakes": [
+      "Letting the hips sag in the plank",
+      "Landing with stiff knees on the jump"
+    ],
+    "kw": [
+      "burpee",
+      "squat thrust",
+      "burpee jump"
+    ]
+  },
+  {
+    "id": "kettlebell_swing",
+    "name": "Kettlebell Swing",
+    "cat": "Full Body",
+    "muscles": [
+      "glutes",
+      "hamstrings",
+      "lower back",
+      "abs",
+      "front delts"
+    ],
+    "equipment": "kettlebell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Hinge back and hike the bell behind legs",
+      "Snap hips forward to float the bell up",
+      "Let the bell fall back, hinge again"
+    ],
+    "mistakes": [
+      "Squatting and lifting with the arms",
+      "Hyperextending the lower back at the top"
+    ],
+    "kw": [
+      "kb swing",
+      "russian swing",
+      "swings"
+    ]
+  },
+  {
+    "id": "kettlebell_goblet_squat",
+    "name": "Kettlebell Goblet Squat",
+    "cat": "Full Body",
+    "muscles": [
+      "quads",
+      "glutes",
+      "abs",
+      "upper back"
+    ],
+    "equipment": "kettlebell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Hold the bell by the horns at your chest",
+      "Sit deep between your hips, elbows inside knees",
+      "Drive up through heels and stand tall"
+    ],
+    "mistakes": [
+      "Letting the bell pull your chest forward",
+      "Knees caving inward on the way up"
+    ],
+    "kw": [
+      "kb goblet squat",
+      "kettlebell squat"
+    ]
+  },
+  {
+    "id": "kettlebell_clean",
+    "name": "Kettlebell Clean",
+    "cat": "Full Body",
+    "muscles": [
+      "glutes",
+      "hamstrings",
+      "traps",
+      "front delts",
+      "forearms"
+    ],
+    "equipment": "kettlebell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Hike the bell back, hinge, keep the arm close",
+      "Snap hips and pull the bell up the body",
+      "Rotate hand around and catch in the rack"
+    ],
+    "mistakes": [
+      "Letting the bell crash on the forearm",
+      "Curling the bell with the arm instead of hips"
+    ],
+    "kw": [
+      "kb clean",
+      "single arm kettlebell clean"
+    ]
+  },
+  {
+    "id": "kettlebell_snatch",
+    "name": "Kettlebell Snatch",
+    "cat": "Full Body",
+    "muscles": [
+      "glutes",
+      "hamstrings",
+      "front delts",
+      "traps",
+      "forearms"
+    ],
+    "equipment": "kettlebell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Hinge back and swing the bell between the legs",
+      "Drive hips and pull the bell straight up",
+      "Punch through at the top, lock out overhead"
+    ],
+    "mistakes": [
+      "Swinging the bell wide, not close to the body",
+      "Letting the bell slam the wrist at the top"
+    ],
+    "kw": [
+      "kb snatch",
+      "single arm snatch"
+    ]
+  },
+  {
+    "id": "turkish_get_up",
+    "name": "Turkish Get-Up",
+    "cat": "Full Body",
+    "muscles": [
+      "abs",
+      "front delts",
+      "glutes",
+      "quads",
+      "obliques"
+    ],
+    "equipment": "kettlebell",
+    "type": "strength",
+    "met": 5,
+    "cues": [
+      "Keep eyes on the weight throughout the movement",
+      "Move deliberately through each step, no rushing",
+      "Keep the arm vertical over the shoulder"
+    ],
+    "mistakes": [
+      "Letting the weighted arm drift or bend",
+      "Rushing steps and losing shoulder stability"
+    ],
+    "kw": [
+      "tgu",
+      "get up",
+      "kb turkish getup",
+      "turkish getup"
+    ]
+  },
+  {
+    "id": "dumbbell_thruster",
+    "name": "Dumbbell Thruster",
+    "cat": "Full Body",
+    "muscles": [
+      "quads",
+      "glutes",
+      "front delts",
+      "triceps"
+    ],
+    "equipment": "dumbbell",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Hold dumbbells at shoulders, squat to parallel",
+      "Drive up explosively through your legs",
+      "Use the momentum to press overhead, lock out"
+    ],
+    "mistakes": [
+      "Pressing before the legs finish driving",
+      "Leaning back at the top of the press"
+    ],
+    "kw": [
+      "thrusters",
+      "db thruster",
+      "squat to press"
+    ]
+  },
+  {
+    "id": "box_jump",
+    "name": "Box Jump",
+    "cat": "Full Body",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves"
+    ],
+    "equipment": "bodyweight",
+    "type": "bodyweight",
+    "met": 6,
+    "cues": [
+      "Swing arms and sink into a quarter squat",
+      "Jump up and land softly with bent knees",
+      "Stand fully on the box, then step down"
+    ],
+    "mistakes": [
+      "Jumping down off the box, stressing the Achilles",
+      "Landing with stiff, locked knees"
+    ],
+    "kw": [
+      "box jumps",
+      "plyo box jump",
+      "jump to box"
+    ]
+  },
+  {
+    "id": "bear_crawl",
+    "name": "Bear Crawl",
+    "cat": "Full Body",
+    "muscles": [
+      "abs",
+      "front delts",
+      "quads",
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 6,
+    "cues": [
+      "Hands under shoulders, knees hover an inch off floor",
+      "Move opposite hand and foot together",
+      "Keep hips low and back flat"
+    ],
+    "mistakes": [
+      "Raising hips up high while crawling",
+      "Taking wide, clumsy steps"
+    ],
+    "kw": [
+      "bear crawls",
+      "crawling",
+      "animal crawl"
+    ]
+  },
+  {
+    "id": "battle_ropes",
+    "name": "Battle Ropes",
+    "cat": "Full Body",
+    "muscles": [
+      "front delts",
+      "abs",
+      "upper back",
+      "forearms"
+    ],
+    "equipment": "other",
+    "type": "timed",
+    "met": 8,
+    "cues": [
+      "Set a quarter squat with a braced core",
+      "Whip the ropes with fast alternating arms",
+      "Keep waves flowing and the chest tall"
+    ],
+    "mistakes": [
+      "Standing upright and using only the arms",
+      "Letting waves die out from poor rhythm"
+    ],
+    "kw": [
+      "battle rope",
+      "rope waves",
+      "ropes"
+    ]
+  },
+  {
+    "id": "sled_push",
+    "name": "Sled Push",
+    "cat": "Full Body",
+    "muscles": [
+      "quads",
+      "glutes",
+      "calves",
+      "front delts"
+    ],
+    "equipment": "other",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Lean into the sled with straight arms",
+      "Drive with powerful short steps",
+      "Keep the back flat and hips low"
+    ],
+    "mistakes": [
+      "Standing too upright and losing drive",
+      "Taking long steps and stalling momentum"
+    ],
+    "kw": [
+      "prowler push",
+      "sled",
+      "prowler"
+    ]
+  },
+  {
+    "id": "medicine_ball_slam",
+    "name": "Medicine Ball Slam",
+    "cat": "Full Body",
+    "muscles": [
+      "abs",
+      "lats",
+      "front delts",
+      "glutes"
+    ],
+    "equipment": "other",
+    "type": "strength",
+    "met": 6,
+    "cues": [
+      "Reach the ball overhead, rising onto your toes",
+      "Slam it down hard with a flexed spine",
+      "Squat to pick it up, keep chest up"
+    ],
+    "mistakes": [
+      "Using only the arms with no hip drive",
+      "Slamming without extending fully overhead"
+    ],
+    "kw": [
+      "ball slam",
+      "med ball slam",
+      "slam ball"
+    ]
+  },
+  {
+    "id": "treadmill_walk",
+    "name": "Treadmill Walk",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings",
+      "calves"
+    ],
+    "equipment": "machine",
+    "type": "cardio",
+    "met": 3.5,
+    "cues": [
+      "Stand tall, eyes ahead, arms swinging naturally",
+      "Land mid-foot with a relaxed stride",
+      "Avoid holding the handrails"
+    ],
+    "mistakes": [
+      "Gripping the rails and leaning back",
+      "Overstriding with heavy heel strikes"
+    ],
+    "kw": [
+      "treadmill",
+      "walking",
+      "walk on treadmill"
+    ]
+  },
+  {
+    "id": "incline_treadmill_walk",
+    "name": "Incline Treadmill Walk",
+    "cat": "Cardio",
+    "muscles": [
+      "glutes",
+      "hamstrings",
+      "calves",
+      "quads"
+    ],
+    "equipment": "machine",
+    "type": "cardio",
+    "met": 6,
+    "cues": [
+      "Set incline between 8 and 12 percent",
+      "Walk with a tall chest and steady pace",
+      "Let arms swing, skip the rails"
+    ],
+    "mistakes": [
+      "Holding the handrails and leaning back",
+      "Taking oversized strides that strain the knees"
+    ],
+    "kw": [
+      "incline walk",
+      "12 3 30",
+      "incline treadmill"
+    ]
+  },
+  {
+    "id": "brisk_walk",
+    "name": "Brisk Walk",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings",
+      "calves"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 4.3,
+    "cues": [
+      "Walk tall with relaxed, swinging arms",
+      "Take quick, short steps at a steady pace",
+      "Breathe rhythmically, keep shoulders relaxed"
+    ],
+    "mistakes": [
+      "Hunching over the phone while walking",
+      "Overstriding and landing hard on heels"
+    ],
+    "kw": [
+      "walk",
+      "power walk",
+      "outdoor walk",
+      "brisk walking"
+    ]
+  },
+  {
+    "id": "run_easy",
+    "name": "Run (Easy)",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "hamstrings",
+      "glutes",
+      "calves"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 8.3,
+    "cues": [
+      "Keep a pace where you can still talk",
+      "Land under your hips with quick, light steps",
+      "Relax shoulders and swing arms to the rhythm"
+    ],
+    "mistakes": [
+      "Starting too fast and fading early",
+      "Overstriding with a hard heel strike"
+    ],
+    "kw": [
+      "easy run",
+      "jog",
+      "jogging",
+      "running",
+      "zone 2 run"
+    ]
+  },
+  {
+    "id": "run_tempo",
+    "name": "Run (Tempo)",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "hamstrings",
+      "glutes",
+      "calves"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 11,
+    "cues": [
+      "Hold a comfortably hard pace you can sustain",
+      "Stay relaxed in the face, shoulders, and hands",
+      "Keep cadence quick with light mid-foot landings"
+    ],
+    "mistakes": [
+      "Surging early and fading in the final minutes",
+      "Clenching fists and tensing the shoulders"
+    ],
+    "kw": [
+      "tempo run",
+      "threshold run",
+      "steady run"
+    ]
+  },
+  {
+    "id": "sprint_intervals",
+    "name": "Sprint Intervals",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "hamstrings",
+      "glutes",
+      "calves"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 12,
+    "cues": [
+      "Warm up fully before any all-out sprint",
+      "Drive knees, pump arms, lean slightly forward",
+      "Walk or jog to recover between sprints"
+    ],
+    "mistakes": [
+      "Sprinting without a proper warm-up",
+      "Cutting rest short so quality drops"
+    ],
+    "kw": [
+      "sprints",
+      "hiit sprints",
+      "interval run",
+      "sprint"
+    ]
+  },
+  {
+    "id": "cycling_stationary",
+    "name": "Cycling (Stationary Bike)",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "hamstrings",
+      "glutes",
+      "calves"
+    ],
+    "equipment": "machine",
+    "type": "cardio",
+    "met": 6.8,
+    "cues": [
+      "Set seat height so knees stay slightly bent",
+      "Keep a smooth cadence around 80 to 100 rpm",
+      "Stay tall with relaxed shoulders and hands"
+    ],
+    "mistakes": [
+      "Seat too low, straining the knees",
+      "Gripping the handlebars tightly and hunching"
+    ],
+    "kw": [
+      "stationary bike",
+      "exercise bike",
+      "spin bike",
+      "bike"
+    ]
+  },
+  {
+    "id": "cycling_outdoor",
+    "name": "Cycling (Outdoor)",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "hamstrings",
+      "glutes",
+      "calves"
+    ],
+    "equipment": "other",
+    "type": "cardio",
+    "met": 7.5,
+    "cues": [
+      "Check seat height and wear a helmet",
+      "Pedal in a smooth, steady cadence",
+      "Keep elbows soft and eyes up on the road"
+    ],
+    "mistakes": [
+      "Riding in too high a gear at low cadence",
+      "Locking arms and tensing the shoulders"
+    ],
+    "kw": [
+      "cycling",
+      "bike ride",
+      "road bike",
+      "cycle"
+    ]
+  },
+  {
+    "id": "elliptical",
+    "name": "Elliptical",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "hamstrings",
+      "calves"
+    ],
+    "equipment": "machine",
+    "type": "cardio",
+    "met": 5,
+    "cues": [
+      "Stand tall, feet flat, hands lightly on handles",
+      "Push and pull smoothly through the full stride",
+      "Keep a steady resistance and cadence"
+    ],
+    "mistakes": [
+      "Leaning heavily on the handles",
+      "Letting the knees collapse inward"
+    ],
+    "kw": [
+      "cross trainer",
+      "elliptical trainer"
+    ]
+  },
+  {
+    "id": "stair_climber",
+    "name": "Stair Climber",
+    "cat": "Cardio",
+    "muscles": [
+      "glutes",
+      "quads",
+      "calves",
+      "hamstrings"
+    ],
+    "equipment": "machine",
+    "type": "cardio",
+    "met": 9,
+    "cues": [
+      "Stand tall with hands lightly on the rails",
+      "Step through the whole foot, driving through heels",
+      "Keep a steady pace without leaning"
+    ],
+    "mistakes": [
+      "Hunching over and gripping the rails",
+      "Taking tiny shallow steps"
+    ],
+    "kw": [
+      "stairmaster",
+      "stair machine",
+      "step mill"
+    ]
+  },
+  {
+    "id": "rowing_machine",
+    "name": "Rowing Machine",
+    "cat": "Cardio",
+    "muscles": [
+      "lats",
+      "quads",
+      "glutes",
+      "hamstrings",
+      "upper back"
+    ],
+    "equipment": "machine",
+    "type": "cardio",
+    "met": 7,
+    "cues": [
+      "Drive with legs first, then lean back",
+      "Pull the handle to lower ribs, elbows past body",
+      "Reverse the order: arms, torso, then legs"
+    ],
+    "mistakes": [
+      "Pulling with the arms before the legs finish",
+      "Rounding the back at the catch"
+    ],
+    "kw": [
+      "rower",
+      "erg",
+      "concept2",
+      "rowing erg"
+    ]
+  },
+  {
+    "id": "skipping_rope",
+    "name": "Skipping Rope",
+    "cat": "Cardio",
+    "muscles": [
+      "calves",
+      "quads",
+      "front delts",
+      "forearms"
+    ],
+    "equipment": "other",
+    "type": "cardio",
+    "met": 11,
+    "cues": [
+      "Keep elbows close, turn the rope with the wrists",
+      "Jump low, landing softly on the balls of feet",
+      "Stay tall with relaxed shoulders"
+    ],
+    "mistakes": [
+      "Jumping too high and wasting energy",
+      "Swinging the rope with big arm circles"
+    ],
+    "kw": [
+      "jump rope",
+      "skipping",
+      "rope skipping"
+    ]
+  },
+  {
+    "id": "swimming",
+    "name": "Swimming",
+    "cat": "Cardio",
+    "muscles": [
+      "lats",
+      "front delts",
+      "abs",
+      "quads"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 6,
+    "cues": [
+      "Keep body long and flat at the surface",
+      "Rotate hips and shoulders with each stroke",
+      "Exhale steadily underwater, breathe to the side"
+    ],
+    "mistakes": [
+      "Lifting the head and sinking the hips",
+      "Holding the breath until gasping"
+    ],
+    "kw": [
+      "swim",
+      "laps",
+      "freestyle",
+      "swimming laps"
+    ]
+  },
+  {
+    "id": "hiit_circuit",
+    "name": "HIIT Circuit",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "abs",
+      "front delts"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 8,
+    "cues": [
+      "Work hard for 30 seconds, rest 30 seconds",
+      "Keep form clean even as you fatigue",
+      "Pick 4 to 6 moves and repeat rounds"
+    ],
+    "mistakes": [
+      "Going too hard early and fading fast",
+      "Letting form break down when tired"
+    ],
+    "kw": [
+      "hiit",
+      "circuit training",
+      "interval training",
+      "tabata"
+    ]
+  },
+  {
+    "id": "badminton",
+    "name": "Badminton",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "calves",
+      "front delts",
+      "forearms"
+    ],
+    "equipment": "other",
+    "type": "cardio",
+    "met": 5.5,
+    "cues": [
+      "Stay light on your toes in a ready stance",
+      "Use a relaxed grip and snap the wrist",
+      "Recover quickly to the centre after each shot"
+    ],
+    "mistakes": [
+      "Standing flat-footed between rallies",
+      "Gripping the racket too tightly"
+    ],
+    "kw": [
+      "shuttle",
+      "racket sport",
+      "badminton game"
+    ]
+  },
+  {
+    "id": "cricket",
+    "name": "Cricket",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "hamstrings",
+      "front delts",
+      "forearms"
+    ],
+    "equipment": "other",
+    "type": "cardio",
+    "met": 4.8,
+    "cues": [
+      "Warm up shoulders, hamstrings, and hips first",
+      "Keep a stable base and watch the ball",
+      "Stay active between overs, don't stand still"
+    ],
+    "mistakes": [
+      "Skipping warm-ups before bowling or batting",
+      "Bowling through fatigue with poor technique"
+    ],
+    "kw": [
+      "cricket match",
+      "net practice",
+      "batting"
+    ]
+  },
+  {
+    "id": "football",
+    "name": "Football (Soccer)",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "hamstrings",
+      "calves",
+      "glutes"
+    ],
+    "equipment": "other",
+    "type": "cardio",
+    "met": 7,
+    "cues": [
+      "Warm up with dynamic stretches first",
+      "Stay on the move to create passing options",
+      "Land softly and stay aware of your knees"
+    ],
+    "mistakes": [
+      "Skipping warm-ups and straining the hamstrings",
+      "Wearing shoes without adequate grip"
+    ],
+    "kw": [
+      "soccer",
+      "five a side",
+      "futsal",
+      "football match"
+    ]
+  },
+  {
+    "id": "jumping_jacks",
+    "name": "Jumping Jacks",
+    "cat": "Cardio",
+    "muscles": [
+      "calves",
+      "quads",
+      "front delts",
+      "abs"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 8,
+    "cues": [
+      "Jump feet wide while raising arms overhead",
+      "Land softly on the balls of the feet",
+      "Keep a steady rhythm with a tall chest"
+    ],
+    "mistakes": [
+      "Landing hard on heels with stiff knees",
+      "Letting the arms flop at half range"
+    ],
+    "kw": [
+      "jumping jack",
+      "star jumps",
+      "jacks"
+    ]
+  },
+  {
+    "id": "hiking",
+    "name": "Hiking",
+    "cat": "Cardio",
+    "muscles": [
+      "glutes",
+      "quads",
+      "calves",
+      "hamstrings"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 6,
+    "cues": [
+      "Take short, steady steps uphill",
+      "Use your legs and glutes, keep chest tall",
+      "Pace yourself and drink water regularly"
+    ],
+    "mistakes": [
+      "Starting too fast and burning out early",
+      "Hunching and looking down at your feet"
+    ],
+    "kw": [
+      "trek",
+      "trail walk",
+      "trekking",
+      "hill walk"
+    ]
+  },
+  {
+    "id": "basketball",
+    "name": "Basketball",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "calves",
+      "glutes",
+      "front delts"
+    ],
+    "equipment": "other",
+    "type": "cardio",
+    "met": 6.5,
+    "cues": [
+      "Stay low in an athletic stance",
+      "Keep your head up while dribbling",
+      "Land softly and control each cut"
+    ],
+    "mistakes": [
+      "Landing stiff-legged after jumps",
+      "Standing still between plays"
+    ],
+    "kw": [
+      "hoops",
+      "basketball game",
+      "pickup game"
+    ]
+  },
+  {
+    "id": "shadow_boxing",
+    "name": "Shadow Boxing",
+    "cat": "Cardio",
+    "muscles": [
+      "front delts",
+      "abs",
+      "obliques",
+      "calves"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 5.5,
+    "cues": [
+      "Stay on the balls of your feet",
+      "Rotate hips and shoulders into each punch",
+      "Keep guard up, return hands to the chin"
+    ],
+    "mistakes": [
+      "Locking elbows at the end of each punch",
+      "Dropping the non-punching hand"
+    ],
+    "kw": [
+      "boxing",
+      "shadow box",
+      "punching",
+      "heavy bag"
+    ]
+  },
+  {
+    "id": "assault_bike",
+    "name": "Assault Bike",
+    "cat": "Cardio",
+    "muscles": [
+      "quads",
+      "glutes",
+      "front delts",
+      "upper back"
+    ],
+    "equipment": "machine",
+    "type": "cardio",
+    "met": 9,
+    "cues": [
+      "Set the seat so knees stay slightly bent",
+      "Push and pull handles in sync with legs",
+      "Brace core and keep shoulders relaxed"
+    ],
+    "mistakes": [
+      "Going all out right away and fading fast",
+      "Sitting hunched and gripping the handles hard"
+    ],
+    "kw": [
+      "air bike",
+      "fan bike",
+      "airdyne",
+      "echo bike"
+    ]
+  },
+  {
+    "id": "yoga",
+    "name": "Yoga Session",
+    "cat": "Mobility",
+    "muscles": [
+      "hamstrings",
+      "hip flexors",
+      "lower back",
+      "abs"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 2.5,
+    "cues": [
+      "Move slowly and match breath to each pose",
+      "Press evenly through hands and feet",
+      "Never force a stretch, ease in gradually"
+    ],
+    "mistakes": [
+      "Forcing a pose beyond the comfortable range",
+      "Holding the breath during difficult poses"
+    ],
+    "kw": [
+      "yoga flow",
+      "hatha",
+      "vinyasa",
+      "yoga session"
+    ]
+  },
+  {
+    "id": "stretching",
+    "name": "Full-Body Stretching",
+    "cat": "Mobility",
+    "muscles": [
+      "hamstrings",
+      "hip flexors",
+      "quads",
+      "upper back"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 2.3,
+    "cues": [
+      "Move into each stretch slowly until mild tension",
+      "Hold 20 to 30 seconds, breathing steadily",
+      "Release gently, never bounce at end range"
+    ],
+    "mistakes": [
+      "Bouncing into a stretch at end range",
+      "Stretching cold muscles without warming up"
+    ],
+    "kw": [
+      "static stretching",
+      "stretch",
+      "cool down stretch"
+    ]
+  },
+  {
+    "id": "foam_rolling",
+    "name": "Foam Rolling",
+    "cat": "Mobility",
+    "muscles": [
+      "quads",
+      "hamstrings",
+      "upper back",
+      "glutes",
+      "calves"
+    ],
+    "equipment": "other",
+    "type": "cardio",
+    "met": 2,
+    "cues": [
+      "Roll slowly over a muscle, about an inch per second",
+      "Pause on tender spots for 20 to 30 seconds",
+      "Keep breathing and avoid rolling over joints"
+    ],
+    "mistakes": [
+      "Rolling quickly without pausing on tight spots",
+      "Rolling directly over joints or the lower back"
+    ],
+    "kw": [
+      "foam roller",
+      "myofascial release",
+      "self massage",
+      "smr"
+    ]
+  },
+  {
+    "id": "surya_namaskar",
+    "name": "Surya Namaskar",
+    "cat": "Mobility",
+    "muscles": [
+      "front delts",
+      "quads",
+      "hamstrings",
+      "abs",
+      "lower back"
+    ],
+    "equipment": "none",
+    "type": "cardio",
+    "met": 3.3,
+    "cues": [
+      "Sync each movement with an inhale or exhale",
+      "Keep hips lifted in downward dog, heels reaching",
+      "Move smoothly from pose to pose without rushing"
+    ],
+    "mistakes": [
+      "Rushing through poses without breath control",
+      "Collapsing the lower back in cobra"
+    ],
+    "kw": [
+      "sun salutation",
+      "sun salutations",
+      "suryanamaskar",
+      "yoga flow"
+    ]
+  },
+  {
+    "id": "cat_cow",
+    "name": "Cat-Cow",
+    "cat": "Mobility",
+    "muscles": [
+      "lower back",
+      "abs",
+      "upper back"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 2.3,
+    "cues": [
+      "Start on all fours, wrists under shoulders",
+      "Arch and round the spine slowly with breath",
+      "Move through the full spine, not just the neck"
+    ],
+    "mistakes": [
+      "Moving too fast without breath control",
+      "Collapsing into the shoulders"
+    ],
+    "kw": [
+      "cat cow stretch",
+      "cat camel",
+      "spinal flow"
+    ]
+  },
+  {
+    "id": "worlds_greatest_stretch",
+    "name": "World's Greatest Stretch",
+    "cat": "Mobility",
+    "muscles": [
+      "hip flexors",
+      "hamstrings",
+      "glutes",
+      "upper back"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 3,
+    "cues": [
+      "Step into a deep lunge, hands inside the foot",
+      "Rotate the chest up toward the lead knee",
+      "Reach the arm high, then switch sides"
+    ],
+    "mistakes": [
+      "Letting the back knee collapse inward",
+      "Rushing through without reaching fully"
+    ],
+    "kw": [
+      "wgs",
+      "lunge with rotation",
+      "spiderman stretch"
+    ]
+  },
+  {
+    "id": "hip_flexor_stretch",
+    "name": "Kneeling Hip Flexor Stretch",
+    "cat": "Mobility",
+    "muscles": [
+      "hip flexors",
+      "quads"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 2.3,
+    "cues": [
+      "Kneel, tuck the pelvis, squeeze your back glute",
+      "Shift weight forward until the front hip stretches",
+      "Hold 30 seconds, breathing slowly"
+    ],
+    "mistakes": [
+      "Arching the lower back to feel more stretch",
+      "Letting the pelvis tilt forward"
+    ],
+    "kw": [
+      "kneeling hip flexor",
+      "half kneeling stretch",
+      "psoas stretch"
+    ]
+  },
+  {
+    "id": "thoracic_rotation",
+    "name": "Open Book Thoracic Rotation",
+    "cat": "Mobility",
+    "muscles": [
+      "upper back",
+      "obliques"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 2.5,
+    "cues": [
+      "Lie on your side with knees stacked",
+      "Open the top arm toward the floor behind you",
+      "Rotate through upper back, keep knees together"
+    ],
+    "mistakes": [
+      "Letting the knees separate during rotation",
+      "Forcing range from the lower back"
+    ],
+    "kw": [
+      "open book",
+      "t spine rotation",
+      "thoracic open book"
+    ]
+  },
+  {
+    "id": "shoulder_dislocates",
+    "name": "Band Shoulder Dislocates",
+    "cat": "Mobility",
+    "muscles": [
+      "front delts",
+      "rear delts",
+      "upper back",
+      "chest"
+    ],
+    "equipment": "band",
+    "type": "bodyweight",
+    "met": 2.5,
+    "cues": [
+      "Hold a band wide with straight arms",
+      "Raise it overhead and behind in an arc",
+      "Keep ribs down and move slowly"
+    ],
+    "mistakes": [
+      "Gripping too narrow, straining the shoulders",
+      "Bending the elbows to get past"
+    ],
+    "kw": [
+      "band dislocates",
+      "pass throughs",
+      "shoulder pass through"
+    ]
+  },
+  {
+    "id": "hamstring_stretch",
+    "name": "Seated Hamstring Stretch",
+    "cat": "Mobility",
+    "muscles": [
+      "hamstrings",
+      "calves",
+      "lower back"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 2.3,
+    "cues": [
+      "Hinge forward from hips with a flat back",
+      "Feel the stretch behind the thigh, not the back",
+      "Hold 30 seconds, breathing evenly"
+    ],
+    "mistakes": [
+      "Rounding the spine to reach the toes",
+      "Bouncing in the stretch"
+    ],
+    "kw": [
+      "seated hamstring stretch",
+      "toe touch stretch",
+      "hamstring stretching"
+    ]
+  },
+  {
+    "id": "childs_pose",
+    "name": "Child's Pose",
+    "cat": "Mobility",
+    "muscles": [
+      "lower back",
+      "lats",
+      "glutes"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 2,
+    "cues": [
+      "Sit hips back toward your heels",
+      "Reach arms forward, resting your forehead down",
+      "Breathe slowly into your lower back"
+    ],
+    "mistakes": [
+      "Forcing the hips down when they're tight",
+      "Holding the breath or tensing shoulders"
+    ],
+    "kw": [
+      "child pose",
+      "balasana",
+      "resting pose"
+    ]
+  },
+  {
+    "id": "pigeon_pose",
+    "name": "Pigeon Pose",
+    "cat": "Mobility",
+    "muscles": [
+      "glutes",
+      "hip flexors",
+      "hamstrings"
+    ],
+    "equipment": "bodyweight",
+    "type": "timed",
+    "met": 2.3,
+    "cues": [
+      "Bring one shin forward, extend the back leg",
+      "Square hips to the floor, lengthen your spine",
+      "Fold forward slowly and breathe into the hip"
+    ],
+    "mistakes": [
+      "Letting the front knee take the strain",
+      "Twisting the hips off to one side"
+    ],
+    "kw": [
+      "pigeon stretch",
+      "glute stretch",
+      "figure four stretch"
+    ]
+  }
+]

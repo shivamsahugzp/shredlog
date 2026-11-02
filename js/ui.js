@@ -1,0 +1,181 @@
+// DOM helpers, icons, sheets, toasts, formatters.
+
+export function h(tag, props, ...children) {
+  const el = document.createElement(tag);
+  if (props) for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'html') el.innerHTML = v;
+    else if (k === 'dataset') Object.assign(el.dataset, v);
+    else if (k === 'value' || k === 'checked' || k === 'disabled' || k === 'selected' || k === 'readOnly') el[k] = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  append(el, children);
+  return el;
+}
+export function append(el, ...children) {
+  for (const c of children.flat(Infinity)) { if (c == null || c === false) continue; el.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return el;
+}
+export function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); return el; }
+export function frag(...children) { const f = document.createDocumentFragment(); append(f, children); return f; }
+
+// ---- icons (24 viewBox, stroke currentColor) ----
+const P = {
+  home: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
+  bowl: 'M4 11h16a8 8 0 0 1-16 0zM8 3c0 2-2 2-2 4M13 3c0 2-2 2-2 4M18 3c0 2-2 2-2 4',
+  dumbbell: 'M3 10v4M6 8v8M18 8v8M21 10v4M6 12h12',
+  flame: 'M12 3s5 4.5 5 9.5a5 5 0 0 1-10 0c0-2.5 1-4 2-5 0 2 1 3 2 3 0-3 1-5.5 1-7.5z',
+  chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+  gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z',
+  plus: 'M12 5v14M5 12h14', minus: 'M5 12h14', check: 'M5 12l5 5L20 7', x: 'M6 6l12 12M18 6L6 18',
+  left: 'M15 6l-6 6 6 6', right: 'M9 6l6 6-6 6', down: 'M6 9l6 6 6-6',
+  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5',
+  trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
+  clock: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2',
+  cup: 'M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2M7 4c0 1-1 1-1 2M11 4c0 1-1 1-1 2',
+  cig: 'M3 15h14v4H3zM19 15h2v4h-2zM18 5c-2 1-2 3 0 4M21 4c-2 1-2 3 0 4',
+  drop: 'M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z',
+  scale: 'M12 3v4M6 7h12l2 10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3zM9 13h6',
+  moon: 'M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z',
+  steps: 'M9 3c2 0 3 2 3 5s-1 5-3 5-3-2-3-5 1-5 3-5zM7 15h4v3a2 2 0 0 1-4 0zM16 9c2 0 3 2 3 5s-1 5-3 5-3-2-3-5 1-5 3-5z',
+  edit: 'M4 20h4l10-10-4-4L4 16zM13 7l4 4',
+  star: 'M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z',
+  copy: 'M9 9h10v10H9zM5 15V5h10',
+  play: 'M7 5v14l12-7z', pause: 'M8 5v14M16 5v14',
+  info: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 16v-5M12 8h.01',
+  download: 'M12 3v12M7 10l5 5 5-5M4 21h16', upload: 'M12 21V9M7 14l5-5 5 5M4 3h16',
+  trophy: 'M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M10 17h4v4h-4z',
+  timer: 'M10 2h4M12 8v5l3 2M12 22a8 8 0 1 0 0-16 8 8 0 0 0 0 16z',
+  more: 'M5 12h.01M12 12h.01M19 12h.01',
+  cal: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
+  share: 'M12 3v12M8 7l4-4 4 4M5 12v8h14v-8',
+  swap: 'M7 7h12l-3-3M17 17H5l3 3',
+  target: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
+  bell: 'M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 21h4',
+  list: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  heart: 'M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z',
+  note: 'M5 3h10l4 4v14H5zM15 3v4h4M8 12h8M8 16h5',
+  oil: 'M9 2h6v3l2 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V8l2-3zM7 14h10',
+  reset: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5',
+  warn: 'M12 3l10 18H2zM12 10v4M12 18h.01',
+};
+export function icon(name, size = 20, cls = '') {
+  const d = P[name] || P.info;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('width', size); svg.setAttribute('height', size);
+  svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round'); svg.setAttribute('aria-hidden', 'true');
+  if (cls) svg.setAttribute('class', cls);
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', d); svg.appendChild(p);
+  return svg;
+}
+
+// ---- sheets ----
+const sheetsRoot = () => document.getElementById('sheets');
+let openSheets = 0;
+export function sheet({ title, content, actions, onClose, full = false, closeLabel = true }) {
+  const root = sheetsRoot();
+  const backdrop = h('div', { class: 'backdrop' });
+  const box = h('div', { class: 'sheet' + (full ? ' full' : ''), role: 'dialog', 'aria-modal': 'true' });
+  const api = { el: box, onClose, close() { if (!box.isConnected) return; backdrop.remove(); box.remove(); openSheets--; if (openSheets <= 0) { openSheets = 0; document.body.style.overflow = ''; } api.onClose && api.onClose(); } };
+  backdrop.addEventListener('click', api.close);
+  box.append(h('div', { class: 'grab' }));
+  if (title || closeLabel) box.append(h('div', { class: 'sheet-head' }, h('h2', null, title || ''), closeLabel ? h('button', { class: 'icon-btn plain', 'aria-label': 'Close', onClick: api.close }, icon('x')) : null));
+  const body = h('div', { class: 'sheet-body' }); append(body, typeof content === 'function' ? content(api) : content); box.append(body);
+  if (actions) { const a = h('div', { class: 'actions' }); append(a, typeof actions === 'function' ? actions(api) : actions); box.append(a); }
+  root.append(backdrop, box); openSheets++; document.body.style.overflow = 'hidden';
+  return api;
+}
+export function confirmSheet(message, { ok = 'Yes', danger = false, title = 'Are you sure?' } = {}) {
+  return new Promise((res) => {
+    const s = sheet({ title, content: h('p', { style: { fontSize: '15px', color: 'var(--ink-2)' } }, message), onClose: () => res(false),
+      actions: (api) => [h('button', { class: 'btn', onClick: () => { api.close(); } }, 'Cancel'), h('button', { class: 'btn ' + (danger ? 'danger' : 'primary'), onClick: () => { res(true); api.onClose = null; api.close(); } }, ok)] });
+    const orig = s.close; s.close = () => { orig(); };
+  });
+}
+
+// ---- toasts ----
+export function toast(msg, { action, onAction, undo, ms = 2600 } = {}) {
+  if (undo) { action = 'Undo'; onAction = undo; }
+  const root = document.getElementById('toasts');
+  const t = h('div', { class: 'toast' }, msg, action ? h('button', { onClick: () => { onAction && onAction(); t.remove(); } }, action) : null);
+  root.append(t); setTimeout(() => t.remove(), ms);
+  return t;
+}
+
+export function promptSheet(title, value = '', { placeholder = '', ok = 'Save' } = {}) {
+  return new Promise((res) => {
+    const input = h('input', { type: 'text', value, placeholder, autocomplete: 'off' });
+    const s = sheet({ title, content: input, onClose: () => res(null), actions: (api) => [h('button', { class: 'btn primary', onClick: () => { const v = input.value.trim(); res(v || null); api.onClose = null; api.close(); } }, ok)] });
+    setTimeout(() => input.focus(), 50);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const v = input.value.trim(); res(v || null); s.onClose = null; s.close(); } });
+  });
+}
+export function setActive(el, id) { [...el.children].forEach((b) => b.classList.toggle('on', b.dataset.id === String(id))); }
+
+// ---- controls ----
+export function segmented(options, value, onChange, cls = '') {
+  const el = h('div', { class: 'seg ' + cls, role: 'tablist' });
+  for (const o of options) el.append(h('button', { class: o.id === value ? 'on' : '', role: 'tab', 'aria-selected': o.id === value ? 'true' : 'false', onClick: () => { [...el.children].forEach((b) => b.classList.remove('on')); el.querySelector(`[data-id="${o.id}"]`)?.classList.add('on'); onChange(o.id); }, dataset: { id: o.id } }, o.label));
+  return el;
+}
+export function chips(options, value, onChange) {
+  const el = h('div', { class: 'chips' });
+  for (const o of options) el.append(h('button', { class: 'chip' + (o.id === value ? ' on' : ''), dataset: { id: o.id }, onClick: () => { [...el.children].forEach((b) => b.classList.toggle('on', b.dataset.id === o.id)); onChange(o.id); } }, o.label));
+  return el;
+}
+export function stepper({ value, min = 0, max = 9999, step = 1, onChange, decimals }) {
+  const dec = decimals ?? (String(step).includes('.') ? String(step).split('.')[1].length : 0);
+  const input = h('input', { type: 'number', inputmode: 'decimal', value: (+value).toFixed(dec), step });
+  const set = (v, snap = true) => { v = Math.min(max, Math.max(min, snap ? Math.round(v / step) * step : v)); v = +v.toFixed(Math.max(dec, snap ? dec : 2)); input.value = String(v); onChange(v); };
+  input.addEventListener('change', () => set(parseFloat(input.value) || 0, false));
+  input.addEventListener('focus', () => input.select());
+  return h('div', { class: 'stepper' }, h('button', { type: 'button', 'aria-label': 'Less', onClick: () => set((parseFloat(input.value) || 0) - step) }, '−'), input, h('button', { type: 'button', 'aria-label': 'More', onClick: () => set((parseFloat(input.value) || 0) + step) }, '+'));
+}
+export function field(label, control, hint) { return h('div', { class: 'field' }, h('label', null, label), control, hint ? h('div', { class: 'hint' }, hint) : null); }
+export function toggle(label, on, onChange, sub) {
+  const sw = h('button', { class: 'switch' + (on ? ' on' : ''), role: 'switch', 'aria-checked': on ? 'true' : 'false', 'aria-label': label });
+  sw.addEventListener('click', () => { const now = !sw.classList.contains('on'); sw.classList.toggle('on', now); sw.setAttribute('aria-checked', now ? 'true' : 'false'); onChange(now); });
+  return h('div', { class: 'toggle' }, h('div', null, h('div', { class: 'strong' }, label), sub ? h('div', { class: 'small muted' }, sub) : null), sw);
+}
+export function emptyState(title, sub, action) { return h('div', { class: 'empty' }, h('b', null, title), sub, action ? h('div', { style: { marginTop: '12px' } }, action) : null); }
+
+// ---- formatting ----
+export const fmt = (n, d = 0) => (n == null || isNaN(n) ? '–' : (+n).toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: 0 }));
+export const fmtG = (n) => (n == null ? '–' : Math.round(n) + ' g');
+export function fmtTime(ts) { const d = new Date(ts); let hh = d.getHours(); const ap = hh >= 12 ? 'pm' : 'am'; hh = hh % 12 || 12; return `${hh}:${String(d.getMinutes()).padStart(2, '0')} ${ap}`; }
+export function fmtDur(sec) { sec = Math.max(0, Math.round(sec)); const hh = Math.floor(sec / 3600), mm = Math.floor((sec % 3600) / 60), ss = sec % 60; return hh ? `${hh}h ${String(mm).padStart(2, '0')}m` : mm ? `${mm}m ${String(ss).padStart(2, '0')}s` : `${ss}s`; }
+export function fmtClock(sec) { sec = Math.max(0, Math.round(sec)); return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`; }
+export function relTime(ts) {
+  if (!ts) return 'never'; const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return 'just now'; if (s < 3600) return `${Math.floor(s / 60)} min ago`;
+  if (s < 86400) { const hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60); return `${hh}h ${mm}m ago`; }
+  const d = Math.floor(s / 86400); return d === 1 ? '1 day ago' : `${d} days ago`;
+}
+export function sinceText(ts) {
+  if (!ts) return '—'; const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+  const d = Math.floor(s / 86400), hh = Math.floor((s % 86400) / 3600), mm = Math.floor((s % 3600) / 60);
+  if (d) return `${d}d ${hh}h`; if (hh) return `${hh}h ${mm}m`; return `${mm}m`;
+}
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export function fmtDateLabel(key, todayKey) {
+  const d = new Date(key + 'T12:00:00');
+  if (key === todayKey) return 'Today';
+  const y = new Date(todayKey + 'T12:00:00'); y.setDate(y.getDate() - 1);
+  if (key === `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`) return 'Yesterday';
+  return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+}
+export function fmtShortDate(key) { const d = new Date(key + 'T12:00:00'); return `${d.getDate()} ${MONTHS[d.getMonth()]}`; }
+export function fmtDow(key) { return DAYS[new Date(key + 'T12:00:00').getDay()]; }
+export function downloadText(filename, text, type = 'application/json') {
+  const blob = new Blob([text], { type }); const url = URL.createObjectURL(blob);
+  const a = h('a', { href: url, download: filename }); document.body.append(a); a.click(); setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1000);
+}
+export function pickFile(accept = 'application/json,.json') {
+  return new Promise((res) => { const i = h('input', { type: 'file', accept, style: { display: 'none' } }); i.addEventListener('change', () => { const f = i.files[0]; i.remove(); if (!f) return res(null); const r = new FileReader(); r.onload = () => res(r.result); r.readAsText(f); }); document.body.append(i); i.click(); });
+}
+export const haptic = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (e) { /* no-op on iOS */ } };

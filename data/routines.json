@@ -1,0 +1,1310 @@
+[
+  {
+    "id": "ppl_6day",
+    "name": "Push / Pull / Legs (6-day)",
+    "level": "intermediate",
+    "daysPerWeek": 6,
+    "goal": "Fat loss with muscle retention",
+    "desc": "Six days of heavy compounds plus isolation volume, hitting every muscle twice a week to hold muscle while in a deficit.",
+    "days": [
+      {
+        "name": "Push A",
+        "exercises": [
+          {
+            "ex": "barbell_bench_press",
+            "sets": 4,
+            "reps": "6-8",
+            "restSec": 120
+          },
+          {
+            "ex": "overhead_press",
+            "sets": 3,
+            "reps": "8-10",
+            "restSec": 90
+          },
+          {
+            "ex": "incline_dumbbell_press",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "dumbbell_lateral_raise",
+            "sets": 4,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "tricep_pushdown_rope",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "overhead_cable_tricep_extension",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          }
+        ]
+      },
+      {
+        "name": "Pull A",
+        "exercises": [
+          {
+            "ex": "barbell_bent_over_row",
+            "sets": 4,
+            "reps": "6-8",
+            "restSec": 120
+          },
+          {
+            "ex": "lat_pulldown_wide",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "seated_cable_row",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "cable_face_pull",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "barbell_curl",
+            "sets": 3,
+            "reps": "8-10",
+            "restSec": 60
+          },
+          {
+            "ex": "hammer_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          }
+        ]
+      },
+      {
+        "name": "Legs A",
+        "exercises": [
+          {
+            "ex": "barbell_back_squat",
+            "sets": 4,
+            "reps": "6-8",
+            "restSec": 150
+          },
+          {
+            "ex": "romanian_deadlift",
+            "sets": 3,
+            "reps": "8-10",
+            "restSec": 120
+          },
+          {
+            "ex": "leg_press",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "lying_leg_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 75
+          },
+          {
+            "ex": "standing_calf_raise",
+            "sets": 4,
+            "reps": "10-15",
+            "restSec": 60
+          },
+          {
+            "ex": "hanging_leg_raise",
+            "sets": 3,
+            "reps": "10-15",
+            "restSec": 60
+          }
+        ]
+      },
+      {
+        "name": "Push B",
+        "exercises": [
+          {
+            "ex": "incline_barbell_bench_press",
+            "sets": 4,
+            "reps": "6-8",
+            "restSec": 120
+          },
+          {
+            "ex": "seated_dumbbell_shoulder_press",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "cable_fly_mid",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "cable_lateral_raise",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "skull_crusher",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 75
+          },
+          {
+            "ex": "tricep_dips",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 75
+          }
+        ]
+      },
+      {
+        "name": "Pull B",
+        "exercises": [
+          {
+            "ex": "pull_up",
+            "sets": 4,
+            "reps": "6-10",
+            "restSec": 120
+          },
+          {
+            "ex": "dumbbell_row",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "chest_supported_dumbbell_row",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "dumbbell_rear_delt_fly",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "incline_dumbbell_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "cable_curl",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          }
+        ]
+      },
+      {
+        "name": "Legs B",
+        "exercises": [
+          {
+            "ex": "conventional_deadlift",
+            "sets": 3,
+            "reps": "4-6",
+            "restSec": 180
+          },
+          {
+            "ex": "bulgarian_split_squat",
+            "sets": 3,
+            "reps": "8-10",
+            "restSec": 90
+          },
+          {
+            "ex": "leg_extension",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "seated_leg_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 75
+          },
+          {
+            "ex": "hip_thrust",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "seated_calf_raise",
+            "sets": 4,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "cable_crunch",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "upper_lower_4day",
+    "name": "Upper / Lower (4-day)",
+    "level": "intermediate",
+    "daysPerWeek": 4,
+    "goal": "Strength and muscle retention in a calorie deficit",
+    "desc": "Two upper and two lower days a week balance heavy strength work with enough recovery to keep lifting performance up while cutting.",
+    "days": [
+      {
+        "name": "Upper A",
+        "exercises": [
+          {
+            "ex": "barbell_bench_press",
+            "sets": 4,
+            "reps": "5-8",
+            "restSec": 120
+          },
+          {
+            "ex": "barbell_bent_over_row",
+            "sets": 4,
+            "reps": "6-8",
+            "restSec": 120
+          },
+          {
+            "ex": "overhead_press",
+            "sets": 3,
+            "reps": "8-10",
+            "restSec": 90
+          },
+          {
+            "ex": "lat_pulldown_close",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "dumbbell_lateral_raise",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "ez_bar_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "tricep_pushdown_rope",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          }
+        ]
+      },
+      {
+        "name": "Lower A",
+        "exercises": [
+          {
+            "ex": "barbell_back_squat",
+            "sets": 4,
+            "reps": "5-8",
+            "restSec": 150
+          },
+          {
+            "ex": "romanian_deadlift",
+            "sets": 3,
+            "reps": "8-10",
+            "restSec": 120
+          },
+          {
+            "ex": "leg_press",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "seated_leg_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 75
+          },
+          {
+            "ex": "standing_calf_raise",
+            "sets": 4,
+            "reps": "10-15",
+            "restSec": 60
+          },
+          {
+            "ex": "plank",
+            "sets": 3,
+            "reps": "45-60 sec",
+            "restSec": 45
+          }
+        ]
+      },
+      {
+        "name": "Upper B",
+        "exercises": [
+          {
+            "ex": "incline_dumbbell_press",
+            "sets": 4,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "pull_up",
+            "sets": 4,
+            "reps": "6-10",
+            "restSec": 120
+          },
+          {
+            "ex": "seated_dumbbell_shoulder_press",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "seated_cable_row",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "cable_fly_mid",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "hammer_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "overhead_cable_tricep_extension",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          }
+        ]
+      },
+      {
+        "name": "Lower B",
+        "exercises": [
+          {
+            "ex": "conventional_deadlift",
+            "sets": 3,
+            "reps": "4-6",
+            "restSec": 180
+          },
+          {
+            "ex": "bulgarian_split_squat",
+            "sets": 3,
+            "reps": "8-10",
+            "restSec": 90
+          },
+          {
+            "ex": "hip_thrust",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "leg_extension",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "lying_leg_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 75
+          },
+          {
+            "ex": "seated_calf_raise",
+            "sets": 4,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "hanging_knee_raise",
+            "sets": 3,
+            "reps": "10-15",
+            "restSec": 60
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fullbody_3day",
+    "name": "Full Body (3-day, beginner)",
+    "level": "beginner",
+    "daysPerWeek": 3,
+    "goal": "Learn the basics and build a foundation while losing fat",
+    "desc": "Three simple full-body sessions a week build form, strength and a calorie burn without overwhelming a new lifter.",
+    "days": [
+      {
+        "name": "Full Body A",
+        "exercises": [
+          {
+            "ex": "goblet_squat",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "dumbbell_bench_press",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "seated_cable_row",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "dumbbell_rdl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "dumbbell_lateral_raise",
+            "sets": 2,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "plank",
+            "sets": 3,
+            "reps": "30 sec",
+            "restSec": 45
+          }
+        ]
+      },
+      {
+        "name": "Full Body B",
+        "exercises": [
+          {
+            "ex": "leg_press",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "seated_dumbbell_shoulder_press",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "lat_pulldown_wide",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "glute_bridge",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "hammer_curl",
+            "sets": 2,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "tricep_pushdown_rope",
+            "sets": 2,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "dead_bug",
+            "sets": 3,
+            "reps": "10",
+            "restSec": 45
+          }
+        ]
+      },
+      {
+        "name": "Full Body C",
+        "exercises": [
+          {
+            "ex": "reverse_lunge",
+            "sets": 3,
+            "reps": "8-10",
+            "restSec": 90
+          },
+          {
+            "ex": "incline_dumbbell_press",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "dumbbell_row",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "hip_thrust",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "cable_face_pull",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "bicycle_crunch",
+            "sets": 3,
+            "reps": "12-20",
+            "restSec": 45
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "bro_split_5day",
+    "name": "Bro Split (5-day)",
+    "level": "intermediate",
+    "daysPerWeek": 5,
+    "goal": "Muscle definition with high weekly volume per body part",
+    "desc": "One muscle group per day lets you hammer each body part with high volume and finish every session fully fatigued.",
+    "days": [
+      {
+        "name": "Chest",
+        "exercises": [
+          {
+            "ex": "barbell_bench_press",
+            "sets": 4,
+            "reps": "6-8",
+            "restSec": 120
+          },
+          {
+            "ex": "incline_dumbbell_press",
+            "sets": 4,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "machine_chest_press",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "cable_fly_mid",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "chest_dips",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "push_up",
+            "sets": 2,
+            "reps": "AMRAP",
+            "restSec": 60
+          }
+        ]
+      },
+      {
+        "name": "Back",
+        "exercises": [
+          {
+            "ex": "pull_up",
+            "sets": 3,
+            "reps": "6-10",
+            "restSec": 120
+          },
+          {
+            "ex": "barbell_bent_over_row",
+            "sets": 4,
+            "reps": "6-8",
+            "restSec": 120
+          },
+          {
+            "ex": "lat_pulldown_close",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "seated_cable_row",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "dumbbell_row",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "straight_arm_pulldown",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "barbell_shrug",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          }
+        ]
+      },
+      {
+        "name": "Shoulders",
+        "exercises": [
+          {
+            "ex": "overhead_press",
+            "sets": 4,
+            "reps": "6-8",
+            "restSec": 120
+          },
+          {
+            "ex": "arnold_press",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 90
+          },
+          {
+            "ex": "dumbbell_lateral_raise",
+            "sets": 4,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "cable_lateral_raise",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "dumbbell_rear_delt_fly",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "cable_face_pull",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "dumbbell_shrug",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          }
+        ]
+      },
+      {
+        "name": "Arms",
+        "exercises": [
+          {
+            "ex": "barbell_curl",
+            "sets": 4,
+            "reps": "8-10",
+            "restSec": 75
+          },
+          {
+            "ex": "skull_crusher",
+            "sets": 4,
+            "reps": "8-10",
+            "restSec": 75
+          },
+          {
+            "ex": "incline_dumbbell_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "tricep_pushdown_bar",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "hammer_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "overhead_cable_tricep_extension",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "wrist_curl",
+            "sets": 2,
+            "reps": "12-15",
+            "restSec": 45
+          }
+        ]
+      },
+      {
+        "name": "Legs",
+        "exercises": [
+          {
+            "ex": "barbell_back_squat",
+            "sets": 4,
+            "reps": "6-8",
+            "restSec": 150
+          },
+          {
+            "ex": "romanian_deadlift",
+            "sets": 3,
+            "reps": "8-10",
+            "restSec": 120
+          },
+          {
+            "ex": "leg_press",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "leg_extension",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "lying_leg_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 75
+          },
+          {
+            "ex": "standing_calf_raise",
+            "sets": 4,
+            "reps": "10-15",
+            "restSec": 60
+          },
+          {
+            "ex": "cable_crunch",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "home_4day",
+    "name": "Home / No-Equipment (4-day)",
+    "level": "beginner",
+    "daysPerWeek": 4,
+    "goal": "Fat loss and conditioning with zero equipment",
+    "desc": "Four bodyweight-only sessions you can do in a living room, mixing push, legs, core and a conditioning finisher.",
+    "days": [
+      {
+        "name": "Push + Core",
+        "exercises": [
+          {
+            "ex": "push_up",
+            "sets": 4,
+            "reps": "8-15",
+            "restSec": 60
+          },
+          {
+            "ex": "pike_push_up",
+            "sets": 3,
+            "reps": "6-10",
+            "restSec": 60
+          },
+          {
+            "ex": "decline_push_up",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 60
+          },
+          {
+            "ex": "diamond_push_up",
+            "sets": 3,
+            "reps": "8-12",
+            "restSec": 60
+          },
+          {
+            "ex": "plank",
+            "sets": 3,
+            "reps": "45-60 sec",
+            "restSec": 30
+          },
+          {
+            "ex": "mountain_climbers",
+            "sets": 3,
+            "reps": "30 sec",
+            "restSec": 30
+          }
+        ]
+      },
+      {
+        "name": "Legs + Glutes",
+        "exercises": [
+          {
+            "ex": "bodyweight_squat",
+            "sets": 4,
+            "reps": "15-20",
+            "restSec": 45
+          },
+          {
+            "ex": "jump_squat",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 45
+          },
+          {
+            "ex": "lateral_lunge",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "single_leg_glute_bridge",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 45
+          },
+          {
+            "ex": "donkey_kick",
+            "sets": 3,
+            "reps": "15",
+            "restSec": 30
+          },
+          {
+            "ex": "single_leg_calf_raise",
+            "sets": 4,
+            "reps": "15-20",
+            "restSec": 30
+          },
+          {
+            "ex": "wall_sit",
+            "sets": 3,
+            "reps": "45 sec",
+            "restSec": 45
+          }
+        ]
+      },
+      {
+        "name": "Back Line + Core",
+        "exercises": [
+          {
+            "ex": "superman",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 45
+          },
+          {
+            "ex": "bird_dog",
+            "sets": 3,
+            "reps": "10",
+            "restSec": 45
+          },
+          {
+            "ex": "dead_bug",
+            "sets": 3,
+            "reps": "10",
+            "restSec": 45
+          },
+          {
+            "ex": "hollow_hold",
+            "sets": 3,
+            "reps": "20-30 sec",
+            "restSec": 45
+          },
+          {
+            "ex": "reverse_crunch",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 45
+          },
+          {
+            "ex": "bicycle_crunch",
+            "sets": 3,
+            "reps": "20",
+            "restSec": 45
+          },
+          {
+            "ex": "side_plank",
+            "sets": 3,
+            "reps": "30 sec",
+            "restSec": 30
+          }
+        ]
+      },
+      {
+        "name": "Conditioning",
+        "exercises": [
+          {
+            "ex": "burpees",
+            "sets": 4,
+            "reps": "10",
+            "restSec": 45
+          },
+          {
+            "ex": "jump_squat",
+            "sets": 3,
+            "reps": "15",
+            "restSec": 45
+          },
+          {
+            "ex": "push_up",
+            "sets": 3,
+            "reps": "AMRAP",
+            "restSec": 45
+          },
+          {
+            "ex": "mountain_climbers",
+            "sets": 4,
+            "reps": "30 sec",
+            "restSec": 30
+          },
+          {
+            "ex": "bear_crawl",
+            "sets": 3,
+            "reps": "30 sec",
+            "restSec": 30
+          },
+          {
+            "ex": "jumping_jacks",
+            "sets": 3,
+            "reps": "60 sec",
+            "restSec": 30
+          },
+          {
+            "ex": "plank",
+            "sets": 3,
+            "reps": "45 sec",
+            "restSec": 30
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "fatloss_circuit_3day",
+    "name": "Fat-Loss Circuit (3-day)",
+    "level": "intermediate",
+    "daysPerWeek": 3,
+    "goal": "Maximum calorie burn with strength work and a cardio finisher",
+    "desc": "Short-rest strength circuits keep your heart rate high, then a 10-minute cardio finisher tops off the calorie burn.",
+    "days": [
+      {
+        "name": "Circuit A",
+        "exercises": [
+          {
+            "ex": "goblet_squat",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 40
+          },
+          {
+            "ex": "dumbbell_bench_press",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 40
+          },
+          {
+            "ex": "dumbbell_row",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 40
+          },
+          {
+            "ex": "dumbbell_rdl",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 40
+          },
+          {
+            "ex": "plank",
+            "sets": 3,
+            "reps": "40 sec",
+            "restSec": 30
+          },
+          {
+            "ex": "rowing_machine",
+            "sets": 1,
+            "reps": "10 min",
+            "restSec": 0
+          }
+        ]
+      },
+      {
+        "name": "Circuit B",
+        "exercises": [
+          {
+            "ex": "kettlebell_swing",
+            "sets": 4,
+            "reps": "15",
+            "restSec": 30
+          },
+          {
+            "ex": "push_up",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 30
+          },
+          {
+            "ex": "walking_lunge",
+            "sets": 3,
+            "reps": "12",
+            "restSec": 40
+          },
+          {
+            "ex": "lat_pulldown_wide",
+            "sets": 3,
+            "reps": "12",
+            "restSec": 40
+          },
+          {
+            "ex": "mountain_climbers",
+            "sets": 3,
+            "reps": "30 sec",
+            "restSec": 30
+          },
+          {
+            "ex": "sprint_intervals",
+            "sets": 1,
+            "reps": "10 min",
+            "restSec": 0
+          }
+        ]
+      },
+      {
+        "name": "Circuit C",
+        "exercises": [
+          {
+            "ex": "dumbbell_thruster",
+            "sets": 4,
+            "reps": "10-12",
+            "restSec": 30
+          },
+          {
+            "ex": "inverted_row",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 30
+          },
+          {
+            "ex": "step_up",
+            "sets": 3,
+            "reps": "10",
+            "restSec": 40
+          },
+          {
+            "ex": "hip_thrust",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 45
+          },
+          {
+            "ex": "bicycle_crunch",
+            "sets": 3,
+            "reps": "20",
+            "restSec": 30
+          },
+          {
+            "ex": "skipping_rope",
+            "sets": 1,
+            "reps": "10 min",
+            "restSec": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "beginner_gym_3day",
+    "name": "Beginner Gym (3-day, machines-first)",
+    "level": "beginner",
+    "daysPerWeek": 3,
+    "goal": "Build confidence in the gym and lose fat safely",
+    "desc": "Guided machines keep the movements simple and safe while you learn the gym, with easy cardio to finish each session.",
+    "days": [
+      {
+        "name": "Day 1 - Full Body A",
+        "exercises": [
+          {
+            "ex": "leg_press",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "machine_chest_press",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "lat_pulldown_wide",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "machine_shoulder_press",
+            "sets": 2,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "seated_leg_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 75
+          },
+          {
+            "ex": "ab_crunch_machine",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "treadmill_walk",
+            "sets": 1,
+            "reps": "10 min",
+            "restSec": 0
+          }
+        ]
+      },
+      {
+        "name": "Day 2 - Full Body B",
+        "exercises": [
+          {
+            "ex": "smith_machine_squat",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "machine_seated_row",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "pec_deck",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "reverse_pec_deck",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "leg_extension",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "standing_calf_raise",
+            "sets": 3,
+            "reps": "12-15",
+            "restSec": 60
+          },
+          {
+            "ex": "elliptical",
+            "sets": 1,
+            "reps": "10 min",
+            "restSec": 0
+          }
+        ]
+      },
+      {
+        "name": "Day 3 - Full Body C",
+        "exercises": [
+          {
+            "ex": "hack_squat",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "lat_pulldown_close",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "machine_shoulder_press",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 90
+          },
+          {
+            "ex": "lying_leg_curl",
+            "sets": 3,
+            "reps": "10-12",
+            "restSec": 75
+          },
+          {
+            "ex": "tricep_pushdown_rope",
+            "sets": 2,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "cable_curl",
+            "sets": 2,
+            "reps": "10-12",
+            "restSec": 60
+          },
+          {
+            "ex": "cycling_stationary",
+            "sets": 1,
+            "reps": "10 min",
+            "restSec": 0
+          }
+        ]
+      }
+    ]
+  }
+]

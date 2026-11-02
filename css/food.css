@@ -1,0 +1,92 @@
+/* Food tab (all classes prefixed fd-; reuses tokens and components from app.css) */
+.icon-btn[disabled] { opacity: .35; pointer-events: none; }
+
+/* header + date nav */
+.fd-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0 14px; }
+.fd-nav { flex: 0 1 230px; }
+.fd-head .icon-btn { width: 44px; height: 44px; }
+
+/* summary strip */
+.fd-sum { padding: 14px 16px 4px; }
+.fd-kcal { font-size: 30px; line-height: 1; }
+.fd-left { font-size: 13px; color: var(--muted); }
+.fd-left b { font: 700 16px var(--display); color: var(--ink); }
+.fd-left.over b { color: var(--bad); }
+.fd-bar { height: 8px; border-radius: 4px; margin: 10px 0 14px; }
+.fd-bar i { background: var(--accent); }
+.fd-bar.over i { background: var(--bad); }
+.fd-macros { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.fd-macro .lbl { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
+.fd-macro .val { font-size: 12px; color: var(--muted); white-space: nowrap; margin-top: 2px; }
+.fd-macro .val b { font: 700 15px var(--display); color: var(--ink); }
+.fd-sum .toggle { border-top: 1px solid var(--line); margin-top: 12px; padding: 8px 0; min-height: 52px; gap: 12px; }
+.fd-sum .toggle .strong { font-weight: 500; font-size: 14px; }
+.fd-nudge { margin-top: 10px; }
+
+/* add food / diary switch */
+.seg.fd-view { margin: 14px 0 12px; }
+.seg.fd-view button { min-height: 44px; }
+
+/* search, chips, actions */
+.search input[type=search] { -webkit-appearance: none; appearance: none; }
+.fd-pane .chips { margin: 10px -16px 4px; padding: 2px 16px 6px; }
+.fd-actions { display: flex; gap: 8px; margin: 4px 0 12px; }
+.fd-actions .btn { flex: 1; min-height: 44px; }
+.fd-empty-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+/* result rows: tappable body + star */
+.fd-split { padding: 0; gap: 0; align-items: stretch; }
+.fd-main { flex: 1; min-width: 0; text-align: left; padding: 11px 4px 11px 14px; min-height: 56px; }
+.fd-star { flex: none; width: 52px; display: grid; place-items: center; color: var(--muted); }
+.fd-star.on { color: var(--accent); }
+.fd-star.on svg { fill: currentColor; }
+.fd-note { text-align: center; color: var(--muted); font-size: 12px; padding: 10px 0 0; }
+
+/* diary */
+.fd-group { margin-top: 18px; }
+.fd-group:first-child { margin-top: 4px; }
+.fd-ghead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 2px 8px; }
+.fd-links { display: flex; flex-wrap: wrap; gap: 0 18px; padding: 0 2px; }
+.fd-link { min-height: 44px; font-size: 14px; font-weight: 600; color: var(--p); }
+
+/* quantity / quick add / create sheets */
+.fd-step { display: flex; align-items: center; gap: 12px; }
+.fd-prev { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.fd-prev .tile { box-shadow: none; background: var(--card-2); padding: 8px 4px; text-align: center; }
+.fd-prev .tile .lbl { justify-content: center; font-size: 11px; gap: 4px; }
+.fd-prev .tile .val { font-size: 17px; }
+.seg.fd-meals button { font-size: 12.5px; padding: 10px 0; min-width: 0; min-height: 44px; }
+.fd-del-food { align-self: flex-start; min-height: 44px; color: var(--bad); font-size: 14px; font-weight: 600; }
+.fd-sub { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+
+/* search row, text quick-log */
+.fd-searchrow { display: flex; gap: 8px; align-items: center; }
+.fd-searchrow .search { flex: 1; min-width: 0; }
+.fd-kb { width: 48px; height: 48px; flex: none; border-radius: 14px; }
+.fd-kb.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.fd-actions { flex-wrap: wrap; }
+.fd-actions .btn { flex: 1 1 calc(50% - 4px); }
+.fd-actions .btn.fd-wide { flex-basis: 100%; }
+.fd-text { margin-top: 12px; }
+.fd-textmeal { margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
+.fd-trow { background: var(--card); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.fd-trow.miss { border: 1px dashed var(--warn); box-shadow: none; }
+.fd-trow-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.fd-trow-name { flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: column; text-align: left; }
+.fd-trow-name .title { font-weight: 600; }
+.fd-trow-name .sub { font-size: 12px; color: var(--muted); }
+.fd-trow-sum { flex: none; max-width: 40%; font-size: 13px; font-weight: 600; text-align: right; color: var(--ink-2); padding-top: 2px; }
+.fd-unit { flex: 1; min-width: 0; height: 44px; border-radius: 12px; padding: 0 10px; font-size: 14px; }
+.fd-oilrow { justify-content: space-between; }
+.fd-logbar { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+
+/* recipes, starter plates */
+.fd-main { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.fd-more { flex: none; width: 44px; display: grid; place-items: center; color: var(--muted); }
+.fd-pill { margin-left: 8px; padding: 1px 8px; font-size: 11px; vertical-align: 1px; }
+.fd-subhead { font-size: 13px; font-weight: 700; color: var(--ink-2); margin: 16px 2px 8px; }
+.fd-subhead:first-child { margin-top: 4px; }
+.fd-ing { background: var(--card-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px 8px 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.fd-ing .icon-btn { width: 36px; height: 36px; }
+.fd-ing .stepper input { width: 64px; }
+.fd-danger { color: var(--bad); }

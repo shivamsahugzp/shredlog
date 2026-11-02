@@ -1,0 +1,3334 @@
+{
+ "meta": {
+  "generatedAt": "2026-11-02",
+  "currency": "INR",
+  "region": "India",
+  "about": "Knowledge base for ShredLog: budget protein tips, micronutrient gaps, food-to-symptom hints, quick Indian meals.",
+  "priceAsOf": "2025-26 retail; most listings fetched Oct-Nov 2026",
+  "priceBasisLegend": {
+   "listing": "priced from a retail/wholesale listing or official price series seen during research (see src, priceNote)",
+   "range-midpoint": "midpoint of several retail quotes / the brief range",
+   "estimate": "no direct listing retrievable; typical Indian retail estimate, verify before relying on it"
+  },
+  "inrPer10gProteinFormula": "priceInr / gramsPerUnit * 1000 / (proteinPer100g * ediblePct/100); i.e. rupees to buy 10 g of protein as purchased (dry weight for dals, raw weight for meat). Sorted ascending.",
+  "caveats": [
+   "Prices are indicative metro retail and move weekly; whey prices rose sharply in 2026 on an imported-whey shortage.",
+   "Many price pages are undated aggregator listings (BigBasket, IndiaMART, rate sites). Government dal series (PIB / Dept of Consumer Affairs) are dated 2024-25.",
+   "Nutrient values are rounded IFCT 2017 / NIN Nutritive Value of Indian Foods figures with USDA FDC as fallback; real foods vary by variety, cooking and fortification.",
+   "RDA values come from secondary summaries of ICMR-NIN 2020 (FSSAI RDA 2021 and the Aug 2021 amendment); the primary NIN table could not be fetched. Folate values in particular should be confirmed.",
+   "Symptom hints are general tips, not medical advice. See a doctor for persistent symptoms, blood in stool, unexplained weight loss or severe pain."
+  ],
+  "tagGlossary": {
+   "trigger tags that exist in data/foods.json \"triggers\"": [
+    "legume",
+    "fodmap_high",
+    "dairy",
+    "lactose_high",
+    "wheat",
+    "fried",
+    "spicy",
+    "high_sodium",
+    "high_fat",
+    "sugar",
+    "caffeine",
+    "alcohol",
+    "soy",
+    "raw_sprouts",
+    "onion_garlic",
+    "artificial_sweetener"
+   ],
+   "derived at runtime by js/insights.js": {
+    "large_meal": "meal kcal well above your median",
+    "late_night": "eaten 10 pm-4 am",
+    "evening_caffeine": "caffeine tagged food after 4 pm"
+   },
+   "behaviour tags the app must derive or log (not food triggers)": {
+    "low_water_high_protein": "high-protein day with low water intake",
+    "low_fiber_day": "day fibre under about 15 g",
+    "fiber_jump": "fibre up by more than about 10 g/day versus the previous week",
+    "very_low_carb": "under about 50 g carbs/day",
+    "creatine": "creatine supplement logged",
+    "cigarettes": "cigarettes logged"
+   }
+  },
+  "symptomIdNote": "symptom uses the brief vocabulary; appSymptom is the matching id in js/insights.js SYMPTOMS (constipation -> hard_stool).",
+  "mealFixesNote": "fixes follow the brief ('b12'); B12 meals also carry 'vitamin_b12' because js/insights.js builds gap ids from micro ids.",
+  "measuresSrc": "https://nutritionconnect.org/resource-center/dietary-guidelines-indians-2024-edition-icmr-nin",
+  "measuresNote": "ICMR-NIN Dietary Guidelines 2024 standard measuring set: katori 115/155/200/360 ml (155 ml ~ 150 ml katori used here); 5 g per teaspoon of oil (4.5 g used here for level tsp of liquid oil); roti 40 g cooked medium (about 30 g flour) is a common-practice value; official annexure values were not re-verified."
+ },
+ "proteinSources": [
+  {
+   "id": "soya_chunks_dry",
+   "name": "Soya chunks (Nutrela)",
+   "diet": "vegan",
+   "unit": "1 kg dry",
+   "priceInr": 130,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 52,
+   "kcalPer100g": 345,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Soaked/boiled weight is about 2.5x, so roughly 20 g protein per 100 g soaked.",
+   "inrPer10gProtein": 2.5,
+   "notes": "Soak in hot water 15 min and squeeze out the water; discarding it cuts the beany taste and bloating. Pair with roti or rice.",
+   "tags": [
+    "budget",
+    "soy",
+    "legume",
+    "complete-protein",
+    "high-protein-density"
+   ],
+   "src": "https://www.bigbasket.com/pd/257382/nutrela-soya-chunks-1-kg-pouch/",
+   "priceBasis": "listing",
+   "priceNote": "BigBasket Rs 123/kg, Zepto Rs 139/kg, MRP Rs 150-190; bulk 25 kg bags Rs 75-100/kg ex-tax. Rs 130 = mid retail."
+  },
+  {
+   "id": "masoor_dal_raw",
+   "name": "Masoor dal (red lentil, split)",
+   "diet": "vegan",
+   "unit": "1 kg dry",
+   "priceInr": 95,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 24.5,
+   "kcalPer100g": 343,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Cooked dal is mostly water: about 7-9 g protein per 100 g thick dal, 4-5 g per watery katori.",
+   "inrPer10gProtein": 3.9,
+   "notes": "Cooks in 15 min with no soaking and is easy on the stomach. Pair with rice or roti to complete the amino acids.",
+   "tags": [
+    "budget",
+    "legume",
+    "dal"
+   ],
+   "src": "https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2112892&reg=48&lang=2",
+   "priceBasis": "listing",
+   "priceNote": "Bharat masoor dal Rs 89/kg (govt, PIB Mar 2025); 2024 all-India modal retail Rs 90/kg. Rs 95 allows a small retail premium."
+  },
+  {
+   "id": "besan_raw",
+   "name": "Besan (chana flour)",
+   "diet": "vegan",
+   "unit": "1 kg",
+   "priceInr": 90,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 22,
+   "kcalPer100g": 387,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry flour. 2 besan chillas use about 60 g flour (about 13 g protein).",
+   "inrPer10gProtein": 4.1,
+   "notes": "Make chilla or pudla with veg and little oil. Cook through; half-cooked besan causes gas.",
+   "tags": [
+    "budget",
+    "legume",
+    "fodmap_high"
+   ],
+   "src": "https://www.india.com/business/dal-prices-rise-up-ahead-of-festive-season-chana-moong-tur-and-matar-are-getting-costlier-heres-why-8531105/",
+   "priceBasis": "estimate",
+   "priceNote": "No clean per-kg retail listing found (pack prices Rs 68-76 for mixed sizes); estimate from chana dal retail (Rs 85-100/kg) plus milling."
+  },
+  {
+   "id": "kala_chana_raw",
+   "name": "Kala chana (black chickpea)",
+   "diet": "vegan",
+   "unit": "1 kg dry",
+   "priceInr": 90,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 20,
+   "kcalPer100g": 360,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Boiled kala chana is about 9 g protein per 100 g.",
+   "inrPer10gProtein": 4.5,
+   "notes": "Soak 8-12 h, discard the water and pressure cook. High fibre keeps you full; start with half a katori to avoid gas.",
+   "tags": [
+    "budget",
+    "legume",
+    "fodmap_high",
+    "fibre"
+   ],
+   "src": "https://www.india.com/business/dal-prices-rise-up-ahead-of-festive-season-chana-moong-tur-and-matar-are-getting-costlier-heres-why-8531105/",
+   "priceBasis": "estimate",
+   "priceNote": "Bharat chana whole Rs 58/kg (Oct 2024 govt); all-India modal chana Rs 85/kg (May 2024). Rs 90 = current retail estimate."
+  },
+  {
+   "id": "chana_dal_raw",
+   "name": "Chana dal (split Bengal gram)",
+   "diet": "vegan",
+   "unit": "1 kg dry",
+   "priceInr": 100,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 21,
+   "kcalPer100g": 365,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Cooked dal is roughly 8 g protein per 100 g thick, 4-5 g per watery katori.",
+   "inrPer10gProtein": 4.8,
+   "notes": "Low glycaemic index. Soak 2-3 h and cook with hing and jeera; swap to moong if it makes you gassy.",
+   "tags": [
+    "budget",
+    "legume",
+    "dal"
+   ],
+   "src": "https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2112892&reg=48&lang=2",
+   "priceBasis": "listing",
+   "priceNote": "Govt retail average about Rs 88.7/kg (Sep, DoCA snapshot); Bharat chana dal Rs 70/kg (Oct 2024). Rs 100 per your range."
+  },
+  {
+   "id": "moong_dal_raw",
+   "name": "Moong dal (split yellow)",
+   "diet": "vegan",
+   "unit": "1 kg dry",
+   "priceInr": 125,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 24,
+   "kcalPer100g": 348,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Cooked moong dal is about 7 g protein per 100 g thick dal.",
+   "inrPer10gProtein": 5.2,
+   "notes": "The easiest dal to digest and good for a light dinner. Whole green moong (sabut) is cheaper and higher in fibre.",
+   "tags": [
+    "legume",
+    "dal",
+    "budget"
+   ],
+   "src": "https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2112892&reg=48&lang=2",
+   "priceBasis": "listing",
+   "priceNote": "Govt retail average about Rs 112/kg (DoCA snapshot); Bharat moong dal Rs 107/kg. Market packs Rs 120-150."
+  },
+  {
+   "id": "urad_dal_raw",
+   "name": "Urad dal (split black gram)",
+   "diet": "vegan",
+   "unit": "1 kg dry",
+   "priceInr": 125,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 24,
+   "kcalPer100g": 347,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Cooked urad dal is about 8 g protein per 100 g thick dal.",
+   "inrPer10gProtein": 5.2,
+   "notes": "Heavier on the stomach: cook with ginger and hing. Fermented in idli/dosa batter it causes less gas.",
+   "tags": [
+    "legume",
+    "dal",
+    "budget"
+   ],
+   "src": "https://www.india.com/business/dal-prices-rise-up-ahead-of-festive-season-chana-moong-tur-and-matar-are-getting-costlier-heres-why-8531105/",
+   "priceBasis": "estimate",
+   "priceNote": "All-India modal retail urad Rs 120/kg (May 2024); no 2025-26 national snapshot found. Rs 125 estimate."
+  },
+  {
+   "id": "toor_dal_raw",
+   "name": "Toor / arhar dal",
+   "diet": "vegan",
+   "unit": "1 kg dry",
+   "priceInr": 135,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 22,
+   "kcalPer100g": 343,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Cooked toor dal is about 7 g protein per 100 g thick dal.",
+   "inrPer10gProtein": 6.1,
+   "notes": "Everyday sambar/dal. A bit gassier than moong or masoor; pressure cook well and add hing.",
+   "tags": [
+    "legume",
+    "dal"
+   ],
+   "src": "https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2112892&reg=48&lang=2",
+   "priceBasis": "listing",
+   "priceNote": "Govt retail average about Rs 125.7/kg (DoCA snapshot); market packs Rs 130-160."
+  },
+  {
+   "id": "peanuts_raw",
+   "name": "Peanuts (raw, shelled)",
+   "diet": "vegan",
+   "unit": "1 kg raw kernels",
+   "priceInr": 160,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 25.5,
+   "kcalPer100g": 567,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Roasted/boiled differs slightly. 30 g handful = 170 kcal and 7.6 g protein.",
+   "inrPer10gProtein": 6.3,
+   "notes": "Calorie-dense: great for bulking, easy to overeat on a cut. Peanut-jaggery chikki is a cheap snack.",
+   "tags": [
+    "budget",
+    "nuts",
+    "high-fat",
+    "calorie-dense",
+    "legume"
+   ],
+   "src": "https://www.bigbasket.com/pd/30010383/bb-popular-peanutsmungaphalishengdana-raw-1-kg-pouch/",
+   "priceBasis": "listing",
+   "priceNote": "BigBasket packaged raw peanuts Rs 190-206/kg; Hyperpure Rs 160/kg; loose kirana typically Rs 130-160/kg. Rs 160 = lower retail band."
+  },
+  {
+   "id": "sattu_powder",
+   "name": "Sattu (roasted chana flour)",
+   "diet": "vegan",
+   "unit": "1 kg",
+   "priceInr": 130,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 20,
+   "kcalPer100g": 365,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry powder. 2 tbsp (30 g) in water gives about 6 g protein.",
+   "inrPer10gProtein": 6.5,
+   "notes": "No-cook drink: mix with water, lemon, jeera and salt. Big servings can cause gas or acidity; start small.",
+   "tags": [
+    "budget",
+    "legume",
+    "no-cook",
+    "fodmap_high"
+   ],
+   "src": "https://www.bigbasket.com/pd/40184724/bb-royal-organic-sattu-atta-1-kg/",
+   "priceBasis": "listing",
+   "priceNote": "BigBasket BB Royal sattu Rs 128/kg; Patna retail Rs 140/kg; sweetened ready mixes cost far more and are not counted."
+  },
+  {
+   "id": "rajma_raw",
+   "name": "Rajma (kidney beans)",
+   "diet": "vegan",
+   "unit": "1 kg dry",
+   "priceInr": 150,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 22.5,
+   "kcalPer100g": 335,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Boiled rajma is about 8.7 g protein per 100 g.",
+   "inrPer10gProtein": 6.7,
+   "notes": "High-FODMAP: soak 8-12 h, discard the water, pressure cook until very soft. Keep to 1/2-1 katori at first.",
+   "tags": [
+    "legume",
+    "fodmap_high",
+    "fibre"
+   ],
+   "src": "https://www.bigbasket.com/pb/rajdhani/",
+   "priceBasis": "listing",
+   "priceNote": "BigBasket Rajdhani Srinagar rajma Rs 153/kg (Rs 96 per 500 g)."
+  },
+  {
+   "id": "kabuli_chana_raw",
+   "name": "Kabuli chana (chole)",
+   "diet": "vegan",
+   "unit": "1 kg dry",
+   "priceInr": 140,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 19,
+   "kcalPer100g": 360,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Boiled chole is about 8.9 g protein per 100 g.",
+   "inrPer10gProtein": 7.4,
+   "notes": "Soak 8-12 h, discard water. Canned, drained and rinsed chickpeas are the lowest-FODMAP form.",
+   "tags": [
+    "legume",
+    "fodmap_high",
+    "fibre"
+   ],
+   "src": "https://www.bigbasket.com/pd/10000802/bb-royal-channa-kabuli-1-kg-pouch/",
+   "priceBasis": "listing",
+   "priceNote": "BigBasket: bb Royal Rs 141/kg, Tata Sampann Rs 180/kg, Royals Kitchen Rs 239/kg; 500 g budget packs about Rs 140-156/kg. Rs 140 = value brand."
+  },
+  {
+   "id": "eggs_farm",
+   "name": "Whole eggs (farm)",
+   "diet": "egg",
+   "unit": "30 eggs (1 tray)",
+   "priceInr": 210,
+   "gramsPerUnit": 1500,
+   "proteinPer100g": 13,
+   "kcalPer100g": 143,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "About 50 g edible per egg = 6.5 g protein. Hard-boiled egg is similar per 100 g.",
+   "inrPer10gProtein": 10.8,
+   "notes": "Best all-round budget complete protein: about 6.5 g per Rs 7. Keep the yolk for B12, vitamin D and choline.",
+   "tags": [
+    "budget",
+    "egg",
+    "complete-protein"
+   ],
+   "src": "https://mkisan.net/en/egg-rate/",
+   "priceBasis": "listing",
+   "priceNote": "NECC wholesale about Rs 5.8-6.6/egg (mKisan, KisanDeals; Delhi Rs 6.3 on 23 Oct 2026). Retail runs 10-25% above NECC, so Rs 7/egg x 30 = Rs 210."
+  },
+  {
+   "id": "skimmed_milk_powder",
+   "name": "Skimmed milk powder",
+   "diet": "veg",
+   "unit": "1 kg",
+   "priceInr": 450,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 35,
+   "kcalPer100g": 360,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "30 g powder in 250 ml water gives about 10 g protein.",
+   "inrPer10gProtein": 12.9,
+   "notes": "A cheap protein booster for oats, lassi or shakes. Contains lactose (about 50% by weight).",
+   "tags": [
+    "dairy",
+    "lactose",
+    "lactose_high",
+    "complete-protein",
+    "lean"
+   ],
+   "src": null,
+   "priceBasis": "estimate",
+   "priceNote": "No listing retrieved (src null); about Rs 400-500/kg is the typical retail range."
+  },
+  {
+   "id": "chicken_breast_raw",
+   "name": "Chicken breast (boneless)",
+   "diet": "nonveg",
+   "unit": "1 kg boneless raw",
+   "priceInr": 340,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 22.5,
+   "kcalPer100g": 120,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Raw weight. Cooked breast is about 31 g protein and 165 kcal per 100 g (about 30% water loss).",
+   "inrPer10gProtein": 15.1,
+   "notes": "Very lean; do not overcook. Bone-in chicken costs less per kg but you pay for the bone.",
+   "tags": [
+    "lean",
+    "poultry",
+    "complete-protein"
+   ],
+   "src": "https://chicken-rate.com/today-chicken-rate-in-bengaluru/",
+   "priceBasis": "range-midpoint",
+   "priceNote": "Bengaluru price guide Rs 360-450/kg; Hyperpure boneless breast 2 kg Rs 575 (about Rs 288/kg wholesale). Rs 340 = mid of your Rs 300-380 band."
+  },
+  {
+   "id": "oats_raw",
+   "name": "Rolled oats",
+   "diet": "vegan",
+   "unit": "1 kg",
+   "priceInr": 200,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 12.5,
+   "kcalPer100g": 389,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Cooked in water (1:2) is about 4 g protein per 100 g.",
+   "inrPer10gProtein": 16.0,
+   "notes": "Good fibre (beta-glucan) but low protein density; cook in milk or add whey/curd to make it a protein meal.",
+   "tags": [
+    "grain",
+    "fibre"
+   ],
+   "src": "https://m.indiamart.com/proddetail/rolled-oats-26233698362.html",
+   "priceBasis": "listing",
+   "priceNote": "IndiaMART rolled oats Rs 220/kg; branded retail typically Rs 180-230/kg."
+  },
+  {
+   "id": "tofu_firm",
+   "name": "Tofu (firm)",
+   "diet": "vegan",
+   "unit": "1 kg",
+   "priceInr": 265,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 16,
+   "kcalPer100g": 130,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Firm pressed tofu 14-18 g protein per 100 g; silken tofu is only 5-8 g.",
+   "inrPer10gProtein": 16.6,
+   "notes": "Low-lactose, soy-based; scramble as bhurji or grill. Keeps 3-4 days refrigerated.",
+   "tags": [
+    "soy",
+    "vegan",
+    "complete-protein"
+   ],
+   "src": null,
+   "priceBasis": "estimate",
+   "priceNote": "Pro Plant tofu 200 g at Rs 53 (about Rs 265/kg, 18 g protein claim) seen in a retail comparison table; no stable product URL, so src is null."
+  },
+  {
+   "id": "peanut_butter",
+   "name": "Peanut butter (unsweetened)",
+   "diet": "vegan",
+   "unit": "1 kg",
+   "priceInr": 420,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 25,
+   "kcalPer100g": 600,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "1 tbsp (15 g) = about 3.8 g protein and 90 kcal.",
+   "inrPer10gProtein": 16.8,
+   "notes": "Choose 90%+ peanuts with no added sugar or palm oil. Very calorie-dense: measure the spoon.",
+   "tags": [
+    "nuts",
+    "high-fat",
+    "calorie-dense"
+   ],
+   "src": null,
+   "priceBasis": "estimate",
+   "priceNote": "Branded unsweetened peanut butter typically Rs 350-550/kg; no listing retrieved (src null)."
+  },
+  {
+   "id": "chicken_whole",
+   "name": "Chicken, whole (with skin and bone)",
+   "diet": "nonveg",
+   "unit": "1 kg dressed bird",
+   "priceInr": 230,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 19.5,
+   "kcalPer100g": 215,
+   "ediblePct": 65,
+   "gramsPer100g_cooked_note": "Per 100 g EDIBLE meat+skin. About 65% of the purchased weight is edible, so 100 g purchased gives about 12.7 g protein.",
+   "inrPer10gProtein": 18.1,
+   "notes": "Cheaper per kg, but about a third is bone. Skin adds fat: remove it for a cut.",
+   "tags": [
+    "poultry",
+    "complete-protein",
+    "high-fat"
+   ],
+   "src": "https://chicken-rate.com/today-chicken-rate-in-bengaluru/",
+   "priceBasis": "estimate",
+   "priceNote": "Dressed-chicken retail about Rs 200-260/kg in metros (rate sites); no single retrievable listing, so Rs 230 is an estimate."
+  },
+  {
+   "id": "milk_toned",
+   "name": "Toned milk",
+   "diet": "veg",
+   "unit": "1 litre",
+   "priceInr": 58,
+   "gramsPerUnit": 1030,
+   "proteinPer100g": 3.1,
+   "kcalPer100g": 58,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "1 litre weighs about 1,030 g. 1 glass (250 ml) = 8 g protein.",
+   "inrPer10gProtein": 18.2,
+   "notes": "Lactose: choose curd or paneer over milk if you bloat. 2 glasses (500 ml) give about 16 g protein.",
+   "tags": [
+    "dairy",
+    "lactose",
+    "lactose_high",
+    "complete-protein",
+    "budget"
+   ],
+   "src": "https://www.businesstoday.in/amp/india/story/amul-increases-milk-prices-by-rs-2-per-litre-after-mother-dairy-check-new-rates-474279-2025-04-30",
+   "priceBasis": "listing",
+   "priceNote": "Mother Dairy pouched toned Rs 57 (Apr-May 2025) rising to about Rs 60 after the May 2026 hike; Amul bulk toned Rs 55. Rs 58 = mid."
+  },
+  {
+   "id": "eggs_desi",
+   "name": "Desi (country) eggs",
+   "diet": "egg",
+   "unit": "30 desi eggs",
+   "priceInr": 300,
+   "gramsPerUnit": 1200,
+   "proteinPer100g": 13,
+   "kcalPer100g": 143,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "About 40 g edible per desi egg = 5.2 g protein.",
+   "inrPer10gProtein": 19.2,
+   "notes": "Smaller and pricier (about Rs 9-12 each); nutritionally close to farm eggs, so it is mostly a taste premium.",
+   "tags": [
+    "egg",
+    "complete-protein"
+   ],
+   "src": "https://mkisan.net/en/egg-rate/",
+   "priceBasis": "estimate",
+   "priceNote": "Retail premium of about Rs 3-5 per egg over farm eggs; no systematic listing found."
+  },
+  {
+   "id": "egg_white",
+   "name": "Egg whites",
+   "diet": "egg",
+   "unit": "Whites of 30 eggs",
+   "priceInr": 210,
+   "gramsPerUnit": 990,
+   "proteinPer100g": 10.9,
+   "kcalPer100g": 52,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "About 33 g white per egg = 3.6 g protein. Cooked whites are similar per 100 g.",
+   "inrPer10gProtein": 19.5,
+   "notes": "Cost assumes you bought whole eggs; if you also eat the yolks (bhurji) the effective cost halves. Cook whites; raw whites block biotin.",
+   "tags": [
+    "egg",
+    "lean",
+    "complete-protein",
+    "low-fat"
+   ],
+   "src": "https://mkisan.net/en/egg-rate/",
+   "priceBasis": "estimate",
+   "priceNote": "Derived from whole-egg price (Rs 7/egg) with yolks counted as waste; there is no standard Indian retail price for whites."
+  },
+  {
+   "id": "paneer_low_fat",
+   "name": "Paneer, low-fat",
+   "diet": "veg",
+   "unit": "1 kg",
+   "priceInr": 380,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 19,
+   "kcalPer100g": 190,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "100 g = about 19 g protein and 190 kcal, versus about 290 kcal for full-fat.",
+   "inrPer10gProtein": 20.0,
+   "notes": "Good cut-phase swap: similar protein, 35% fewer calories. Fresh paneer has little lactose.",
+   "tags": [
+    "dairy",
+    "low-lactose",
+    "lean",
+    "complete-protein"
+   ],
+   "src": "https://www.hyperpure.com/in/amul-lite-paneer-500-gm",
+   "priceBasis": "listing",
+   "priceNote": "Hyperpure wholesale Amul Lite paneer 500 g Rs 168 (about Rs 336/kg); retail markup brings it to about Rs 380/kg."
+  },
+  {
+   "id": "milk_full_cream",
+   "name": "Full-cream milk",
+   "diet": "veg",
+   "unit": "1 litre",
+   "priceInr": 70,
+   "gramsPerUnit": 1030,
+   "proteinPer100g": 3.3,
+   "kcalPer100g": 91,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "1 glass (250 ml) = about 8 g protein and 230 kcal.",
+   "inrPer10gProtein": 20.6,
+   "notes": "Lactose applies, same as toned milk. Higher calories help bulking; toned is better on a cut.",
+   "tags": [
+    "dairy",
+    "lactose",
+    "lactose_high",
+    "complete-protein"
+   ],
+   "src": "https://www.businesstoday.in/amp/india/story/amul-increases-milk-prices-by-rs-2-per-litre-after-mother-dairy-check-new-rates-474279-2025-04-30",
+   "priceBasis": "listing",
+   "priceNote": "Amul Gold Rs 67 (May 2025), Mother Dairy full cream Rs 69 (2025) rising to about Rs 72 (May 2026). Rs 70 = mid."
+  },
+  {
+   "id": "fish_rohu",
+   "name": "Fish (rohu)",
+   "diet": "nonveg",
+   "unit": "1 kg whole, uncleaned",
+   "priceInr": 200,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 16.6,
+   "kcalPer100g": 97,
+   "ediblePct": 55,
+   "gramsPer100g_cooked_note": "Per 100 g EDIBLE flesh. About 55% of a whole rohu is edible after scaling, gutting and bones.",
+   "inrPer10gProtein": 21.9,
+   "notes": "Cheap freshwater fish; good B12. Fatty marine fish (bangda, sardine) give more omega-3 and vitamin D.",
+   "tags": [
+    "fish",
+    "lean",
+    "complete-protein"
+   ],
+   "src": "https://dir.tridge.com/prices/fresh-rohu/IN",
+   "priceBasis": "listing",
+   "priceNote": "Retail Delhi Rs 175/kg, Chennai Rs 205/kg, Raipur online Rs 210/kg; wholesale Rs 145-186/kg (Apr 2025)."
+  },
+  {
+   "id": "curd_full_fat",
+   "name": "Curd / dahi (toned, packaged)",
+   "diet": "veg",
+   "unit": "1 kg",
+   "priceInr": 80,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 3.3,
+   "kcalPer100g": 60,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Hung curd (strained overnight) is about 6-8 g protein per 100 g.",
+   "inrPer10gProtein": 24.2,
+   "notes": "Lactose is partly fermented, so curd is usually tolerated better than milk. Hang it for thick, higher-protein dahi.",
+   "tags": [
+    "dairy",
+    "low-lactose",
+    "probiotic",
+    "complete-protein"
+   ],
+   "src": "https://www.tribuneindia.com/news/business/after-mother-dairy-amul-hikes-milk-prices-by-rs-2-per-litre/",
+   "priceBasis": "estimate",
+   "priceNote": "Pack prices for toned dahi (400 g pouches about Rs 30-35) imply about Rs 75-85/kg; no single listing fetched. Same dairy price class as Amul/Mother Dairy milk (source)."
+  },
+  {
+   "id": "paneer_raw",
+   "name": "Paneer (full-fat)",
+   "diet": "veg",
+   "unit": "1 kg",
+   "priceInr": 440,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 18,
+   "kcalPer100g": 290,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Pack labels vary from 14 to 20 g protein per 100 g depending on moisture and brand.",
+   "inrPer10gProtein": 24.4,
+   "notes": "Whey is drained off, so lactose is low: usually fine when milk bloats you. Calorie-dense (100 g about 290 kcal).",
+   "tags": [
+    "dairy",
+    "low-lactose",
+    "high-fat",
+    "complete-protein"
+   ],
+   "src": "https://www.bigbasket.com/pd/40096749/amul-malai-fresh-paneer-1-kg/",
+   "priceBasis": "listing",
+   "priceNote": "BigBasket Amul fresh paneer 1 kg Rs 435, Amul Malai block Rs 455; Mother Dairy Calcutta list Rs 300 (stale). GST on paneer cut to 0% from 22 Sep 2025."
+  },
+  {
+   "id": "moong_sprouts",
+   "name": "Sprouts (moong / mixed)",
+   "diet": "vegan",
+   "unit": "1 kg ready-to-eat sprouts",
+   "priceInr": 150,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 6,
+   "kcalPer100g": 85,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Home 1-day sprouts are 8-11 g protein per 100 g; long-tailed market sprouts are only about 3-5 g (mostly water).",
+   "inrPer10gProtein": 25.0,
+   "notes": "Raw sprouts cause gas and carry bacteria risk: steam or saute for 5 minutes with lemon and jeera.",
+   "tags": [
+    "legume",
+    "sprout",
+    "fibre"
+   ],
+   "src": "https://www.pib.gov.in/PressReleaseIframePage.aspx?PRID=2112892&reg=48&lang=2",
+   "priceBasis": "estimate",
+   "priceNote": "Ready packs about Rs 35-45 per 250 g (Rs 140-180/kg); home sprouting costs about Rs 15-20/kg of moong equivalent."
+  },
+  {
+   "id": "quinoa_dry",
+   "name": "Quinoa",
+   "diet": "vegan",
+   "unit": "1 kg dry",
+   "priceInr": 350,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 14,
+   "kcalPer100g": 368,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Dry weight. Cooked quinoa is about 4.4 g protein per 100 g.",
+   "inrPer10gProtein": 25.0,
+   "notes": "Complete protein but expensive for what it gives; jowar, bajra and ragi are far cheaper fibre sources.",
+   "tags": [
+    "grain",
+    "complete-protein",
+    "premium"
+   ],
+   "src": "https://alphonsomango.in/blogs/dry-fruits/dry-fruits-price-list",
+   "priceBasis": "listing",
+   "priceNote": "Online retail Rs 350/kg (Oct 2026 list); Selina Wamucii metros Rs 680-900/kg; bulk wholesale Rs 90/kg."
+  },
+  {
+   "id": "cheese_slice",
+   "name": "Cheese (processed block / slices)",
+   "diet": "veg",
+   "unit": "1 kg",
+   "priceInr": 580,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 20,
+   "kcalPer100g": 320,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "1 slice (20 g) = about 4 g protein and 60 kcal.",
+   "inrPer10gProtein": 29.0,
+   "notes": "Very little lactose but high in sodium and fat; fine as a topping, a poor main protein source.",
+   "tags": [
+    "dairy",
+    "low-lactose",
+    "high-fat",
+    "high-sodium",
+    "complete-protein"
+   ],
+   "src": "https://www.bigbasket.com/pd/40096749/amul-malai-fresh-paneer-1-kg/",
+   "priceBasis": "estimate",
+   "priceNote": "Amul processed cheese blocks retail about Rs 550-650/kg (estimate); src is the paneer listing as a dairy-retail reference."
+  },
+  {
+   "id": "whey_blend",
+   "name": "Whey blend (budget, about 55% protein)",
+   "diet": "veg",
+   "unit": "1 kg",
+   "priceInr": 1700,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 55,
+   "kcalPer100g": 395,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "A 45 g scoop gives about 24 g protein, with extra carbs, flavour and often sweeteners.",
+   "inrPer10gProtein": 30.9,
+   "notes": "Cheapest whey per kg but only 53-60% protein and often sweetened; compare cost per gram of protein, not per kg.",
+   "tags": [
+    "supplement",
+    "dairy",
+    "lactose",
+    "lactose_high",
+    "artificial_sweetener",
+    "complete-protein",
+    "fast-absorbing"
+   ],
+   "src": "https://www.yourtrainer.in/whey-protein-price-india",
+   "priceBasis": "listing",
+   "priceNote": "Nakpro Impact Rs 1,599/kg (53% protein), AS-IT-IS ATOM Rs 1,792/kg (60%), Oct 2026."
+  },
+  {
+   "id": "prawns_raw",
+   "name": "Prawns (jhinga)",
+   "diet": "nonveg",
+   "unit": "1 kg shell-on, headless",
+   "priceInr": 400,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 18,
+   "kcalPer100g": 85,
+   "ediblePct": 65,
+   "gramsPer100g_cooked_note": "Per 100 g EDIBLE meat. About 65% of shell-on weight is edible.",
+   "inrPer10gProtein": 34.2,
+   "notes": "Low calorie and high protein but cholesterol-rich; shellfish allergy is common.",
+   "tags": [
+    "seafood",
+    "lean",
+    "complete-protein",
+    "shellfish-allergen"
+   ],
+   "src": "https://market.todaypricerates.com/Delhi-chicken-mutton-beef-fish-rate",
+   "priceBasis": "listing",
+   "priceNote": "Retail jhinga Delhi Rs 355/kg, New Delhi Rs 390, Chennai Rs 400 (Oct 2026 aggregator); peeled/jumbo costs far more."
+  },
+  {
+   "id": "whey_concentrate",
+   "name": "Whey protein concentrate (plain)",
+   "diet": "veg",
+   "unit": "1 kg",
+   "priceInr": 3000,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 76,
+   "kcalPer100g": 380,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "1 scoop (30-35 g) gives 24-28 g protein; protein by weight 73-80%.",
+   "inrPer10gProtein": 39.5,
+   "notes": "Lactose is present (about 3-4 g per scoop): if it bloats you, try isolate. Check for lab-tested labels.",
+   "tags": [
+    "supplement",
+    "dairy",
+    "lactose",
+    "lactose_high",
+    "complete-protein",
+    "fast-absorbing"
+   ],
+   "src": "https://www.yourtrainer.in/whey-protein-price-india",
+   "priceBasis": "listing",
+   "priceNote": "Oct 2026: Nakpro Whey Gold Rs 2,999/kg, AS-IT-IS ONE Rs 3,299, MuscleBlaze Raw Rs 3,499. Prices rose sharply in 2026 on imported-whey shortage (Business Standard)."
+  },
+  {
+   "id": "soy_milk",
+   "name": "Soy milk (unsweetened, fortified)",
+   "diet": "vegan",
+   "unit": "1 litre",
+   "priceInr": 140,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 3.3,
+   "kcalPer100g": 45,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "1 glass (250 ml) = about 8 g protein.",
+   "inrPer10gProtein": 42.4,
+   "notes": "Pick unsweetened, calcium and B12 fortified. Mild bloating in some people.",
+   "tags": [
+    "soy",
+    "vegan",
+    "dairy-free"
+   ],
+   "src": null,
+   "priceBasis": "estimate",
+   "priceNote": "No retrievable listing; typical Indian soy-milk cartons Rs 120-160 per litre (estimate)."
+  },
+  {
+   "id": "whey_isolate",
+   "name": "Whey protein isolate",
+   "diet": "veg",
+   "unit": "1 kg",
+   "priceInr": 4800,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 88,
+   "kcalPer100g": 370,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "1 scoop (30 g) gives about 25-27 g protein; protein by weight 85-90%.",
+   "inrPer10gProtein": 54.5,
+   "notes": "Lowest lactose of the whey family, the best pick for milk-related bloating. Premium price.",
+   "tags": [
+    "supplement",
+    "dairy",
+    "low-lactose",
+    "complete-protein",
+    "fast-absorbing"
+   ],
+   "src": "https://www.business-standard.com/amp/economy/news/protein-boom-pushes-whey-prices-higher-as-india-relies-on-imports-126092901134_1.html",
+   "priceBasis": "estimate",
+   "priceNote": "No pure isolate listing found in the Oct 2026 table (only blends); Business Standard cites whey up to Rs 4,500+/kg and isolate up about 5x since 2023. Rs 4,800 is an estimate."
+  },
+  {
+   "id": "mutton_raw",
+   "name": "Mutton (goat, bone-in)",
+   "diet": "nonveg",
+   "unit": "1 kg bone-in",
+   "priceInr": 850,
+   "gramsPerUnit": 1000,
+   "proteinPer100g": 19,
+   "kcalPer100g": 150,
+   "ediblePct": 80,
+   "gramsPer100g_cooked_note": "Per 100 g EDIBLE meat. About 80% of bone-in weight is edible meat and fat.",
+   "inrPer10gProtein": 55.9,
+   "notes": "Rich in iron, zinc and B12 but costly per gram of protein and high in saturated fat. Use as a 1-2x/week iron booster.",
+   "tags": [
+    "red_meat",
+    "complete-protein",
+    "iron-rich",
+    "high-fat"
+   ],
+   "src": "https://market.todaypricerates.com/Delhi-chicken-mutton-beef-fish-rate",
+   "priceBasis": "listing",
+   "priceNote": "Retail Delhi Rs 815/kg, Chennai Rs 855, New Delhi Rs 875, UP Rs 785 (Oct 2026); supermarkets and apps Rs 980-1,180."
+  },
+  {
+   "id": "greek_yogurt_epigamia",
+   "name": "Greek yogurt (Epigamia, plain)",
+   "diet": "veg",
+   "unit": "400 g tub",
+   "priceInr": 250,
+   "gramsPerUnit": 400,
+   "proteinPer100g": 7,
+   "kcalPer100g": 90,
+   "ediblePct": 100,
+   "gramsPer100g_cooked_note": "Epigamia plain is about 7 g protein per 100 g; Turbo high-protein line is about 12 g per 100 g (Rs 325 for 430 g).",
+   "inrPer10gProtein": 89.3,
+   "notes": "Convenient and low-lactose (strained) but about 9x the cost per gram of protein of eggs. Hang regular curd for a cheap version.",
+   "tags": [
+    "dairy",
+    "low-lactose",
+    "premium",
+    "complete-protein"
+   ],
+   "src": "https://blinkit.com/prn/epigamia-natural-greek-yogurt/prid/332681",
+   "priceBasis": "listing",
+   "priceNote": "Blinkit: 400 g Rs 250 (about Rs 625/kg); 85 g Rs 60."
+  }
+ ],
+ "micros": [
+  {
+   "id": "iron",
+   "name": "Iron",
+   "unit": "mg",
+   "rdaMale": 19,
+   "rdaFemale": 29,
+   "ulNote": "Tolerable upper limit about 45 mg/day (IOM/NIN). Do not supplement without a blood test (Hb, ferritin): excess causes GI upset and is risky in haemochromatosis.",
+   "whyItMatters": "Carries oxygen to working muscle; low iron means early fatigue, breathlessness on sets and slow recovery.",
+   "indiaPrevalenceNote": "NFHS-5 (2019-21): 57% of women and 25% of men aged 15-49 are anaemic.",
+   "indiaPrevalenceSrc": "https://www.dtnext.in/lifestyle/wellbeing/anaemia-a-preventable-health-threat-in-girls-women-in-india-784398",
+   "vegNote": "Plant (non-haem) iron absorbs only about 2-10%. Squeeze lemon or amla on dal, chole and palak, keep chai/coffee 1 hour away from meals, and cook in an iron kadhai.",
+   "rdaSrc": "https://www.nutraingredients.com/Article/2021/08/11/India-s-RDA-levels-Regulator-again-revises-vitamin-and-mineral-rules-with-increase-in-magnesium-biotin/",
+   "rdaNote": "ICMR-NIN Nutrient Requirements for Indians 2020 (RDA, adult 18-50 y), as adopted by FSSAI RDA 2021 / Aug 2021 amendment.",
+   "topFoods": [
+    {
+     "name": "Chicken liver (cooked)",
+     "per100": 11.6,
+     "serving": "1 katori (80 g)",
+     "perServing": 9.3
+    },
+    {
+     "name": "Til / sesame seeds",
+     "per100": 9.3,
+     "serving": "2 tsp (10 g)",
+     "perServing": 0.9
+    },
+    {
+     "name": "Rajgira (amaranth seeds, dry)",
+     "per100": 7.6,
+     "serving": "30 g (1 ladoo / small porridge)",
+     "perServing": 2.3
+    },
+    {
+     "name": "Bajra flour",
+     "per100": 6.4,
+     "serving": "1 bajra roti (40 g flour)",
+     "perServing": 2.6
+    },
+    {
+     "name": "Soya chunks (dry)",
+     "per100": 9.2,
+     "serving": "30 g dry (about 1 katori cooked)",
+     "perServing": 2.8
+    },
+    {
+     "name": "Jaggery (gur)",
+     "per100": 11.0,
+     "serving": "1 small piece (10 g)",
+     "perServing": 1.1
+    },
+    {
+     "name": "Moringa (drumstick) leaves",
+     "per100": 4.0,
+     "serving": "1 katori sabzi (100 g raw leaves)",
+     "perServing": 4.0
+    },
+    {
+     "name": "Ragi (finger millet) flour",
+     "per100": 3.9,
+     "serving": "1 ragi roti (40 g flour)",
+     "perServing": 1.6
+    },
+    {
+     "name": "Masoor dal (cooked)",
+     "per100": 3.3,
+     "serving": "1 katori (150 g)",
+     "perServing": 5.0
+    },
+    {
+     "name": "Palak (spinach), raw",
+     "per100": 2.7,
+     "serving": "1 katori sabzi (100 g raw leaves)",
+     "perServing": 2.7
+    }
+   ]
+  },
+  {
+   "id": "calcium",
+   "name": "Calcium",
+   "unit": "mg",
+   "rdaMale": 1000,
+   "rdaFemale": 1000,
+   "ulNote": "Upper limit about 2,500 mg/day from food + supplements (NIN/IOM). Supplements above about 500 mg per dose absorb poorly: split doses and take with food.",
+   "whyItMatters": "Bone density and muscle contraction; heavy lifters and people who sweat a lot lose more calcium.",
+   "indiaPrevalenceNote": "No recent national adult survey found; older NNMB state surveys showed mean intakes of only about 280-400 mg/day (1970s data, dated) against the 1,000 mg RDA.",
+   "indiaPrevalenceSrc": "https://www.nin.res.in/downloads/Report_for_the_year_1977.pdf",
+   "vegNote": "Vegans: ragi, til, methi/moringa leaves and calcium-set tofu or fortified soy milk. Spinach calcium is mostly oxalate-bound, so do not count on palak. Vitamin D improves absorption.",
+   "rdaSrc": "https://www.nutraingredients.com/Article/2021/08/11/India-s-RDA-levels-Regulator-again-revises-vitamin-and-mineral-rules-with-increase-in-magnesium-biotin/",
+   "rdaNote": "ICMR-NIN Nutrient Requirements for Indians 2020 (RDA, adult 18-50 y), as adopted by FSSAI RDA 2021 / Aug 2021 amendment.",
+   "topFoods": [
+    {
+     "name": "Ragi (finger millet) flour",
+     "per100": 344,
+     "serving": "1 ragi roti (40 g flour)",
+     "perServing": 138.0
+    },
+    {
+     "name": "Til / sesame seeds",
+     "per100": 975,
+     "serving": "2 tsp (10 g)",
+     "perServing": 97.5
+    },
+    {
+     "name": "Skimmed milk powder",
+     "per100": 1257,
+     "serving": "2 tbsp (20 g)",
+     "perServing": 251.0
+    },
+    {
+     "name": "Curd / dahi",
+     "per100": 120,
+     "serving": "1 katori (150 g)",
+     "perServing": 180.0
+    },
+    {
+     "name": "Toned milk",
+     "per100": 120,
+     "serving": "1 glass (250 ml, about 258 g)",
+     "perServing": 310.0
+    },
+    {
+     "name": "Paneer",
+     "per100": 208,
+     "serving": "100 g",
+     "perServing": 208.0
+    },
+    {
+     "name": "Methi (fenugreek) leaves, raw",
+     "per100": 395,
+     "serving": "1 katori sabzi (about 100 g raw leaves)",
+     "perServing": 395.0
+    },
+    {
+     "name": "Moringa (drumstick) leaves",
+     "per100": 185,
+     "serving": "1 katori sabzi (100 g raw leaves)",
+     "perServing": 185.0
+    },
+    {
+     "name": "Sardine fish eaten with bones (tarli / canned)",
+     "per100": 382,
+     "serving": "1 katori (100 g)",
+     "perServing": 382.0
+    },
+    {
+     "name": "Cheese slice (processed)",
+     "per100": 700,
+     "serving": "1 slice (20 g)",
+     "perServing": 140.0
+    }
+   ]
+  },
+  {
+   "id": "vitamin_d",
+   "name": "Vitamin D",
+   "unit": "mcg",
+   "rdaMale": 15,
+   "rdaFemale": 15,
+   "ulNote": "Upper limit 100 mcg (4,000 IU)/day (IOM/NIN). Test 25(OH)D before high-dose supplements; weekly 60,000 IU sachets only under medical advice.",
+   "whyItMatters": "Supports calcium absorption, bone strength, muscle function and immunity; low levels link to aches and slower recovery.",
+   "indiaPrevalenceNote": "Pune corporate-employee study (vegetarians, n=100): 82% were vitamin D deficient; a larger pan-India diagnostic-lab dataset reports about 81% (self-selected samples).",
+   "indiaPrevalenceSrc": "https://doi.org/10.7759/cureus.34642",
+   "vegNote": "Almost no veg food has vitamin D: rely on 15-30 min of midday sun on arms/legs 3-4x a week (darker skin needs longer), fortified milk/oil, and a supplement if tests are low. Vegans: choose D3 from lichen or D2.",
+   "rdaSrc": "https://www.nutraingredients.com/Article/2021/08/11/India-s-RDA-levels-Regulator-again-revises-vitamin-and-mineral-rules-with-increase-in-magnesium-biotin/",
+   "rdaNote": "Vitamin D RDA 600 IU = 15 mcg/day (ICMR-NIN 2020). Food values vary widely by species, season and fortification.",
+   "topFoods": [
+    {
+     "name": "Salmon fish (farmed)",
+     "per100": 11.0,
+     "serving": "100 g fillet",
+     "perServing": 11.0
+    },
+    {
+     "name": "Mackerel fish (bangda)",
+     "per100": 8.0,
+     "serving": "1 katori fry (100 g)",
+     "perServing": 8.0
+    },
+    {
+     "name": "Mushrooms, UV/sun-exposed (label says vitamin D)",
+     "per100": 10.0,
+     "serving": "1 katori (100 g)",
+     "perServing": 10.0
+    },
+    {
+     "name": "Sardine fish (tarli)",
+     "per100": 4.8,
+     "serving": "1 katori (100 g)",
+     "perServing": 4.8
+    },
+    {
+     "name": "Cod liver oil (check label)",
+     "per100": 250.0,
+     "serving": "1 tsp (5 g)",
+     "perServing": 12.5
+    },
+    {
+     "name": "Egg (whole)",
+     "per100": 2.0,
+     "serving": "2 eggs (100 g)",
+     "perServing": 2.0
+    },
+    {
+     "name": "Canned tuna fish (in water)",
+     "per100": 1.7,
+     "serving": "1/2 tin (80 g)",
+     "perServing": 1.4
+    },
+    {
+     "name": "Fortified toned milk (check label)",
+     "per100": 1.0,
+     "serving": "1 glass (250 ml)",
+     "perServing": 2.5
+    }
+   ]
+  },
+  {
+   "id": "vitamin_b12",
+   "name": "Vitamin B12",
+   "unit": "mcg",
+   "rdaMale": 2.2,
+   "rdaFemale": 2.2,
+   "ulNote": "No upper limit set (excess is excreted). High-dose tablets or injections are for diagnosed deficiency under a doctor.",
+   "whyItMatters": "Needed for red blood cells and nerves; low B12 causes tiredness, tingling and poor workout recovery.",
+   "indiaPrevalenceNote": "In Pune men, vegetarians had 4.4x the risk of low B12 vs frequent non-veg eaters; a Pune vegetarian corporate sample found 14% B12-deficient.",
+   "indiaPrevalenceSrc": "https://nutritionj.biomedcentral.com/track/pdf/10.1186/1475-2891-12-136",
+   "vegNote": "B12 is almost absent in plant foods. Dairy and eggs help but often fall short, so vegetarians should get B12 tested; vegans must take a supplement or fortified foods (typical maintenance about 250 mcg/day, per doctor advice).",
+   "rdaSrc": "https://www.nutraingredients.com/Article/2021/08/11/India-s-RDA-levels-Regulator-again-revises-vitamin-and-mineral-rules-with-increase-in-magnesium-biotin/",
+   "rdaNote": "ICMR-NIN Nutrient Requirements for Indians 2020 (RDA, adult 18-50 y), as adopted by FSSAI RDA 2021 / Aug 2021 amendment.",
+   "topFoods": [
+    {
+     "name": "Chicken liver (cooked)",
+     "per100": 16.6,
+     "serving": "1 katori (80 g)",
+     "perServing": 13.3
+    },
+    {
+     "name": "Sardine fish (tarli)",
+     "per100": 8.9,
+     "serving": "1 katori (100 g)",
+     "perServing": 8.9
+    },
+    {
+     "name": "Mackerel fish (bangda)",
+     "per100": 8.7,
+     "serving": "1 katori fry (100 g)",
+     "perServing": 8.7
+    },
+    {
+     "name": "Goat meat (mutton), cooked",
+     "per100": 2.0,
+     "serving": "1 katori (100 g)",
+     "perServing": 2.0
+    },
+    {
+     "name": "Rohu fish",
+     "per100": 1.5,
+     "serving": "1 katori curry (100 g fish)",
+     "perServing": 1.5
+    },
+    {
+     "name": "Prawns",
+     "per100": 1.1,
+     "serving": "100 g",
+     "perServing": 1.1
+    },
+    {
+     "name": "Egg (whole)",
+     "per100": 1.1,
+     "serving": "2 eggs (100 g)",
+     "perServing": 1.1
+    },
+    {
+     "name": "Toned milk",
+     "per100": 0.45,
+     "serving": "1 glass (250 ml, about 258 g)",
+     "perServing": 1.2
+    },
+    {
+     "name": "Curd / dahi",
+     "per100": 0.4,
+     "serving": "1 katori (150 g)",
+     "perServing": 0.6
+    },
+    {
+     "name": "Fortified soy drink (check label)",
+     "per100": 0.9,
+     "serving": "1 glass (250 ml)",
+     "perServing": 2.2
+    }
+   ]
+  },
+  {
+   "id": "vitamin_c",
+   "name": "Vitamin C",
+   "unit": "mg",
+   "rdaMale": 80,
+   "rdaFemale": 65,
+   "ulNote": "Upper limit 2,000 mg/day (IOM). Over 1 g/day in supplements can cause loose stools and raises kidney-stone risk in prone people.",
+   "whyItMatters": "Collagen and tendon repair, immunity, and it multiplies absorption of plant iron.",
+   "indiaPrevalenceNote": "Household surveys show fruit+veg intake of only about 160-184 g/person/day (NSS 2011-12) vs the WHO 400 g; one survey found 98% of adults eat under 400 g. No national vitamin C deficiency survey.",
+   "indiaPrevalenceSrc": "https://www.business-standard.com/article/pti-stories/intake-of-fruits-and-vegetables-low-in-indians-survey-116020401817_1.html",
+   "vegNote": "Heat destroys vitamin C, so eat fruit and salads raw or lightly cooked. Lemon on dal/chole/palak can boost plant-iron absorption 2-3x.",
+   "rdaSrc": "https://www.nutraingredients.com/Article/2021/08/11/India-s-RDA-levels-Regulator-again-revises-vitamin-and-mineral-rules-with-increase-in-magnesium-biotin/",
+   "rdaNote": "Vitamin C RDA 80 mg men / 65 mg women (ICMR-NIN 2020). Food values depend on variety and ripeness.",
+   "topFoods": [
+    {
+     "name": "Amla (Indian gooseberry)",
+     "per100": 252,
+     "serving": "1 medium amla (35 g)",
+     "perServing": 88.2
+    },
+    {
+     "name": "Guava",
+     "per100": 212,
+     "serving": "1 small guava (100 g)",
+     "perServing": 212.0
+    },
+    {
+     "name": "Drumstick (sahjan) pods",
+     "per100": 120,
+     "serving": "1 katori sabzi (100 g)",
+     "perServing": 120.0
+    },
+    {
+     "name": "Capsicum (green/red)",
+     "per100": 100,
+     "serving": "1 katori chopped (100 g)",
+     "perServing": 100.0
+    },
+    {
+     "name": "Papaya",
+     "per100": 61,
+     "serving": "1 katori cubes (150 g)",
+     "perServing": 91.5
+    },
+    {
+     "name": "Orange / mosambi",
+     "per100": 53,
+     "serving": "1 medium (130 g)",
+     "perServing": 68.9
+    },
+    {
+     "name": "Pineapple",
+     "per100": 48,
+     "serving": "1 katori (150 g)",
+     "perServing": 72.0
+    },
+    {
+     "name": "Cauliflower",
+     "per100": 48,
+     "serving": "1 katori (100 g)",
+     "perServing": 48.0
+    },
+    {
+     "name": "Lemon juice",
+     "per100": 39,
+     "serving": "juice of 1 lemon (30 ml)",
+     "perServing": 11.7
+    },
+    {
+     "name": "Cabbage (patta gobi), raw",
+     "per100": 36,
+     "serving": "1 katori shredded (100 g)",
+     "perServing": 36.0
+    }
+   ]
+  },
+  {
+   "id": "zinc",
+   "name": "Zinc",
+   "unit": "mg",
+   "rdaMale": 17,
+   "rdaFemale": 13.2,
+   "ulNote": "Upper limit 40 mg/day (IOM). Long-term high-dose supplements can cause copper deficiency and nausea.",
+   "whyItMatters": "Testosterone, protein synthesis and immunity; sweat losses are high in gym-goers.",
+   "indiaPrevalenceNote": "Share of Indians with inadequate absorbable zinc intake rose from 17.1% (1983) to 24.6% (2011-12), per Smith et al; CNNS 2016-18 found 32% of adolescents zinc-deficient.",
+   "indiaPrevalenceSrc": "https://eprints.exchange.isb.edu/id/eprint/876/",
+   "vegNote": "Phytates in grains and legumes block zinc: soak, sprout or ferment (idli, dosa, sprouted moong). Vegetarians may need up to 50% more. Seeds, cashew and soya are the best plant sources.",
+   "rdaSrc": "https://www.nutraingredients.com/Article/2021/08/11/India-s-RDA-levels-Regulator-again-revises-vitamin-and-mineral-rules-with-increase-in-magnesium-biotin/",
+   "rdaNote": "ICMR-NIN Nutrient Requirements for Indians 2020 (RDA, adult 18-50 y), as adopted by FSSAI RDA 2021 / Aug 2021 amendment.",
+   "topFoods": [
+    {
+     "name": "Pumpkin seeds",
+     "per100": 7.8,
+     "serving": "2 tbsp (20 g)",
+     "perServing": 1.6
+    },
+    {
+     "name": "Til / sesame seeds",
+     "per100": 7.8,
+     "serving": "2 tsp (10 g)",
+     "perServing": 0.8
+    },
+    {
+     "name": "Cashew nuts",
+     "per100": 5.8,
+     "serving": "10 cashews (15 g)",
+     "perServing": 0.9
+    },
+    {
+     "name": "Goat meat (mutton), cooked",
+     "per100": 4.5,
+     "serving": "1 katori (100 g)",
+     "perServing": 4.5
+    },
+    {
+     "name": "Soya chunks (dry)",
+     "per100": 4.9,
+     "serving": "30 g dry",
+     "perServing": 1.5
+    },
+    {
+     "name": "Oats (dry)",
+     "per100": 3.6,
+     "serving": "40 g",
+     "perServing": 1.4
+    },
+    {
+     "name": "Peanuts",
+     "per100": 3.3,
+     "serving": "handful (30 g)",
+     "perServing": 1.0
+    },
+    {
+     "name": "Kabuli chana, boiled",
+     "per100": 1.5,
+     "serving": "1 katori (150 g)",
+     "perServing": 2.2
+    },
+    {
+     "name": "Egg (whole)",
+     "per100": 1.3,
+     "serving": "2 eggs (100 g)",
+     "perServing": 1.3
+    },
+    {
+     "name": "Rajma, boiled",
+     "per100": 1.0,
+     "serving": "1 katori (150 g)",
+     "perServing": 1.5
+    }
+   ]
+  },
+  {
+   "id": "magnesium",
+   "name": "Magnesium",
+   "unit": "mg",
+   "rdaMale": 440,
+   "rdaFemale": 370,
+   "ulNote": "The 350 mg/day upper limit applies to supplements only (IOM); food magnesium has no limit. Excess supplement causes loose stools.",
+   "whyItMatters": "Muscle relaxation, cramps, sleep quality and energy metabolism.",
+   "indiaPrevalenceNote": "No national magnesium survey. A 2024 Lancet Global Health 185-country model flagged Indian men as more likely than women to have inadequate magnesium intake (no India-wide percentage published in coverage).",
+   "indiaPrevalenceSrc": "https://thesouthfirst.com/health/lancet-study-estimates-indians-to-be-deficient-in-iron-calcium-folate-intake/",
+   "vegNote": "Plant foods are the main source, so vegetarians do well if they eat seeds, millets, greens and legumes. Sweating, alcohol and heavy chai can lower stores.",
+   "rdaSrc": "https://www.nutraingredients.com/Article/2021/08/11/India-s-RDA-levels-Regulator-again-revises-vitamin-and-mineral-rules-with-increase-in-magnesium-biotin/",
+   "rdaNote": "Magnesium RDA 440/370 mg per the Aug 2021 FSSAI amendment of ICMR-NIN 2020 values (original July 2021 draft had 385/325).",
+   "topFoods": [
+    {
+     "name": "Pumpkin seeds",
+     "per100": 592,
+     "serving": "2 tbsp (20 g)",
+     "perServing": 118.0
+    },
+    {
+     "name": "Flax seeds (alsi)",
+     "per100": 392,
+     "serving": "1 tbsp (10 g)",
+     "perServing": 39.2
+    },
+    {
+     "name": "Til / sesame seeds",
+     "per100": 351,
+     "serving": "2 tsp (10 g)",
+     "perServing": 35.1
+    },
+    {
+     "name": "Cashew nuts",
+     "per100": 292,
+     "serving": "10 cashews (15 g)",
+     "perServing": 43.8
+    },
+    {
+     "name": "Soya chunks (dry)",
+     "per100": 280,
+     "serving": "30 g dry",
+     "perServing": 84.0
+    },
+    {
+     "name": "Almonds",
+     "per100": 270,
+     "serving": "10 almonds (12 g)",
+     "perServing": 32.4
+    },
+    {
+     "name": "Rajgira (amaranth seeds, dry)",
+     "per100": 248,
+     "serving": "30 g",
+     "perServing": 74.4
+    },
+    {
+     "name": "Oats (dry)",
+     "per100": 177,
+     "serving": "40 g",
+     "perServing": 70.8
+    },
+    {
+     "name": "Ragi (finger millet) flour",
+     "per100": 137,
+     "serving": "1 ragi roti (40 g flour)",
+     "perServing": 54.8
+    },
+    {
+     "name": "Palak (spinach), cooked",
+     "per100": 87,
+     "serving": "1 katori (100 g)",
+     "perServing": 87.0
+    }
+   ]
+  },
+  {
+   "id": "potassium",
+   "name": "Potassium",
+   "unit": "mg",
+   "rdaMale": 3510,
+   "rdaFemale": 3510,
+   "ulNote": "No upper limit for food. If you have kidney disease or take ACE inhibitors/potassium-sparing drugs, check with a doctor before supplements or KCl salt substitutes.",
+   "whyItMatters": "Offsets sodium, reduces cramps and water retention, and supports muscle contraction.",
+   "indiaPrevalenceNote": "PGIMER/George Institute study (Frontiers in Nutrition 2024) of 404 north-Indian adults (182 healthy, 222 with CKD; no group difference): mean potassium intake only 1.43 g/day by 24-h urine vs the 3.5 g target.",
+   "indiaPrevalenceSrc": "https://www.frontiersin.org/journals/nutrition/articles/10.3389/fnut.2024.1312581/full",
+   "vegNote": "Plant diets are naturally high in potassium; dal, rajma, banana, coconut water and sabzi do the job. Boiling in water leaches it, so use the cooking water.",
+   "rdaSrc": "https://www.nutraingredients.com/Article/2021/08/11/India-s-RDA-levels-Regulator-again-revises-vitamin-and-mineral-rules-with-increase-in-magnesium-biotin/",
+   "rdaNote": "Potassium 3,510 mg/day adequate intake (ICMR-NIN 2020). Mean intake is typically far lower.",
+   "topFoods": [
+    {
+     "name": "Dates (khajoor), dry",
+     "per100": 656,
+     "serving": "3 dates (about 21 g)",
+     "perServing": 138.0
+    },
+    {
+     "name": "Guava",
+     "per100": 417,
+     "serving": "1 small guava (100 g)",
+     "perServing": 417.0
+    },
+    {
+     "name": "Ragi (finger millet) flour",
+     "per100": 408,
+     "serving": "1 ragi roti (40 g flour)",
+     "perServing": 163.0
+    },
+    {
+     "name": "Rajma, boiled",
+     "per100": 403,
+     "serving": "1 katori (150 g)",
+     "perServing": 604.0
+    },
+    {
+     "name": "Banana",
+     "per100": 358,
+     "serving": "1 medium (100 g edible)",
+     "perServing": 358.0
+    },
+    {
+     "name": "Masoor dal (cooked, thick)",
+     "per100": 369,
+     "serving": "1 katori (150 g)",
+     "perServing": 554.0
+    },
+    {
+     "name": "Potato (aloo), boiled",
+     "per100": 328,
+     "serving": "1 medium (150 g)",
+     "perServing": 492.0
+    },
+    {
+     "name": "Palak (spinach), cooked",
+     "per100": 466,
+     "serving": "1 katori (100 g)",
+     "perServing": 466.0
+    },
+    {
+     "name": "Coconut water",
+     "per100": 250,
+     "serving": "1 glass (250 ml)",
+     "perServing": 625.0
+    },
+    {
+     "name": "Sweet potato (shakarkandi), boiled",
+     "per100": 230,
+     "serving": "1 medium (150 g)",
+     "perServing": 345.0
+    }
+   ]
+  },
+  {
+   "id": "folate",
+   "name": "Folate (vitamin B9)",
+   "unit": "mcg",
+   "rdaMale": 300,
+   "rdaFemale": 220,
+   "ulNote": "Upper limit 1,000 mcg/day of synthetic folic acid (IOM). High folic acid can mask B12 deficiency, so test B12 too.",
+   "whyItMatters": "Red-cell and DNA synthesis; supports recovery and energy. Important before and during pregnancy.",
+   "indiaPrevalenceNote": "CNNS 2016-18: folate deficiency in 37% of Indian adolescents (government report) or 35.6% in a peer-reviewed analysis; 23% of pre-schoolers.",
+   "indiaPrevalenceSrc": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10346745/",
+   "vegNote": "Dals, chana, rajma and green leafy vegetables are rich in folate, so most vegetarians do well. Overcooking and discarding cooking water destroys it: pressure cook pulses, lightly cook greens.",
+   "rdaSrc": "https://www.nutraingredients.com/Article/2021/08/11/India-s-RDA-levels-Regulator-again-revises-vitamin-and-mineral-rules-with-increase-in-magnesium-biotin/",
+   "rdaNote": "Folate RDA 300 mcg DFE men / 220 mcg women as given in secondary summaries of ICMR-NIN 2020; one source lists 220 for both. Verify against the NIN table before clinical use.",
+   "topFoods": [
+    {
+     "name": "Chicken liver (cooked)",
+     "per100": 588,
+     "serving": "1 katori (80 g)",
+     "perServing": 470.0
+    },
+    {
+     "name": "Soya chunks (dry)",
+     "per100": 300,
+     "serving": "30 g dry",
+     "perServing": 90.0
+    },
+    {
+     "name": "Peanuts",
+     "per100": 240,
+     "serving": "handful (30 g)",
+     "perServing": 72.0
+    },
+    {
+     "name": "Masoor dal (cooked)",
+     "per100": 181,
+     "serving": "1 katori (150 g)",
+     "perServing": 272.0
+    },
+    {
+     "name": "Kabuli chana, boiled",
+     "per100": 172,
+     "serving": "1 katori (150 g)",
+     "perServing": 258.0
+    },
+    {
+     "name": "Moong dal (cooked)",
+     "per100": 159,
+     "serving": "1 katori (150 g)",
+     "perServing": 238.0
+    },
+    {
+     "name": "Palak (spinach), cooked",
+     "per100": 146,
+     "serving": "1 katori (100 g)",
+     "perServing": 146.0
+    },
+    {
+     "name": "Rajma, boiled",
+     "per100": 130,
+     "serving": "1 katori (150 g)",
+     "perServing": 195.0
+    },
+    {
+     "name": "Beetroot, raw",
+     "per100": 109,
+     "serving": "1 medium (100 g)",
+     "perServing": 109.0
+    },
+    {
+     "name": "Egg (whole)",
+     "per100": 47,
+     "serving": "2 eggs (100 g)",
+     "perServing": 47.0
+    }
+   ]
+  },
+  {
+   "id": "fiber",
+   "name": "Dietary fibre",
+   "unit": "g",
+   "rdaMale": 30,
+   "rdaFemale": 25,
+   "ulNote": "No upper limit, but raising fibre faster than about 5 g/week without enough water causes gas, bloating and constipation.",
+   "whyItMatters": "Keeps you full on a cut, supports gut regularity and steadier blood sugar.",
+   "indiaPrevalenceNote": "An industry survey (Aashirvaad, 2026; brand-sponsored) found nearly 7 in 10 Indians fall short of recommended fibre.",
+   "indiaPrevalenceSrc": "https://nuffoodsspectrum.asia/2026/05/29/nearly-7-in-10-indians-fall-short-of-daily-fibre-intake-aashirvaad-happy-tummy-findings.html",
+   "vegNote": "Most vegetarian staples (dal, sabzi, whole-grain roti, millets) already supply fibre. Maida, white rice and packaged snacks do not. Raise slowly and drink more water.",
+   "rdaSrc": "https://www.nutraingredients.com/Article/2021/08/11/India-s-RDA-levels-Regulator-again-revises-vitamin-and-mineral-rules-with-increase-in-magnesium-biotin/",
+   "rdaNote": "Fibre RDA 30 g men / 25 g women for sedentary work; 40 g / 30 g for moderate work (ICMR-NIN 2020 via FSSAI). Active gym-goers should aim for the higher figure.",
+   "topFoods": [
+    {
+     "name": "Flax seeds (alsi)",
+     "per100": 27,
+     "serving": "1 tbsp (10 g)",
+     "perServing": 2.7
+    },
+    {
+     "name": "Roasted chana (bhuna)",
+     "per100": 17,
+     "serving": "handful (30 g)",
+     "perServing": 5.1
+    },
+    {
+     "name": "Ragi (finger millet) flour",
+     "per100": 11.5,
+     "serving": "1 ragi roti (40 g flour)",
+     "perServing": 4.6
+    },
+    {
+     "name": "Whole wheat atta",
+     "per100": 11,
+     "serving": "1 roti (30 g flour)",
+     "perServing": 3.3
+    },
+    {
+     "name": "Oats (dry)",
+     "per100": 10.6,
+     "serving": "40 g",
+     "perServing": 4.2
+    },
+    {
+     "name": "Masoor dal (dry)",
+     "per100": 10.7,
+     "serving": "30 g dry (1 katori dal)",
+     "perServing": 3.2
+    },
+    {
+     "name": "Kabuli chana, boiled",
+     "per100": 7.6,
+     "serving": "1 katori (150 g)",
+     "perServing": 11.4
+    },
+    {
+     "name": "Rajma, boiled",
+     "per100": 6.4,
+     "serving": "1 katori (150 g)",
+     "perServing": 9.6
+    },
+    {
+     "name": "Green peas (matar), boiled",
+     "per100": 5.5,
+     "serving": "1 katori (100 g)",
+     "perServing": 5.5
+    },
+    {
+     "name": "Guava",
+     "per100": 5.4,
+     "serving": "1 small guava (100 g)",
+     "perServing": 5.4
+    }
+   ]
+  }
+ ],
+ "symptomHints": [
+  {
+   "id": "legume_gas",
+   "trigger": {
+    "tags": [
+     "legume"
+    ]
+   },
+   "symptom": "gas",
+   "appSymptom": "gas",
+   "lagHours": [
+    3,
+    10
+   ],
+   "hint": "Beans and chana ferment in the gut and cause gas. Soak 8-12 h, discard the water, pressure-cook until soft, add hing + jeera. Build portions up slowly.",
+   "confidence": "common",
+   "src": "https://www.monashfodmap.com/about-fodmap-and-ibs/high-and-low-fodmap-foods/"
+  },
+  {
+   "id": "rajma_chole_bloating",
+   "trigger": {
+    "foodIds": [
+     "rajma_curry",
+     "rajma_raw",
+     "chole",
+     "chole_bhature",
+     "chana_boiled",
+     "kala_chana_boiled"
+    ]
+   },
+   "symptom": "bloating",
+   "appSymptom": "bloating",
+   "lagHours": [
+    2,
+    8
+   ],
+   "hint": "Rajma and chole are high-FODMAP. Soak 8-12 h, discard water, pressure cook, add hing + jeera.",
+   "confidence": "common",
+   "src": "https://www.monashfodmap.com/about-fodmap-and-ibs/high-and-low-fodmap-foods/"
+  },
+  {
+   "id": "dal_gas",
+   "trigger": {
+    "foodIds": [
+     "chana_dal_cooked",
+     "urad_dal_cooked",
+     "toor_dal_cooked",
+     "dal_makhani"
+    ]
+   },
+   "symptom": "gas",
+   "appSymptom": "gas",
+   "lagHours": [
+    2,
+    8
+   ],
+   "hint": "Urad, chana and toor dal ferment more than moong or masoor. Pressure-cook with hing, ginger and jeera, or switch to moong or masoor if gassy.",
+   "confidence": "possible",
+   "src": "https://www.monashfodmap.com/about-fodmap-and-ibs/high-and-low-fodmap-foods/"
+  },
+  {
+   "id": "fodmap_bloating",
+   "trigger": {
+    "tags": [
+     "fodmap_high"
+    ]
+   },
+   "symptom": "bloating",
+   "appSymptom": "bloating",
+   "lagHours": [
+    1,
+    6
+   ],
+   "hint": "High-FODMAP foods (rajma, chole, cauliflower, onion-heavy gravies) bloat sensitive guts. Cut portions in half for 2 weeks and see if it settles.",
+   "confidence": "common",
+   "src": "https://www.monashfodmap.com/about-fodmap-and-ibs/high-and-low-fodmap-foods/"
+  },
+  {
+   "id": "milk_lactose_bloating",
+   "trigger": {
+    "tags": [
+     "lactose_high"
+    ]
+   },
+   "symptom": "bloating",
+   "appSymptom": "bloating",
+   "lagHours": [
+    0.5,
+    4
+   ],
+   "hint": "Milk, milk powder and whey concentrate carry lactose. If you bloat within hours, try curd, paneer or whey isolate, or take milk in smaller glasses.",
+   "confidence": "common",
+   "src": "https://www.niddk.nih.gov/health-information/digestive-diseases/lactose-intolerance",
+   "context": "Lactose malabsorption is common in India (about 27% in a New Delhi cohort vs 67% in South Indian centres, 1981 study)."
+  },
+  {
+   "id": "milk_lactose_loose",
+   "trigger": {
+    "tags": [
+     "lactose_high"
+    ]
+   },
+   "symptom": "loose_stool",
+   "appSymptom": "loose_stool",
+   "lagHours": [
+    0.5,
+    6
+   ],
+   "hint": "Loose stools after milk or a whey-concentrate shake often point to lactose. Swap to isolate or lactose-free milk for a week and see if it clears.",
+   "confidence": "common",
+   "src": "https://pubmed.ncbi.nlm.nih.gov/7234720/"
+  },
+  {
+   "id": "whey_blend_gas",
+   "trigger": {
+    "foodIds": [
+     "whey_goldstandard",
+     "protein_shake_whey_milk",
+     "protein_shake_whey_water"
+    ]
+   },
+   "symptom": "gas",
+   "appSymptom": "gas",
+   "lagHours": [
+    0.5,
+    4
+   ],
+   "hint": "Cheap whey blends often carry sweeteners and fillers that cause gas. If a shake bothers you, test plain concentrate or isolate for two weeks.",
+   "confidence": "possible",
+   "src": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5093271"
+  },
+  {
+   "id": "paneer_cheese_low_lactose",
+   "trigger": {
+    "foodIds": [
+     "paneer_raw",
+     "paneer_low_fat",
+     "cheese_slice",
+     "curd_full_fat",
+     "curd_low_fat",
+     "greek_yogurt_full",
+     "greek_yogurt_nonfat"
+    ]
+   },
+   "symptom": "bloating",
+   "appSymptom": "bloating",
+   "lagHours": [
+    1,
+    4
+   ],
+   "hint": "Paneer, curd and cheese have far less lactose than milk, so most people who bloat on milk tolerate them. If you still bloat, look at the onion-garlic gravy.",
+   "confidence": "possible",
+   "src": "https://www.niddk.nih.gov/health-information/digestive-diseases/lactose-intolerance"
+  },
+  {
+   "id": "dairy_skin",
+   "trigger": {
+    "tags": [
+     "dairy"
+    ]
+   },
+   "symptom": "skin",
+   "appSymptom": "skin",
+   "lagHours": [
+    24,
+    336
+   ],
+   "hint": "Whey and milk can worsen acne in some people. If breakouts follow, try 2-4 weeks off whey, or use isolate, plant protein, eggs and dal.",
+   "confidence": "possible",
+   "src": "https://www.aad.org/public/diseases/acne/causes/diet"
+  },
+  {
+   "id": "wheat_bloating",
+   "trigger": {
+    "tags": [
+     "wheat"
+    ]
+   },
+   "symptom": "bloating",
+   "appSymptom": "bloating",
+   "lagHours": [
+    1,
+    6
+   ],
+   "hint": "Some people bloat from wheat (fructans). If roti triggers you, try ragi, bajra or jowar roti for a week and compare.",
+   "confidence": "possible",
+   "src": "https://www.monashfodmap.com/about-fodmap-and-ibs/high-and-low-fodmap-foods/"
+  },
+  {
+   "id": "fried_acidity",
+   "trigger": {
+    "tags": [
+     "fried"
+    ]
+   },
+   "symptom": "acidity",
+   "appSymptom": "acidity",
+   "lagHours": [
+    0.5,
+    3
+   ],
+   "hint": "Fried and oily food slows stomach emptying and can trigger heartburn. Air-fry or shallow-fry, keep portions small, stay upright 2-3 h after eating.",
+   "confidence": "common",
+   "src": "https://www.niddk.nih.gov/health-information/digestive-diseases/acid-reflux-ger-gerd-adults/eating-diet-nutrition"
+  },
+  {
+   "id": "fried_lethargy",
+   "trigger": {
+    "tags": [
+     "fried",
+     "high_fat"
+    ]
+   },
+   "symptom": "low_energy",
+   "appSymptom": "low_energy",
+   "lagHours": [
+    1,
+    3
+   ],
+   "hint": "Heavy fried meals leave you sluggish for hours. Keep them away from pre-workout meals; pair with salad and a short walk afterwards.",
+   "confidence": "common",
+   "src": "https://www.niddk.nih.gov/health-information/digestive-diseases/acid-reflux-ger-gerd-adults/eating-diet-nutrition"
+  },
+  {
+   "id": "spicy_acidity",
+   "trigger": {
+    "tags": [
+     "spicy"
+    ]
+   },
+   "symptom": "acidity",
+   "appSymptom": "acidity",
+   "lagHours": [
+    0.5,
+    3
+   ],
+   "hint": "Very spicy food and raw chilli can trigger heartburn. Cut chilli, add curd or raita, and avoid it close to bedtime.",
+   "confidence": "common",
+   "src": "https://www.niddk.nih.gov/health-information/digestive-diseases/acid-reflux-ger-gerd-adults/eating-diet-nutrition"
+  },
+  {
+   "id": "rice_lunch_slump",
+   "trigger": {
+    "foodIds": [
+     "rice_white_boiled",
+     "jeera_rice",
+     "curd_rice",
+     "lemon_rice",
+     "tamarind_rice",
+     "fried_rice_veg",
+     "khichdi"
+    ]
+   },
+   "symptom": "low_energy",
+   "appSymptom": "low_energy",
+   "lagHours": [
+    1,
+    3
+   ],
+   "hint": "A big plate of white rice spikes then drops blood sugar, causing a 2-3 pm slump. Halve the rice, start with dal or salad, add protein.",
+   "confidence": "common",
+   "src": "https://www.health.harvard.edu/diseases-and-conditions/glycemic-index-and-glycemic-load-for-100-foods",
+   "context": "Large rice portion (about 250 g cooked or more) at lunch."
+  },
+  {
+   "id": "large_meal_slump",
+   "trigger": {
+    "tags": [
+     "large_meal"
+    ]
+   },
+   "symptom": "low_energy",
+   "appSymptom": "low_energy",
+   "lagHours": [
+    1,
+    3
+   ],
+   "hint": "One very large meal makes you drowsy. Split the same food into two sittings and add a 10-minute walk.",
+   "confidence": "common",
+   "src": "https://www.health.harvard.edu/diseases-and-conditions/glycemic-index-and-glycemic-load-for-100-foods"
+  },
+  {
+   "id": "late_dinner_sleep",
+   "trigger": {
+    "tags": [
+     "late_night"
+    ]
+   },
+   "symptom": "poor_sleep",
+   "appSymptom": "poor_sleep",
+   "lagHours": [
+    1,
+    6
+   ],
+   "hint": "Eating within 2-3 hours of bed can keep you restless. Move dinner earlier, or make it light: dal, khichdi, egg whites or curd.",
+   "confidence": "common",
+   "src": "https://www.healthline.com/nutrition/what-time-should-you-eat-dinner",
+   "context": "Meal within about 3 h of bedtime (app tag late_night = after 10 pm)."
+  },
+  {
+   "id": "late_dinner_acidity",
+   "trigger": {
+    "tags": [
+     "late_night"
+    ]
+   },
+   "symptom": "acidity",
+   "appSymptom": "acidity",
+   "lagHours": [
+    0.5,
+    4
+   ],
+   "hint": "Lying down soon after a heavy dinner pushes acid up. Leave 3 hours before bed; a short walk after eating helps.",
+   "confidence": "common",
+   "src": "https://www.healthline.com/nutrition/what-time-should-you-eat-dinner"
+  },
+  {
+   "id": "evening_caffeine_sleep",
+   "trigger": {
+    "tags": [
+     "evening_caffeine"
+    ]
+   },
+   "symptom": "poor_sleep",
+   "appSymptom": "poor_sleep",
+   "lagHours": [
+    4,
+    10
+   ],
+   "hint": "Caffeine lingers 5-6 hours. Chai or coffee after 4 pm can cut sleep even if you drop off easily. Switch to haldi milk or herbal tea.",
+   "confidence": "common",
+   "src": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3805807/"
+  },
+  {
+   "id": "chai_with_meals_iron",
+   "trigger": {
+    "tags": [
+     "caffeine"
+    ]
+   },
+   "symptom": "low_energy",
+   "appSymptom": "low_energy",
+   "lagHours": [
+    168,
+    2160
+   ],
+   "hint": "Tea or coffee with meals blocks iron absorption, a big deal for vegetarians. Keep chai 1 hour away from meals, or add lemon or amla to the meal.",
+   "confidence": "common",
+   "src": "https://ods.od.nih.gov/factsheets/Iron-HealthProfessional/",
+   "context": "Chai/coffee within about 1 hour of a meal, repeated for weeks."
+  },
+  {
+   "id": "sugar_crash",
+   "trigger": {
+    "tags": [
+     "sugar"
+    ]
+   },
+   "symptom": "low_energy",
+   "appSymptom": "low_energy",
+   "lagHours": [
+    1,
+    3
+   ],
+   "hint": "Sweets and sugary drinks spike then crash blood sugar, leaving you tired. Have them after a protein-rich meal, not on an empty stomach.",
+   "confidence": "common",
+   "src": "https://www.health.harvard.edu/diseases-and-conditions/glycemic-index-and-glycemic-load-for-100-foods"
+  },
+  {
+   "id": "sugar_cravings",
+   "trigger": {
+    "tags": [
+     "sugar"
+    ]
+   },
+   "symptom": "cravings",
+   "appSymptom": "cravings",
+   "lagHours": [
+    1,
+    4
+   ],
+   "hint": "Sugary snacks often trigger more cravings an hour or two later. Pair sweets with protein, like nuts, curd or paneer, to blunt the swing.",
+   "confidence": "possible",
+   "src": "https://www.who.int/news-room/fact-sheets/detail/healthy-diet"
+  },
+  {
+   "id": "alcohol_sleep",
+   "trigger": {
+    "tags": [
+     "alcohol"
+    ]
+   },
+   "symptom": "poor_sleep",
+   "appSymptom": "poor_sleep",
+   "lagHours": [
+    2,
+    8
+   ],
+   "hint": "Alcohol helps you fall asleep but fragments the second half of the night and cuts REM. Stop drinking at least 3 hours before bed.",
+   "confidence": "common",
+   "src": "https://pubmed.ncbi.nlm.nih.gov/23347102/"
+  },
+  {
+   "id": "alcohol_dehydration",
+   "trigger": {
+    "tags": [
+     "alcohol"
+    ]
+   },
+   "symptom": "headache",
+   "appSymptom": "headache",
+   "lagHours": [
+    6,
+    18
+   ],
+   "hint": "Alcohol dehydrates you and often brings a next-morning headache. Alternate each drink with water and have nimbu pani or ORS before sleep.",
+   "confidence": "common",
+   "src": "https://pubmed.ncbi.nlm.nih.gov/23347102/"
+  },
+  {
+   "id": "low_water_protein_constipation",
+   "trigger": {
+    "tags": [
+     "low_water_high_protein"
+    ]
+   },
+   "symptom": "constipation",
+   "appSymptom": "hard_stool",
+   "lagHours": [
+    12,
+    72
+   ],
+   "hint": "High protein with little water and fibre slows the gut. Drink 2.5-3 L water, add isabgol, veggies and fruit; do not live on paneer and eggs alone.",
+   "confidence": "common",
+   "src": "https://www.niddk.nih.gov/health-information/digestive-diseases/constipation/eating-diet-nutrition",
+   "context": "High-protein day (about 1.6 g/kg or more) with low water and fibre."
+  },
+  {
+   "id": "low_fiber_constipation",
+   "trigger": {
+    "tags": [
+     "low_fiber_day"
+    ]
+   },
+   "symptom": "constipation",
+   "appSymptom": "hard_stool",
+   "lagHours": [
+    24,
+    72
+   ],
+   "hint": "Low-fibre days (maida, white rice, no veg or dal) slow digestion. Aim for 25-30 g fibre: salad, fruit, dal and whole-grain roti.",
+   "confidence": "common",
+   "src": "https://www.niddk.nih.gov/health-information/digestive-diseases/constipation/eating-diet-nutrition"
+  },
+  {
+   "id": "fiber_jump_gas",
+   "trigger": {
+    "tags": [
+     "fiber_jump"
+    ]
+   },
+   "symptom": "gas",
+   "appSymptom": "gas",
+   "lagHours": [
+    2,
+    24
+   ],
+   "hint": "Jumping fibre overnight (big salads, sattu, oats, bran) causes gas and bloating. Add about 5 g a week and drink more water.",
+   "confidence": "common",
+   "src": "https://www.niddk.nih.gov/health-information/digestive-diseases/constipation/eating-diet-nutrition",
+   "context": "Fibre intake rises by more than about 10 g/day in a week."
+  },
+  {
+   "id": "soy_bloating",
+   "trigger": {
+    "tags": [
+     "soy"
+    ]
+   },
+   "symptom": "bloating",
+   "appSymptom": "bloating",
+   "lagHours": [
+    2,
+    8
+   ],
+   "hint": "Soya chunks and soy milk bloat some people. Squeeze out the soaking water, start with 25 g dry, and cook with ajwain or jeera.",
+   "confidence": "possible",
+   "src": "https://www.monashfodmap.com/about-fodmap-and-ibs/high-and-low-fodmap-foods/"
+  },
+  {
+   "id": "raw_sprouts_gas",
+   "trigger": {
+    "tags": [
+     "raw_sprouts"
+    ]
+   },
+   "symptom": "gas",
+   "appSymptom": "gas",
+   "lagHours": [
+    2,
+    10
+   ],
+   "hint": "Raw sprouts are hard to digest and can carry bacteria. Steam or saute 5 minutes, add lemon and jeera, and start with half a katori.",
+   "confidence": "possible",
+   "src": "https://www.monashfodmap.com/about-fodmap-and-ibs/high-and-low-fodmap-foods/"
+  },
+  {
+   "id": "onion_garlic_bloating",
+   "trigger": {
+    "tags": [
+     "onion_garlic"
+    ]
+   },
+   "symptom": "bloating",
+   "appSymptom": "bloating",
+   "lagHours": [
+    1,
+    6
+   ],
+   "hint": "Onion and garlic are high-FODMAP and bloat some people. Try hing in the tadka, the green tops of spring onion, or garlic-infused oil.",
+   "confidence": "possible",
+   "src": "https://www.monashfodmap.com/about-fodmap-and-ibs/high-and-low-fodmap-foods/"
+  },
+  {
+   "id": "sweetener_bloating",
+   "trigger": {
+    "tags": [
+     "artificial_sweetener"
+    ]
+   },
+   "symptom": "bloating",
+   "appSymptom": "bloating",
+   "lagHours": [
+    1,
+    6
+   ],
+   "hint": "Sorbitol, xylitol and other sugar alcohols in protein bars and sugar-free drinks ferment in the gut. Check labels; stevia and erythritol are usually gentler.",
+   "confidence": "possible",
+   "src": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5093271"
+  },
+  {
+   "id": "high_sodium_bloating",
+   "trigger": {
+    "tags": [
+     "high_sodium"
+    ]
+   },
+   "symptom": "bloating",
+   "appSymptom": "bloating",
+   "lagHours": [
+    1,
+    12
+   ],
+   "hint": "Salty namkeen, chips and papad hold water, so you feel puffy and the scale jumps. Balance with extra water and potassium: banana, coconut water.",
+   "confidence": "common",
+   "src": "https://www.who.int/news-room/fact-sheets/detail/salt-reduction"
+  },
+  {
+   "id": "very_low_carb_headache",
+   "trigger": {
+    "tags": [
+     "very_low_carb"
+    ]
+   },
+   "symptom": "headache",
+   "appSymptom": "headache",
+   "lagHours": [
+    24,
+    336
+   ],
+   "hint": "Cutting carbs hard can cause headache in the first 1-2 weeks. Drink water, add salt and potassium (coconut water), and taper carbs gradually.",
+   "confidence": "common",
+   "src": "https://www.healthline.com/nutrition/keto-flu-symptoms",
+   "context": "Under about 50 g carbs/day, first 1-2 weeks."
+  },
+  {
+   "id": "very_low_carb_energy",
+   "trigger": {
+    "tags": [
+     "very_low_carb"
+    ]
+   },
+   "symptom": "low_energy",
+   "appSymptom": "low_energy",
+   "lagHours": [
+    24,
+    336
+   ],
+   "hint": "Expect low energy and weaker workouts for 1-2 weeks on very low carb. Keep some carbs around the workout, or taper down instead of cutting at once.",
+   "confidence": "common",
+   "src": "https://www.healthline.com/nutrition/keto-flu-symptoms"
+  },
+  {
+   "id": "creatine_water",
+   "trigger": {
+    "tags": [
+     "creatine"
+    ]
+   },
+   "symptom": "bloating",
+   "appSymptom": "bloating",
+   "lagHours": [
+    24,
+    168
+   ],
+   "hint": "Creatine pulls water into muscle: 0.5-1.5 kg on the scale in week 1 is normal. Take 3-5 g daily and drink water; it is not fat.",
+   "confidence": "possible",
+   "src": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2048496/"
+  },
+  {
+   "id": "cigarettes_appetite",
+   "trigger": {
+    "tags": [
+     "cigarettes"
+    ]
+   },
+   "symptom": "cravings",
+   "appSymptom": "cravings",
+   "lagHours": [
+    0.5,
+    4
+   ],
+   "hint": "Nicotine suppresses appetite, so you may under-eat protein, then overeat later. Set meal times and a protein target instead of waiting for hunger.",
+   "confidence": "possible",
+   "src": "https://apps.dtic.mil/sti/tr/pdf/ADA186805.pdf"
+  },
+  {
+   "id": "cigarettes_sleep",
+   "trigger": {
+    "tags": [
+     "cigarettes"
+    ]
+   },
+   "symptom": "poor_sleep",
+   "appSymptom": "poor_sleep",
+   "lagHours": [
+    1,
+    8
+   ],
+   "hint": "Smoking, especially close to bedtime, is linked with lighter, poorer sleep. Avoid cigarettes for 2 hours before bed.",
+   "confidence": "common",
+   "src": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10733894/"
+  },
+  {
+   "id": "cigarettes_recovery",
+   "trigger": {
+    "tags": [
+     "cigarettes"
+    ]
+   },
+   "symptom": "low_energy",
+   "appSymptom": "low_energy",
+   "lagHours": [
+    12,
+    72
+   ],
+   "hint": "Smoking is linked with lower endurance and poorer sleep, so you may tire faster and recover slower. Many people notice better gym stamina within weeks of cutting down.",
+   "confidence": "possible",
+   "src": "https://apps.dtic.mil/sti/tr/pdf/ADA186805.pdf",
+   "context": "Evidence on recovery specifically is limited; treat as a likely, not proven, effect."
+  }
+ ],
+ "mealIdeas": [
+  {
+   "id": "soya_chunk_curry_roti",
+   "name": "Soya chunk curry + 2 roti",
+   "diet": "vegan",
+   "fixes": [
+    "protein",
+    "cheap",
+    "iron",
+    "fiber"
+   ],
+   "approx": {
+    "kcal": 450,
+    "p": 29,
+    "c": 60,
+    "f": 10
+   },
+   "costInr": 16,
+   "items": "40 g dry soya chunks (soaked) in onion-tomato gravy + 2 roti",
+   "prepMin": 20
+  },
+  {
+   "id": "egg_bhurji_roti",
+   "name": "Egg bhurji (3 eggs) + 2 roti",
+   "diet": "egg",
+   "fixes": [
+    "protein",
+    "cheap",
+    "b12",
+    "vitamin_d",
+    "vitamin_b12"
+   ],
+   "approx": {
+    "kcal": 505,
+    "p": 26,
+    "c": 45,
+    "f": 23
+   },
+   "costInr": 30,
+   "items": "3 eggs scrambled with onion-tomato + 2 roti",
+   "prepMin": 12
+  },
+  {
+   "id": "egg_white_omelette_toast",
+   "name": "4-white + 1 whole-egg omelette + toast",
+   "diet": "egg",
+   "fixes": [
+    "protein",
+    "low_kcal",
+    "post_workout",
+    "late_night_light"
+   ],
+   "approx": {
+    "kcal": 290,
+    "p": 24,
+    "c": 18,
+    "f": 12
+   },
+   "costInr": 42,
+   "items": "4 egg whites + 1 egg, veggies, 1 slice toast",
+   "prepMin": 10
+  },
+  {
+   "id": "paneer_bhurji_phulka",
+   "name": "Paneer bhurji (100 g) + 2 phulka",
+   "diet": "veg",
+   "fixes": [
+    "protein",
+    "calcium",
+    "b12",
+    "post_workout",
+    "vitamin_b12"
+   ],
+   "approx": {
+    "kcal": 585,
+    "p": 26,
+    "c": 49,
+    "f": 31
+   },
+   "costInr": 53,
+   "items": "100 g paneer bhurji + 2 phulka",
+   "prepMin": 15
+  },
+  {
+   "id": "moong_chilla_paneer",
+   "name": "Moong dal chilla x2 with paneer filling",
+   "diet": "veg",
+   "fixes": [
+    "protein",
+    "fiber",
+    "iron"
+   ],
+   "approx": {
+    "kcal": 355,
+    "p": 20,
+    "c": 34,
+    "f": 15
+   },
+   "costInr": 28,
+   "items": "50 g moong dal batter (soaked 4 h) 2 chillas + 40 g paneer",
+   "prepMin": 15
+  },
+  {
+   "id": "besan_chilla_curd",
+   "name": "Besan chilla x2 + curd",
+   "diet": "veg",
+   "fixes": [
+    "protein",
+    "cheap",
+    "calcium"
+   ],
+   "approx": {
+    "kcal": 365,
+    "p": 17,
+    "c": 43,
+    "f": 13
+   },
+   "costInr": 18,
+   "items": "60 g besan 2 chillas with veg + 1 katori curd",
+   "prepMin": 12
+  },
+  {
+   "id": "sattu_sharbat",
+   "name": "Sattu sharbat (2 tbsp) with lemon + jeera",
+   "diet": "vegan",
+   "fixes": [
+    "cheap",
+    "pre_workout",
+    "low_kcal"
+   ],
+   "approx": {
+    "kcal": 110,
+    "p": 6,
+    "c": 19,
+    "f": 2
+   },
+   "costInr": 5,
+   "items": "30 g sattu in a glass of water, lemon, black salt, jeera",
+   "prepMin": 3
+  },
+  {
+   "id": "masala_oats_egg",
+   "name": "Masala oats with veg + 2 boiled eggs",
+   "diet": "egg",
+   "fixes": [
+    "fiber",
+    "protein",
+    "pre_workout"
+   ],
+   "approx": {
+    "kcal": 370,
+    "p": 19,
+    "c": 31,
+    "f": 18
+   },
+   "costInr": 27,
+   "items": "40 g oats cooked with veg + 2 boiled eggs",
+   "prepMin": 10
+  },
+  {
+   "id": "oats_milk_banana_pb",
+   "name": "Oats + milk + banana + peanut butter",
+   "diet": "veg",
+   "fixes": [
+    "pre_workout",
+    "protein",
+    "fiber"
+   ],
+   "approx": {
+    "kcal": 450,
+    "p": 16,
+    "c": 63,
+    "f": 15
+   },
+   "costInr": 32,
+   "items": "40 g oats in 250 ml toned milk, 1 banana, 2 tsp peanut butter",
+   "prepMin": 7
+  },
+  {
+   "id": "banana_pb_toast",
+   "name": "Banana + peanut butter toast (2 slices)",
+   "diet": "vegan",
+   "fixes": [
+    "pre_workout",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 360,
+    "p": 12,
+    "c": 52,
+    "f": 12
+   },
+   "costInr": 19,
+   "items": "2 slices bread, 20 g peanut butter, 1 banana",
+   "prepMin": 4
+  },
+  {
+   "id": "hung_curd_roasted_chana",
+   "name": "Thick curd bowl + roasted chana",
+   "diet": "veg",
+   "fixes": [
+    "protein",
+    "calcium",
+    "late_night_light",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 245,
+    "p": 17,
+    "c": 23,
+    "f": 9
+   },
+   "costInr": 29,
+   "items": "150 g hung curd + 30 g roasted chana, jeera, black salt",
+   "prepMin": 5
+  },
+  {
+   "id": "greek_yogurt_banana_flax",
+   "name": "Greek yogurt + banana + flax",
+   "diet": "veg",
+   "fixes": [
+    "post_workout",
+    "fiber"
+   ],
+   "approx": {
+    "kcal": 280,
+    "p": 13,
+    "c": 33,
+    "f": 12
+   },
+   "costInr": 102,
+   "items": "150 g Greek yogurt, 1 banana, 1 tbsp flax",
+   "prepMin": 3
+  },
+  {
+   "id": "chicken_tikka_salad",
+   "name": "Air-fried chicken breast tikka + salad",
+   "diet": "nonveg",
+   "fixes": [
+    "protein",
+    "low_kcal",
+    "post_workout"
+   ],
+   "approx": {
+    "kcal": 260,
+    "p": 36,
+    "c": 5,
+    "f": 10
+   },
+   "costInr": 61,
+   "items": "150 g chicken breast marinated in curd, air-fried, with salad",
+   "prepMin": 25
+  },
+  {
+   "id": "chicken_rice_dal_bowl",
+   "name": "Chicken breast + rice + dal bowl",
+   "diet": "nonveg",
+   "fixes": [
+    "protein",
+    "post_workout"
+   ],
+   "approx": {
+    "kcal": 600,
+    "p": 45,
+    "c": 72,
+    "f": 13
+   },
+   "costInr": 65,
+   "items": "150 g chicken breast, 200 g cooked rice, 100 g dal",
+   "prepMin": 30
+  },
+  {
+   "id": "chicken_curry_roti",
+   "name": "Home-style chicken curry + 2 roti",
+   "diet": "nonveg",
+   "fixes": [
+    "protein",
+    "post_workout"
+   ],
+   "approx": {
+    "kcal": 540,
+    "p": 42,
+    "c": 48,
+    "f": 18
+   },
+   "costInr": 64,
+   "items": "150 g chicken in onion-tomato gravy + 2 roti",
+   "prepMin": 30
+  },
+  {
+   "id": "rohu_curry_rice",
+   "name": "Rohu fish curry + rice",
+   "diet": "nonveg",
+   "fixes": [
+    "protein",
+    "b12",
+    "vitamin_b12"
+   ],
+   "approx": {
+    "kcal": 490,
+    "p": 31,
+    "c": 50,
+    "f": 14
+   },
+   "costInr": 67,
+   "items": "150 g rohu curry + 150 g cooked rice",
+   "prepMin": 30
+  },
+  {
+   "id": "bangda_fry_roti_lemon",
+   "name": "Bangda / sardine shallow fry + 2 roti + lemon",
+   "diet": "nonveg",
+   "fixes": [
+    "vitamin_d",
+    "b12",
+    "protein",
+    "vitamin_c",
+    "vitamin_b12"
+   ],
+   "approx": {
+    "kcal": 540,
+    "p": 29,
+    "c": 41,
+    "f": 28
+   },
+   "costInr": 45,
+   "items": "120 g bangda fry, 2 roti, lemon wedge",
+   "prepMin": 20
+  },
+  {
+   "id": "prawn_masala_roti",
+   "name": "Prawn masala + 2 roti",
+   "diet": "nonveg",
+   "fixes": [
+    "protein",
+    "b12",
+    "vitamin_b12"
+   ],
+   "approx": {
+    "kcal": 430,
+    "p": 30,
+    "c": 48,
+    "f": 13
+   },
+   "costInr": 85,
+   "items": "120 g prawns in masala + 2 roti",
+   "prepMin": 20
+  },
+  {
+   "id": "liver_masala_roti",
+   "name": "Chicken liver masala + 2 roti",
+   "diet": "nonveg",
+   "fixes": [
+    "iron",
+    "b12",
+    "protein",
+    "cheap",
+    "vitamin_b12"
+   ],
+   "approx": {
+    "kcal": 440,
+    "p": 25,
+    "c": 46,
+    "f": 16
+   },
+   "costInr": 33,
+   "items": "100 g chicken liver masala + 2 roti",
+   "prepMin": 20
+  },
+  {
+   "id": "egg_curry_rice",
+   "name": "Egg curry (2 eggs) + rice",
+   "diet": "egg",
+   "fixes": [
+    "protein",
+    "b12",
+    "cheap",
+    "vitamin_b12"
+   ],
+   "approx": {
+    "kcal": 465,
+    "p": 19,
+    "c": 51,
+    "f": 20
+   },
+   "costInr": 25,
+   "items": "2 eggs in gravy + 150 g cooked rice",
+   "prepMin": 20
+  },
+  {
+   "id": "rajma_chawal",
+   "name": "Rajma chawal",
+   "diet": "vegan",
+   "fixes": [
+    "protein",
+    "fiber",
+    "iron",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 540,
+    "p": 20,
+    "c": 96,
+    "f": 8
+   },
+   "costInr": 20,
+   "items": "150 g boiled rajma in gravy + 200 g cooked rice",
+   "prepMin": 35
+  },
+  {
+   "id": "chole_roti_lemon",
+   "name": "Chole + 2 roti + onion and lemon",
+   "diet": "vegan",
+   "fixes": [
+    "iron",
+    "fiber",
+    "vitamin_c",
+    "protein"
+   ],
+   "approx": {
+    "kcal": 550,
+    "p": 21,
+    "c": 87,
+    "f": 13
+   },
+   "costInr": 20,
+   "items": "150 g chole, 2 roti, raw onion, lemon",
+   "prepMin": 30
+  },
+  {
+   "id": "kala_chana_sundal",
+   "name": "Kala chana sundal / chaat",
+   "diet": "vegan",
+   "fixes": [
+    "iron",
+    "fiber",
+    "cheap",
+    "pre_workout"
+   ],
+   "approx": {
+    "kcal": 280,
+    "p": 14,
+    "c": 40,
+    "f": 7
+   },
+   "costInr": 11,
+   "items": "150 g boiled kala chana tossed with onion, tomato, lemon",
+   "prepMin": 10
+  },
+  {
+   "id": "moong_sprouts_salad",
+   "name": "Moong sprouts salad with lemon",
+   "diet": "vegan",
+   "fixes": [
+    "vitamin_c",
+    "fiber",
+    "low_kcal",
+    "late_night_light"
+   ],
+   "approx": {
+    "kcal": 140,
+    "p": 10,
+    "c": 24,
+    "f": 1
+   },
+   "costInr": 26,
+   "items": "150 g steamed sprouts, tomato, cucumber, lemon",
+   "prepMin": 8
+  },
+  {
+   "id": "palak_paneer_roti",
+   "name": "Palak paneer + 2 roti",
+   "diet": "veg",
+   "fixes": [
+    "iron",
+    "calcium",
+    "protein"
+   ],
+   "approx": {
+    "kcal": 580,
+    "p": 29,
+    "c": 48,
+    "f": 30
+   },
+   "costInr": 56,
+   "items": "100 g paneer in 150 g palak gravy + 2 roti",
+   "prepMin": 25
+  },
+  {
+   "id": "palak_dal_rice",
+   "name": "Palak dal + rice",
+   "diet": "vegan",
+   "fixes": [
+    "iron",
+    "fiber",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 435,
+    "p": 17,
+    "c": 70,
+    "f": 10
+   },
+   "costInr": 17,
+   "items": "200 g dal with 100 g palak + 150 g cooked rice",
+   "prepMin": 25
+  },
+  {
+   "id": "ragi_roti_curd",
+   "name": "2 ragi roti + curd + sabzi",
+   "diet": "veg",
+   "fixes": [
+    "calcium",
+    "fiber",
+    "iron",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 370,
+    "p": 11,
+    "c": 57,
+    "f": 10
+   },
+   "costInr": 21,
+   "items": "60 g ragi flour (2 roti), 150 g curd, 100 g sabzi",
+   "prepMin": 20
+  },
+  {
+   "id": "ragi_malt",
+   "name": "Ragi malt",
+   "diet": "veg",
+   "fixes": [
+    "calcium",
+    "iron",
+    "pre_workout"
+   ],
+   "approx": {
+    "kcal": 235,
+    "p": 8,
+    "c": 37,
+    "f": 6
+   },
+   "costInr": 13,
+   "items": "25 g ragi flour cooked in 200 ml milk + 10 g jaggery",
+   "prepMin": 8
+  },
+  {
+   "id": "til_jaggery_laddu",
+   "name": "Til-jaggery laddu x2",
+   "diet": "vegan",
+   "fixes": [
+    "calcium",
+    "iron",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 190,
+    "p": 4,
+    "c": 24,
+    "f": 10
+   },
+   "costInr": 6,
+   "items": "2 laddus: 20 g til + 20 g jaggery",
+   "prepMin": 15
+  },
+  {
+   "id": "amla_lemon_shot",
+   "name": "Amla + lemon water shot",
+   "diet": "vegan",
+   "fixes": [
+    "vitamin_c",
+    "low_kcal",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 35,
+    "p": 1,
+    "c": 8,
+    "f": 0
+   },
+   "costInr": 7,
+   "items": "2 amla (or 1 tbsp amla powder) blended with lemon, salt, water",
+   "prepMin": 3
+  },
+  {
+   "id": "guava_chaat",
+   "name": "Guava with chaat masala",
+   "diet": "vegan",
+   "fixes": [
+    "vitamin_c",
+    "fiber",
+    "low_kcal",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 100,
+    "p": 4,
+    "c": 21,
+    "f": 2
+   },
+   "costInr": 9,
+   "items": "1 large guava (150 g), chaat masala, lemon",
+   "prepMin": 2
+  },
+  {
+   "id": "coconut_water_banana",
+   "name": "Coconut water + banana",
+   "diet": "vegan",
+   "fixes": [
+    "pre_workout",
+    "post_workout",
+    "low_kcal"
+   ],
+   "approx": {
+    "kcal": 140,
+    "p": 3,
+    "c": 32,
+    "f": 1
+   },
+   "costInr": 47,
+   "items": "250 ml coconut water + 1 banana",
+   "prepMin": 2
+  },
+  {
+   "id": "dates_warm_milk",
+   "name": "3 dates + warm milk",
+   "diet": "veg",
+   "fixes": [
+    "late_night_light",
+    "calcium",
+    "iron"
+   ],
+   "approx": {
+    "kcal": 215,
+    "p": 8,
+    "c": 30,
+    "f": 8
+   },
+   "costInr": 20,
+   "items": "3 dates (25 g) with 250 ml warm toned milk",
+   "prepMin": 5
+  },
+  {
+   "id": "haldi_doodh_smp",
+   "name": "Haldi doodh + skimmed milk powder",
+   "diet": "veg",
+   "fixes": [
+    "late_night_light",
+    "calcium",
+    "b12",
+    "vitamin_b12"
+   ],
+   "approx": {
+    "kcal": 200,
+    "p": 13,
+    "c": 20,
+    "f": 8
+   },
+   "costInr": 21,
+   "items": "250 ml warm milk, haldi, 1 tbsp skimmed milk powder",
+   "prepMin": 5
+  },
+  {
+   "id": "egg_white_veg_scramble",
+   "name": "Egg-white scramble with veggies",
+   "diet": "egg",
+   "fixes": [
+    "protein",
+    "low_kcal",
+    "late_night_light"
+   ],
+   "approx": {
+    "kcal": 170,
+    "p": 19,
+    "c": 7,
+    "f": 7
+   },
+   "costInr": 41,
+   "items": "5 egg whites scrambled with veg",
+   "prepMin": 8
+  },
+  {
+   "id": "boiled_eggs_3",
+   "name": "3 boiled eggs with black salt",
+   "diet": "egg",
+   "fixes": [
+    "protein",
+    "cheap",
+    "post_workout",
+    "b12",
+    "vitamin_d",
+    "vitamin_b12"
+   ],
+   "approx": {
+    "kcal": 215,
+    "p": 19,
+    "c": 1,
+    "f": 14
+   },
+   "costInr": 21,
+   "items": "3 hard-boiled eggs, pepper, black salt",
+   "prepMin": 12
+  },
+  {
+   "id": "whey_banana_shake",
+   "name": "Whey shake + banana",
+   "diet": "veg",
+   "fixes": [
+    "post_workout",
+    "protein"
+   ],
+   "approx": {
+    "kcal": 205,
+    "p": 24,
+    "c": 25,
+    "f": 2
+   },
+   "costInr": 96,
+   "items": "1 scoop (30 g) whey in water or milk + 1 banana",
+   "prepMin": 2
+  },
+  {
+   "id": "budget_smp_banana_shake",
+   "name": "Budget shake: skimmed milk powder + banana + peanut butter",
+   "diet": "veg",
+   "fixes": [
+    "protein",
+    "cheap",
+    "post_workout"
+   ],
+   "approx": {
+    "kcal": 295,
+    "p": 18,
+    "c": 46,
+    "f": 6
+   },
+   "costInr": 28,
+   "items": "40 g skimmed milk powder, 1 banana, 2 tsp peanut butter in water",
+   "prepMin": 3
+  },
+  {
+   "id": "tofu_bhurji_roti",
+   "name": "Tofu bhurji + 2 roti",
+   "diet": "vegan",
+   "fixes": [
+    "protein",
+    "calcium"
+   ],
+   "approx": {
+    "kcal": 490,
+    "p": 32,
+    "c": 49,
+    "f": 20
+   },
+   "costInr": 49,
+   "items": "150 g crumbled tofu with onion-tomato + 2 roti",
+   "prepMin": 15
+  },
+  {
+   "id": "overnight_oats_soy",
+   "name": "Overnight oats with soy milk, flax and peanuts",
+   "diet": "vegan",
+   "fixes": [
+    "protein",
+    "fiber",
+    "pre_workout"
+   ],
+   "approx": {
+    "kcal": 385,
+    "p": 17,
+    "c": 38,
+    "f": 18
+   },
+   "costInr": 41,
+   "items": "40 g oats, 200 ml soy milk, 1 tbsp flax, 15 g peanuts",
+   "prepMin": 5
+  },
+  {
+   "id": "poha_peanuts_lemon",
+   "name": "Poha with peanuts and lemon",
+   "diet": "vegan",
+   "fixes": [
+    "pre_workout",
+    "vitamin_c",
+    "cheap",
+    "iron"
+   ],
+   "approx": {
+    "kcal": 360,
+    "p": 9,
+    "c": 52,
+    "f": 14
+   },
+   "costInr": 11,
+   "items": "60 g poha, 15 g peanuts, veg, lemon",
+   "prepMin": 12
+  },
+  {
+   "id": "dalia_moong_khichdi",
+   "name": "Veg dalia-moong khichdi",
+   "diet": "vegan",
+   "fixes": [
+    "fiber",
+    "cheap",
+    "protein",
+    "late_night_light"
+   ],
+   "approx": {
+    "kcal": 370,
+    "p": 16,
+    "c": 58,
+    "f": 8
+   },
+   "costInr": 13,
+   "items": "40 g dalia + 40 g moong dal + veg, one-pot",
+   "prepMin": 25
+  },
+  {
+   "id": "moong_khichdi_curd",
+   "name": "Moong dal khichdi + curd",
+   "diet": "veg",
+   "fixes": [
+    "late_night_light",
+    "cheap",
+    "protein",
+    "calcium"
+   ],
+   "approx": {
+    "kcal": 385,
+    "p": 16,
+    "c": 59,
+    "f": 9
+   },
+   "costInr": 19,
+   "items": "40 g rice + 40 g moong dal khichdi, 1 tsp ghee, 100 g curd",
+   "prepMin": 25
+  },
+  {
+   "id": "paneer_tikka_lite",
+   "name": "Air-fried low-fat paneer tikka + mint chutney",
+   "diet": "veg",
+   "fixes": [
+    "protein",
+    "low_kcal",
+    "calcium"
+   ],
+   "approx": {
+    "kcal": 230,
+    "p": 21,
+    "c": 6,
+    "f": 13
+   },
+   "costInr": 44,
+   "items": "100 g low-fat paneer, capsicum, onion, mint chutney",
+   "prepMin": 20
+  },
+  {
+   "id": "dal_rice_curd_salad",
+   "name": "Dal + rice + curd + salad",
+   "diet": "veg",
+   "fixes": [
+    "cheap",
+    "protein",
+    "calcium"
+   ],
+   "approx": {
+    "kcal": 465,
+    "p": 18,
+    "c": 73,
+    "f": 11
+   },
+   "costInr": 23,
+   "items": "200 g dal, 150 g cooked rice, 100 g curd, salad",
+   "prepMin": 25
+  },
+  {
+   "id": "thin_moong_soup_spinach",
+   "name": "Thin moong soup with spinach",
+   "diet": "vegan",
+   "fixes": [
+    "late_night_light",
+    "iron",
+    "low_kcal",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 175,
+    "p": 10,
+    "c": 21,
+    "f": 6
+   },
+   "costInr": 10,
+   "items": "150 g thin moong dal soup with 80 g spinach",
+   "prepMin": 15
+  },
+  {
+   "id": "soya_pulao_raita",
+   "name": "Soya chunk pulao + raita",
+   "diet": "veg",
+   "fixes": [
+    "protein",
+    "cheap",
+    "fiber"
+   ],
+   "approx": {
+    "kcal": 555,
+    "p": 31,
+    "c": 79,
+    "f": 12
+   },
+   "costInr": 24,
+   "items": "40 g dry soya chunks, 200 g cooked rice pulao, veg, 100 g curd raita",
+   "prepMin": 25
+  },
+  {
+   "id": "masala_chaas",
+   "name": "Masala chaas (300 ml)",
+   "diet": "veg",
+   "fixes": [
+    "low_kcal",
+    "late_night_light",
+    "calcium",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 60,
+    "p": 3,
+    "c": 4,
+    "f": 3
+   },
+   "costInr": 8,
+   "items": "100 g curd + water, jeera, mint, salt (300 ml)",
+   "prepMin": 2
+  },
+  {
+   "id": "chicken_clear_soup",
+   "name": "Clear chicken soup",
+   "diet": "nonveg",
+   "fixes": [
+    "late_night_light",
+    "low_kcal",
+    "protein"
+   ],
+   "approx": {
+    "kcal": 195,
+    "p": 24,
+    "c": 7,
+    "f": 7
+   },
+   "costInr": 40,
+   "items": "100 g chicken, veg, ginger, pepper (1 big bowl)",
+   "prepMin": 20
+  },
+  {
+   "id": "idli_sambar_boiled_egg",
+   "name": "3 idli + sambar + 2 boiled eggs",
+   "diet": "egg",
+   "fixes": [
+    "protein",
+    "post_workout",
+    "cheap"
+   ],
+   "approx": {
+    "kcal": 370,
+    "p": 21,
+    "c": 42,
+    "f": 12
+   },
+   "costInr": 29,
+   "items": "3 idli (117 g), 150 g sambar, 2 boiled eggs",
+   "prepMin": 10
+  },
+  {
+   "id": "hung_curd_veg_sandwich",
+   "name": "Hung-curd veg sandwich (2 slices)",
+   "diet": "veg",
+   "fixes": [
+    "protein",
+    "late_night_light"
+   ],
+   "approx": {
+    "kcal": 295,
+    "p": 16,
+    "c": 33,
+    "f": 10
+   },
+   "costInr": 30,
+   "items": "2 slices brown bread, 150 g hung curd, cucumber, tomato",
+   "prepMin": 8
+  },
+  {
+   "id": "roasted_makhana",
+   "name": "Roasted makhana (30 g)",
+   "diet": "vegan",
+   "fixes": [
+    "low_kcal",
+    "late_night_light"
+   ],
+   "approx": {
+    "kcal": 120,
+    "p": 3,
+    "c": 23,
+    "f": 2
+   },
+   "costInr": 27,
+   "items": "30 g makhana roasted in 2 g oil with pepper",
+   "prepMin": 5
+  }
+ ],
+ "indianMeasures": {
+  "katori_ml": 150,
+  "glass_ml": 250,
+  "cup_chai_ml": 150,
+  "cutting_chai_ml": 100,
+  "roti_medium_g": 40,
+  "roti_small_g": 30,
+  "tsp_oil_g": 4.5,
+  "tbsp_g": 15,
+  "bowl_g": 200,
+  "plate_rice_g": 200
+ }
+}
