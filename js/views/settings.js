@@ -1,7 +1,7 @@
 // Settings: profile, targets, habits, appearance, backup, install guide.
-import { state, setProfile, setTargets, recomputeTargets, setSetting, exportJSON, importJSON, resetAll, allFoods, todayKey, commit } from '../state.js';
+import { state, setProfile, setTargets, recomputeTargets, setSetting, exportJSON, importJSON, resetAll, allFoods, todayKey, commit, storage } from '../state.js';
 import { ACTIVITY, GOALS, tdee, defaultTargets } from '../calc.js';
-import { h, icon, sheet, toast, confirmSheet, stepper, segmented, chips, field, toggle, downloadText, pickFile, clear, fmt } from '../ui.js';
+import { h, icon, sheet, toast, confirmSheet, stepper, segmented, chips, field, toggle, downloadText, pickFile, clear, fmt, relTime } from '../ui.js';
 import { hashPin, renderLock } from '../lock.js';
 
 export function render(container, ctx) {
@@ -52,6 +52,8 @@ function build(ctx) {
     h('div', { class: 'section-head', style: { marginTop: '18px' } }, h('h2', null, 'Your data')),
     h('div', { class: 'card stack' },
       h('div', { class: 'row between small' }, h('span', { class: 'muted' }, 'Entries stored'), h('b', null, fmt(entries))),
+      h('div', { class: 'row between small' }, h('span', { class: 'muted' }, 'Saved on this phone'), h('b', { class: storage.blocked ? 'text-danger' : '' }, storageLabel())),
+      storage.blocked ? h('div', { class: 'callout small danger' }, icon('warn'), h('div', null, 'Safari is refusing to store data (', storage.lastError || 'unknown error', '). Turn off Settings → Safari → Block All Cookies and open the app from the Home Screen icon, not a Private tab.')) : null,
       h('div', { class: 'row between small' }, h('span', { class: 'muted' }, 'Last backup'), h('b', null, state.meta.lastBackup ? new Date(state.meta.lastBackup).toLocaleDateString('en-IN') : 'never')),
       h('div', { class: 'row' },
         h('button', { class: 'btn grow', onClick: () => { downloadText(`shredlog-backup-${todayKey()}.json`, exportJSON()); state.meta.lastBackup = Date.now(); commit(); toast('Backup file ready. Save it to Files or iCloud.'); } }, icon('download'), 'Export backup'),
@@ -77,6 +79,12 @@ function build(ctx) {
 const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : '—');
 const step = (n, text) => h('div', { class: 'row' }, h('span', { class: 'num', style: { width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent)', color: 'var(--accent-ink)', display: 'grid', placeItems: 'center', fontSize: '13px', flex: 'none' } }, n), h('span', null, text));
 
+function storageLabel() {
+  if (storage.blocked) return 'Not saving';
+  const stores = (storage.ls === 'ok' ? 1 : 0) + (storage.idb === 'ok' ? 1 : 0);
+  const when = storage.lastSaved ? relTime(storage.lastSaved) : 'nothing yet';
+  return `${when} · ${stores} of 2 stores`;
+}
 function profileSheet(ctx, section = 0) {
   const p = { ...state.profile };
   const num = (k, unit, st = 1) => h('div', { class: 'row' }, h('input', { type: 'number', inputmode: 'decimal', value: p[k] ?? '', step: st, onInput: (e) => { p[k] = e.target.value === '' ? null : +e.target.value; } }), unit ? h('span', { class: 'muted small', style: { width: '30px', flex: 'none' } }, unit) : null);

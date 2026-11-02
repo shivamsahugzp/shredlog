@@ -27,7 +27,10 @@ git branch -M main
 git remote get-url origin >/dev/null 2>&1 || git remote add origin "https://github.com/$OWNER/$REPO.git"
 
 echo "→ pushing"
-git -c credential.helper= -c "credential.helper=!f() { echo username=$OWNER; echo password=\$(cat $TOKEN_FILE); }; f" push -u origin main -q
+if ! git -c credential.helper= -c "credential.helper=!f() { echo username=$OWNER; echo password=\$(cat $TOKEN_FILE); }; f" push -u origin main -q; then
+  echo "   git push failed (flaky network or API-made remote commit) → uploading through the GitHub API instead"
+  python3 -I scripts/push-via-api.py
+fi
 
 echo "→ enabling GitHub Pages (main branch, root)"
 pcode=$(api -o /tmp/pages.json -w "%{http_code}" -X POST "https://api.github.com/repos/$OWNER/$REPO/pages" -d '{"source":{"branch":"main","path":"/"}}')

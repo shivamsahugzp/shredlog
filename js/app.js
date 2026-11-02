@@ -1,5 +1,5 @@
 // App shell: boot, tab router, re-render on state change, service worker updates.
-import { state, load, on, todayKey } from './state.js';
+import { state, load, on, todayKey, flush, storage } from './state.js';
 import { h, icon, toast, clear } from './ui.js';
 import { renderLock } from './lock.js';
 
@@ -81,8 +81,9 @@ function registerSW() {
     });
     setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000);
   }).catch((e) => console.warn('SW registration failed', e));
-  let reloading = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloading) return; reloading = true; location.reload(); });
+  // Reload only when a *new* worker replaces an old one. The very first claim must not reload: it would throw away onboarding mid-way.
+  let controlled = !!navigator.serviceWorker.controller, reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (!controlled) { controlled = true; return; } if (reloading) return; reloading = true; location.reload(); });
 }
 
 let hiddenAt = 0;
@@ -98,13 +99,17 @@ async function boot() {
   await lockIfNeeded();
   on('change', schedule);
   on('settings', applyTheme);
+  window.addEventListener('pagehide', () => { flush(); });
   document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); return; }
+    if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); flush(); return; }
     const t = todayKey(); if (date < t) date = t;
     if (state.settings.pinHash && hiddenAt && Date.now() - hiddenAt > 60 * 1000) { await lockIfNeeded(); }
     rerender(true);
   });
   window.addEventListener('hashchange', () => { const tab = location.hash.replace('#', ''); if (tab && tab !== current.tab && VIEWS[tab] && tab !== 'onboarding') go(tab); });
+  if (storage.blocked) {
+    document.body.insertBefore(h('div', { class: 'storage-warn', role: 'alert' }, icon('warn', 18), h('div', null, h('b', null, 'This phone is not saving your data. '), 'Everything you log will vanish when the app closes. In iPhone Settings → Safari turn off “Block All Cookies”, and open the app from the Home Screen icon, not a Private tab.')), document.getElementById('app'));
+  }
   if (!state.settings.onboarded || !state.profile) { await go('onboarding'); }
   else { const tab = location.hash.replace('#', ''); await go(VIEWS[tab] && tab !== 'onboarding' ? tab : 'today'); }
   registerSW();

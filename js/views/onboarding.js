@@ -1,5 +1,5 @@
 // First-run wizard: profile → lifestyle → food → habits → plan.
-import { state, setProfile, setWeight, todayKey, allFoods } from '../state.js';
+import { state, setProfile, setWeight, todayKey, allFoods, save } from '../state.js';
 import { h, icon, chips, segmented, stepper, field, toggle, clear } from '../ui.js';
 import { ACTIVITY, GOALS, bmr, tdee, defaultTargets, bmi } from '../calc.js';
 
@@ -12,6 +12,8 @@ const BUDGETS = [{ id: 'tight', label: 'Tight', sub: 'dal, soya, eggs, milk' }, 
 
 function init() {
   const p = state.profile || {};
+  const draft = state.settings.onboardingDraft;
+  if (draft && draft.d && typeof draft.d === 'object') { d = { ...draft.d }; step = Math.min(Math.max(draft.step | 0, 0), 4); return; }
   d = { name: p.name || '', sex: p.sex || 'male', age: p.age || 25, heightCm: p.heightCm || 170, weightKg: p.weightKg || 70, activity: p.activity || 'light', goal: p.goal || 'cut', targetWeightKg: p.targetWeightKg || null,
     diet: p.diet || 'veg', region: p.region || 'north', budget: p.budget || 'moderate', chaiCups: p.chaiCups ?? 2, chaiFoodId: p.chaiFoodId || 'chai_milk_1tsp', coffee: p.coffee || false,
     smoker: p.smoker || false, cigBaseline: p.cigBaseline || 5, cigCost: p.cigCost || 18, sleepTarget: p.sleepTarget || 7.5, glassMl: state.settings.glassMl || 250 };
@@ -21,7 +23,7 @@ export function render(container, ctx) {
   if (!d) init();
   const root = h('div', { class: 'onb' });
   container.append(root);
-  const draw = () => { clear(root); root.append(steps[step](draw, ctx)); window.scrollTo({ top: 0 }); };
+  const draw = () => { clear(root); root.append(steps[step](draw, ctx)); window.scrollTo({ top: 0 }); state.settings.onboardingDraft = { step, d }; save(); };
   draw();
 }
 
@@ -96,6 +98,7 @@ const steps = [
     ], { nextLabel: 'Start logging', draw, next: () => {
       const { glassMl, ...profile } = d;
       state.settings.glassMl = glassMl;
+      delete state.settings.onboardingDraft;
       setProfile(profile);
       setWeight(todayKey(), d.weightKg);
       step = 0; d = null;

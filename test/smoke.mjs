@@ -80,6 +80,26 @@ try {
   check('wrong PIN rejected', await evalJs(`!!document.querySelector('.lock')`));
   for (const k of ['1','2','3','4']) await evalJs(`[...document.querySelectorAll('.lock-key')].find(b=>b.textContent==='${k}').click()`); await sleep(900);
   check('correct PIN unlocks the app', await evalJs(`!document.querySelector('.lock') && !!document.querySelector('#app h1')`));
+  // persistence: clear the PIN, log something, let the debounce run, reload → data must still be there
+  await evalJs(`(async()=>{const s=await import('./js/state.js'); s.setSetting('pinHash', null); s.logHabit(s.todayKey(),'cig'); return true;})()`); await sleep(600);
+  await send('Page.reload', {}); await sleep(1800);
+  const afterReload = await evalJs(`(async()=>{const s=await import('./js/state.js'); return JSON.stringify({onb:s.state.settings.onboarded, cig:s.habitCount(s.todayKey(),'cig'), src:s.storage.source, ls:s.storage.ls, idb:s.storage.idb, saved:s.storage.lastSaved>0})})()`);
+  check('data survives reload', /"onb":true/.test(afterReload) && /"cig":2/.test(afterReload) && /"saved":true/.test(afterReload), afterReload);
+  // persistence with IndexedDB hanging (iOS home-screen bug): app must still boot from localStorage within a few seconds
+  const { identifier } = (await send('Page.addScriptToEvaluateOnNewDocument', { source: `indexedDB.open = () => ({ set onsuccess(f){}, set onerror(f){}, set onupgradeneeded(f){}, set onblocked(f){} });` })).result;
+  await send('Page.reload', {}); await sleep(6500);
+  const idbHang = await evalJs(`(async()=>{const s=await import('./js/state.js'); return JSON.stringify({h1:document.querySelector('#app h1')?.textContent||'', onb:s.state.settings.onboarded, cig:s.habitCount(s.todayKey(),'cig'), src:s.storage.source, idb:s.storage.idb, blocked:s.storage.blocked})})()`);
+  check('boots from localStorage when IndexedDB hangs', /"onb":true/.test(idbHang) && /"cig":2/.test(idbHang) && /"src":"ls"/.test(idbHang) && /"idb":"failed"/.test(idbHang) && /"blocked":false/.test(idbHang), idbHang);
+  await send('Page.removeScriptToEvaluateOnNewDocument', { identifier });
+  // onboarding draft: reset, go to step 2 of the wizard, reload → wizard resumes at step 2 with typed values
+  await evalJs(`(async()=>{const s=await import('./js/state.js'); await s.resetAll(); return true;})()`);
+  await send('Page.reload', {}); await sleep(1800);
+  check('reset returns to onboarding', await evalJs(`!!document.querySelector('.onb')`));
+  await evalJs(`const i=document.querySelector('.onb input[type=text]'); i.value='Draft'; i.dispatchEvent(new Event('input',{bubbles:true})); [...document.querySelectorAll('.onb button')].find(b=>b.textContent.trim()==='Next').click()`); await sleep(600);
+  await send('Page.reload', {}); await sleep(1800);
+  const draft = await evalJs(`(async()=>{const s=await import('./js/state.js'); const dr=s.state.settings.onboardingDraft; return JSON.stringify({onb:!!document.querySelector('.onb'), step:dr?.step, name:dr?.d?.name, lit:document.querySelectorAll('.onb .steps i.on').length})})()`);
+  check('onboarding resumes where it left off', /"onb":true/.test(draft) && /"step":1/.test(draft) && /"name":"Draft"/.test(draft) && /"lit":2/.test(draft), draft);
+  await shot('09-onboarding-resumed');
 } catch (e) { check('script', false, e.message); }
 await sleep(300);
 console.log('\nConsole errors/warnings:'); for (const l of [...errors, ...logs]) console.log('  ' + l.split('\n')[0].slice(0, 220));

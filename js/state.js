@@ -1,24 +1,47 @@
-// Single in-memory state, persisted whole to IndexedDB (with a localStorage mirror).
+// Single in-memory state, persisted whole to localStorage (synchronous, written first) and IndexedDB (larger, written after).
+// iOS home-screen apps sometimes leave IndexedDB requests hanging or drop them when the app is suspended, so neither store
+// is trusted alone: every save writes both, and load picks whichever copy is newer.
 import { defaultTargets } from './calc.js';
 
 const DB_NAME = 'shredlog', STORE = 'kv', KEY = 'state', LS_KEY = 'shredlog-backup';
+const IDB_TIMEOUT = 4000;
 const listeners = {};
 export function on(evt, fn) { (listeners[evt] ||= []).push(fn); return () => { listeners[evt] = listeners[evt].filter((f) => f !== fn); }; }
 export function emit(evt, data) { (listeners[evt] || []).forEach((fn) => { try { fn(data); } catch (e) { console.error(e); } }); }
 
-function openDB() {
+// Live (never persisted) health of the two stores, shown in Settings so a phone that silently refuses to save is visible.
+export const storage = { ls: 'untested', idb: 'untested', source: 'none', lastSaved: 0, lastError: '', get blocked() { return this.ls === 'failed' && this.idb === 'failed'; } };
+const errText = (e) => String((e && (e.message || e.name)) || e || 'unknown error');
+
+function withTimeout(promise, ms, what) {
   return new Promise((res, rej) => {
-    const r = indexedDB.open(DB_NAME, 1);
-    r.onupgradeneeded = () => r.result.createObjectStore(STORE);
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
+    const t = setTimeout(() => rej(new Error(what + ' timed out')), ms);
+    promise.then((v) => { clearTimeout(t); res(v); }, (e) => { clearTimeout(t); rej(e); });
   });
 }
-async function kvGet(k) { const db = await openDB(); return new Promise((res, rej) => { const t = db.transaction(STORE, 'readonly').objectStore(STORE).get(k); t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error); }); }
-async function kvSet(k, v) { const db = await openDB(); return new Promise((res, rej) => { const tx = db.transaction(STORE, 'readwrite'); tx.objectStore(STORE).put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); }
+function openDB() {
+  return withTimeout(new Promise((res, rej) => {
+    let r;
+    try { r = indexedDB.open(DB_NAME, 1); } catch (e) { rej(e); return; }
+    r.onupgradeneeded = () => r.result.createObjectStore(STORE);
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error || new Error('IndexedDB open failed'));
+    r.onblocked = () => rej(new Error('IndexedDB open blocked'));
+  }), IDB_TIMEOUT, 'IndexedDB open');
+}
+async function kvGet(k) {
+  const db = await openDB();
+  try { return await withTimeout(new Promise((res, rej) => { const t = db.transaction(STORE, 'readonly').objectStore(STORE).get(k); t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error); }), IDB_TIMEOUT, 'IndexedDB read'); }
+  finally { try { db.close(); } catch (e) { /* ignore */ } }
+}
+async function kvSet(k, v) {
+  const db = await openDB();
+  try { await withTimeout(new Promise((res, rej) => { const tx = db.transaction(STORE, 'readwrite'); tx.objectStore(STORE).put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error('IndexedDB write aborted')); }), IDB_TIMEOUT, 'IndexedDB write'); }
+  finally { try { db.close(); } catch (e) { /* ignore */ } }
+}
 
 const initial = () => ({
-  meta: { v: 1, created: Date.now(), lastBackup: null },
+  meta: { v: 1, created: Date.now(), lastBackup: null, savedAt: 0 },
   profile: null,
   targets: null,
   settings: { theme: 'auto', restSec: 90, glassMl: 250, recents: [], onboarded: false, lastWeeklyReview: null },
@@ -38,24 +61,42 @@ export const state = { ready: false, data: { foods: [], exercises: [], routines:
 export function snapshot() { const o = {}; for (const k of PERSIST) o[k] = state[k]; return o; }
 export function hydrate(obj) { const base = initial(); for (const k of PERSIST) { if (obj[k] !== undefined && obj[k] !== null) state[k] = k === 'settings' ? { ...base.settings, ...obj[k] } : obj[k]; } }
 
-let saveTimer = null;
+let saveTimer = null, dirty = false, idbQueue = Promise.resolve();
 export function save(immediate) {
-  clearTimeout(saveTimer);
-  const run = async () => {
-    const snap = JSON.parse(JSON.stringify(snapshot()));
-    try { await kvSet(KEY, snap); } catch (e) { console.warn('IndexedDB save failed', e); }
-    try { localStorage.setItem(LS_KEY, JSON.stringify(snap)); } catch (e) { /* quota — ignore, IDB is primary */ }
+  clearTimeout(saveTimer); saveTimer = null; dirty = true;
+  const run = () => {
+    dirty = false;
+    state.meta.savedAt = Date.now();
+    const text = JSON.stringify(snapshot());
+    const snap = JSON.parse(text);
+    // localStorage first: synchronous, so it lands even if the app is killed a moment later.
+    try { localStorage.setItem(LS_KEY, text); storage.ls = 'ok'; storage.lastSaved = snap.meta.savedAt; }
+    catch (e) { storage.ls = 'failed'; storage.lastError = errText(e); console.warn('localStorage save failed', e); }
+    // IndexedDB second, serialised so an older snapshot can never overwrite a newer one.
+    idbQueue = idbQueue.then(() => kvSet(KEY, snap)).then(
+      () => { storage.idb = 'ok'; storage.lastSaved = Math.max(storage.lastSaved, snap.meta.savedAt); },
+      (e) => { storage.idb = 'failed'; storage.lastError = errText(e); console.warn('IndexedDB save failed', e); });
+    return idbQueue;
   };
   if (immediate) return run();
   saveTimer = setTimeout(run, 250);
 }
+// Write any debounced change right now (called when the app goes to the background).
+export function flush() { if (dirty) return save(true); }
 export function commit(evt) { save(); if (evt) emit(evt); emit('change'); }
 
 export async function load() {
-  let saved = null;
-  try { saved = await kvGet(KEY); } catch (e) { console.warn('IndexedDB unavailable', e); }
-  if (!saved) { try { const ls = localStorage.getItem(LS_KEY); if (ls) saved = JSON.parse(ls); } catch (e) { /* ignore */ } }
-  if (saved) hydrate(saved);
+  let fromLs = null, fromIdb = null;
+  try { const ls = localStorage.getItem(LS_KEY); if (ls) fromLs = JSON.parse(ls); storage.ls = 'ok'; }
+  catch (e) { storage.ls = 'failed'; storage.lastError = errText(e); console.warn('localStorage unavailable', e); }
+  try { fromIdb = (await kvGet(KEY)) || null; storage.idb = 'ok'; }
+  catch (e) { storage.idb = 'failed'; storage.lastError = errText(e); console.warn('IndexedDB unavailable', e); }
+  const at = (o) => (o && o.meta && o.meta.savedAt) || 0;
+  const saved = fromLs && fromIdb ? (at(fromLs) > at(fromIdb) ? fromLs : fromIdb) : (fromIdb || fromLs);
+  storage.source = !saved ? 'none' : saved === fromIdb ? 'idb' : 'ls';
+  if (saved) { hydrate(saved); storage.lastSaved = at(saved); }
+  // Probe: Safari with "Block All Cookies" or a Private tab throws on write, not on read.
+  if (storage.ls === 'ok') { try { localStorage.setItem(LS_KEY + '-probe', '1'); localStorage.removeItem(LS_KEY + '-probe'); } catch (e) { storage.ls = 'failed'; storage.lastError = errText(e); } }
   const [foods, exercises, routines, knowledge] = await Promise.all(['foods', 'exercises', 'routines', 'knowledge'].map((n) => fetch(`./data/${n}.json`).then((r) => r.json()).catch(() => (n === 'knowledge' ? null : []))));
   state.data = { foods, exercises, routines, knowledge };
   state.ready = true;
