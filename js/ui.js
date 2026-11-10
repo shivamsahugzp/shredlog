@@ -1,4 +1,5 @@
 // DOM helpers, icons, sheets, toasts, formatters.
+import { prefersReducedMotion, pulse } from './motion.js';
 
 export function h(tag, props, ...children) {
   const el = document.createElement(tag);
@@ -37,6 +38,7 @@ const P = {
   clock: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2',
   cup: 'M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2M7 4c0 1-1 1-1 2M11 4c0 1-1 1-1 2',
   cig: 'M3 15h14v4H3zM19 15h2v4h-2zM18 5c-2 1-2 3 0 4M21 4c-2 1-2 3 0 4',
+  camera: 'M4 8h3l2-3h6l2 3h3v11H4zM12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
   drop: 'M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z',
   scale: 'M12 3v4M6 7h12l2 10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3zM9 13h6',
   moon: 'M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z',
@@ -77,23 +79,51 @@ export function icon(name, size = 20, cls = '') {
 // ---- sheets ----
 const sheetsRoot = () => document.getElementById('sheets');
 let openSheets = 0;
-export function sheet({ title, content, actions, onClose, full = false, closeLabel = true }) {
+// Exit animation lives in motion.css (.mo-out); the DOM is removed after it. api.close() stays synchronous in every other way
+// (counter, scroll lock, onClose all run immediately) so callers that open a second sheet straight after closing one are unaffected.
+function leave(...els) {
+  if (prefersReducedMotion()) { els.forEach((e) => e.remove()); return; }
+  els.forEach((e) => { e.classList.add('mo-out'); e.style.pointerEvents = 'none'; });
+  setTimeout(() => els.forEach((e) => e.remove()), 230);
+}
+// Drag the grab handle or title bar down to dismiss.
+function dragToClose(box, api) {
+  let id = null, y0 = 0, dy = 0, t0 = 0, raf = 0;
+  const paint = () => { raf = 0; box.style.transform = `translateY(${dy}px)`; };
+  const down = (e) => { if (id != null || e.target.closest('button') || (e.pointerType === 'mouse' && e.button !== 0)) return; id = e.pointerId; y0 = e.clientY; dy = 0; t0 = performance.now(); try { e.currentTarget.setPointerCapture(id); } catch (err) { /* ignore */ } };
+  const move = (e) => { if (e.pointerId !== id) return; dy = Math.max(0, e.clientY - y0); if (!raf) raf = requestAnimationFrame(paint); };
+  const up = (e) => {
+    if (e.pointerId !== id) return; id = null; if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    const v = dy / Math.max(1, performance.now() - t0);
+    if (dy > 90 || (v > 0.6 && dy > 30)) {
+      if (!prefersReducedMotion() && box.animate) box.animate([{ transform: `translateY(${dy}px)` }, { transform: 'translateY(100%)' }], { duration: 180, easing: 'ease-in', fill: 'forwards' });
+      api.close();
+    } else if (dy > 0) {
+      if (!prefersReducedMotion() && box.animate) box.animate([{ transform: `translateY(${dy}px)` }, { transform: 'translateY(0)' }], { duration: 220, easing: 'cubic-bezier(.22,1,.36,1)' });
+      box.style.transform = '';
+    }
+    dy = 0;
+  };
+  for (const el of box.querySelectorAll('.grab, .sheet-head')) { el.classList.add('mo-drag'); el.addEventListener('pointerdown', down); el.addEventListener('pointermove', move); el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up); }
+}
+export function sheet({ title, content, actions, onClose, full = false, closeLabel = true, dismissable = true }) {
   const root = sheetsRoot();
   const backdrop = h('div', { class: 'backdrop' });
   const box = h('div', { class: 'sheet' + (full ? ' full' : ''), role: 'dialog', 'aria-modal': 'true' });
-  const api = { el: box, onClose, close() { if (!box.isConnected) return; backdrop.remove(); box.remove(); openSheets--; if (openSheets <= 0) { openSheets = 0; document.body.style.overflow = ''; } api.onClose && api.onClose(); } };
-  backdrop.addEventListener('click', api.close);
+  const api = { el: box, onClose, closed: false, close() { if (api.closed || !box.isConnected) return; api.closed = true; openSheets--; if (openSheets <= 0) { openSheets = 0; document.body.style.overflow = ''; } leave(backdrop, box); api.onClose && api.onClose(); } };
+  if (dismissable) backdrop.addEventListener('click', api.close);
   box.append(h('div', { class: 'grab' }));
   if (title || closeLabel) box.append(h('div', { class: 'sheet-head' }, h('h2', null, title || ''), closeLabel ? h('button', { class: 'icon-btn plain', 'aria-label': 'Close', onClick: api.close }, icon('x')) : null));
   const body = h('div', { class: 'sheet-body' }); append(body, typeof content === 'function' ? content(api) : content); box.append(body);
   if (actions) { const a = h('div', { class: 'actions' }); append(a, typeof actions === 'function' ? actions(api) : actions); box.append(a); }
   root.append(backdrop, box); openSheets++; document.body.style.overflow = 'hidden';
+  dragToClose(box, api);
   return api;
 }
 export function confirmSheet(message, { ok = 'Yes', danger = false, title = 'Are you sure?' } = {}) {
   return new Promise((res) => {
     const s = sheet({ title, content: h('p', { style: { fontSize: '15px', color: 'var(--ink-2)' } }, message), onClose: () => res(false),
-      actions: (api) => [h('button', { class: 'btn', onClick: () => { api.close(); } }, 'Cancel'), h('button', { class: 'btn ' + (danger ? 'danger' : 'primary'), onClick: () => { res(true); api.onClose = null; api.close(); } }, ok)] });
+      actions: (api) => [h('button', { class: 'btn', onClick: () => { api.close(); } }, 'Cancel'), h('button', { class: 'btn ' + (danger ? 'danger' : 'primary'), onClick: () => { if (danger) haptic('warn'); res(true); api.onClose = null; api.close(); } }, ok)] });
     const orig = s.close; s.close = () => { orig(); };
   });
 }
@@ -102,8 +132,10 @@ export function confirmSheet(message, { ok = 'Yes', danger = false, title = 'Are
 export function toast(msg, { action, onAction, undo, ms = 2600 } = {}) {
   if (undo) { action = 'Undo'; onAction = undo; }
   const root = document.getElementById('toasts');
+  while (root.children.length >= 2) root.firstChild.remove(); // a burst of quick logs must not pile up over the UI
   const t = h('div', { class: 'toast' }, msg, action ? h('button', { onClick: () => { onAction && onAction(); t.remove(); } }, action) : null);
-  root.append(t); setTimeout(() => t.remove(), ms);
+  root.append(t);
+  setTimeout(() => { if (!t.isConnected) return; if (prefersReducedMotion()) return t.remove(); t.classList.add('mo-out'); setTimeout(() => t.remove(), 200); }, ms);
   return t;
 }
 
@@ -130,11 +162,22 @@ export function chips(options, value, onChange) {
 }
 export function stepper({ value, min = 0, max = 9999, step = 1, onChange, decimals }) {
   const dec = decimals ?? (String(step).includes('.') ? String(step).split('.')[1].length : 0);
-  const input = h('input', { type: 'number', inputmode: 'decimal', value: (+value).toFixed(dec), step });
-  const set = (v, snap = true) => { v = Math.min(max, Math.max(min, snap ? Math.round(v / step) * step : v)); v = +v.toFixed(Math.max(dec, snap ? dec : 2)); input.value = String(v); onChange(v); };
-  input.addEventListener('change', () => set(parseFloat(input.value) || 0, false));
+  const input = h('input', { type: 'number', inputmode: dec ? 'decimal' : 'numeric', enterkeyhint: 'done', value: (+value).toFixed(dec), step });
+  const cur = () => parseFloat(input.value) || 0;
+  const set = (v, snap = true, bump = true) => { v = Math.min(max, Math.max(min, snap ? Math.round(v / step) * step : v)); v = +v.toFixed(Math.max(dec, snap ? dec : 2)); input.value = String(v); onChange(v); if (bump) pulse(input, { scale: 1.1, ms: 260 }); };
+  input.addEventListener('change', () => set(cur(), false, false));
   input.addEventListener('focus', () => input.select());
-  return h('div', { class: 'stepper' }, h('button', { type: 'button', 'aria-label': 'Less', onClick: () => set((parseFloat(input.value) || 0) - step) }, '−'), input, h('button', { type: 'button', 'aria-label': 'More', onClick: () => set((parseFloat(input.value) || 0) + step) }, '+'));
+  // Tap = one step; press and hold repeats, and speeds up after a dozen steps (78.0 to 82.5 kg is a hold, not 45 taps).
+  const btn = (label, text, dir) => {
+    let t = 0, iv = 0, held = false, n = 0;
+    const stop = () => { clearTimeout(t); clearInterval(iv); t = iv = 0; };
+    const b = h('button', { type: 'button', 'aria-label': label, onClick: (e) => { if (held) { held = false; e.preventDefault(); return; } set(cur() + dir * step); } }, text);
+    b.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse' && e.button !== 0) return; held = false; n = 0; stop(); t = setTimeout(() => { held = true; iv = setInterval(() => { n++; set(cur() + dir * step * (n > 12 ? 5 : 1), true, false); }, 85); }, 420); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => b.addEventListener(ev, stop));
+    b.addEventListener('contextmenu', (e) => e.preventDefault());
+    return b;
+  };
+  return h('div', { class: 'stepper' }, btn('Less', '−', -1), input, btn('More', '+', 1));
 }
 export function field(label, control, hint) { return h('div', { class: 'field' }, h('label', null, label), control, hint ? h('div', { class: 'hint' }, hint) : null); }
 export function toggle(label, on, onChange, sub) {
@@ -142,7 +185,7 @@ export function toggle(label, on, onChange, sub) {
   sw.addEventListener('click', () => { const now = !sw.classList.contains('on'); sw.classList.toggle('on', now); sw.setAttribute('aria-checked', now ? 'true' : 'false'); onChange(now); });
   return h('div', { class: 'toggle' }, h('div', null, h('div', { class: 'strong' }, label), sub ? h('div', { class: 'small muted' }, sub) : null), sw);
 }
-export function emptyState(title, sub, action) { return h('div', { class: 'empty' }, h('b', null, title), sub, action ? h('div', { style: { marginTop: '12px' } }, action) : null); }
+export function emptyState(title, sub, action, { ico } = {}) { return h('div', { class: 'empty' }, ico ? h('span', { class: 'mo-empty-ico' }, icon(ico, 22)) : null, h('b', null, title), sub, action ? h('div', { style: { marginTop: '12px' } }, action) : null); }
 
 // ---- formatting ----
 export const fmt = (n, d = 0) => (n == null || isNaN(n) ? '–' : (+n).toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: 0 }));
@@ -167,7 +210,7 @@ export function fmtDateLabel(key, todayKey) {
   if (key === todayKey) return 'Today';
   const y = new Date(todayKey + 'T12:00:00'); y.setDate(y.getDate() - 1);
   if (key === `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, '0')}-${String(y.getDate()).padStart(2, '0')}`) return 'Yesterday';
-  return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  return `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 export function fmtShortDate(key) { const d = new Date(key + 'T12:00:00'); return `${d.getDate()} ${MONTHS[d.getMonth()]}`; }
 export function fmtDow(key) { return DAYS[new Date(key + 'T12:00:00').getDay()]; }
@@ -178,4 +221,20 @@ export function downloadText(filename, text, type = 'application/json') {
 export function pickFile(accept = 'application/json,.json') {
   return new Promise((res) => { const i = h('input', { type: 'file', accept, style: { display: 'none' } }); i.addEventListener('change', () => { const f = i.files[0]; i.remove(); if (!f) return res(null); const r = new FileReader(); r.onload = () => res(r.result); r.readAsText(f); }); document.body.append(i); i.click(); });
 }
-export const haptic = () => { try { navigator.vibrate && navigator.vibrate(8); } catch (e) { /* no-op on iOS */ } };
+// kind: 'tap' (default) | 'success' | 'warn'. Android vibrates; iOS has no Vibration API, so a hidden <input switch> is toggled inside the
+// user gesture, which gives the native switch tick on iOS 17.4+ (a silent no-op on older iOS and on desktop).
+export const haptic = (kind = 'tap') => {
+  try { if (navigator.vibrate) { if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return; navigator.vibrate(kind === 'warn' ? [18, 40, 18] : kind === 'success' ? [10, 30, 10] : 8); return; } } catch (e) { /* ignore */ }
+  try {
+    if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+    const tick = () => { const l = document.createElement('label'); l.setAttribute('aria-hidden', 'true'); l.style.display = 'none'; const i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', ''); l.append(i); document.head.append(l); l.click(); l.remove(); };
+    tick(); if (kind !== 'tap') setTimeout(tick, 70);
+  } catch (e) { /* ignore */ }
+};
+// Calendar-day distance, in words: "today", "yesterday", "3 days ago".
+export function ago(ts) {
+  if (!ts) return 'never';
+  const a = new Date(ts), b = new Date(); a.setHours(12, 0, 0, 0); b.setHours(12, 0, 0, 0);
+  const d = Math.round((b - a) / 864e5);
+  return d <= 0 ? 'today' : d === 1 ? 'yesterday' : `${d} days ago`;
+}

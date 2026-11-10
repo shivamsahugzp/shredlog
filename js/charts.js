@@ -1,4 +1,6 @@
 // Hand-rolled SVG charts: line (with trend/dots), bars (with target), stacked bars. Hover/tap tooltips.
+// Intro animation (first render only; see motion.js quiet()): lines draw in, bars grow from the baseline, dots fade in. Each piece <= 400 ms.
+import { canIntro, EASE_OUT } from './motion.js';
 const NS = 'http://www.w3.org/2000/svg';
 const S = (tag, attrs = {}, ...kids) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) if (v != null) e.setAttribute(k, v); for (const k of kids) if (k != null) e.append(k.nodeType ? k : document.createTextNode(k)); return e; };
 const txt = (x, y, s, attrs = {}) => S('text', { x, y, ...attrs }, s);
@@ -29,11 +31,13 @@ function tooltipLayer(svg, W, H) {
 }
 
 // series: [{name, color (css var or hex), points:[{x:label, y}], dots, dash, width}]
-export function lineChart({ series, target, height = 170, fmtY = (v) => String(Math.round(v)), yMin, yMax, xLabels = 5, unit = '' }) {
+// clampTarget: keep the target line out of the y-domain (a far-off goal would squash the data); it is drawn at the edge as a label instead.
+export function lineChart({ series, target, height = 170, fmtY = (v) => String(Math.round(v)), yMin, yMax, xLabels = 5, unit = '', clampTarget = false }) {
   const W = 360, H = height, padL = 36, padR = 10, padT = 10, padB = 24;
   const allPts = series.flatMap((s) => s.points.filter((p) => p.y != null));
   const n = Math.max(...series.map((s) => s.points.length), 1);
-  const ys = allPts.map((p) => p.y).concat(target != null ? [target] : []);
+  const ys = allPts.map((p) => p.y).concat(target != null && !clampTarget ? [target] : []);
+  const intro = canIntro();
   const rawMin = yMin ?? (ys.length ? Math.min(...ys) : 0), rawMax = yMax ?? (ys.length ? Math.max(...ys) : 1);
   const padY = (rawMax - rawMin) * 0.12 || 1;
   const { lo, hi, ticks } = niceTicks(yMin ?? rawMin - padY, yMax ?? rawMax + padY, 4);
@@ -46,13 +50,28 @@ export function lineChart({ series, target, height = 170, fmtY = (v) => String(M
   const labels = series[0]?.points.map((p) => p.x) || [];
   const every = Math.max(1, Math.ceil(n / xLabels));
   labels.forEach((l, i) => { if (i % every === 0 || i === n - 1) svg.append(txt(sx(i), H - 6, l, { 'text-anchor': i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle' })); });
-  if (target != null) svg.append(S('line', { class: 'target-line', x1: padL, x2: W - padR, y1: sy(target), y2: sy(target) }));
+  if (target != null) {
+    if (clampTarget && (target > hi || target < lo)) svg.append(txt(W - padR, target > hi ? padT + 11 : H - padB - 5, `Goal ${fmtY(target)}${unit} ${target > hi ? '↑' : '↓'}`, { class: 'tgt-out', 'text-anchor': 'end' }));
+    else svg.append(S('line', { class: 'target-line', x1: padL, x2: W - padR, y1: sy(target), y2: sy(target) }));
+  }
   for (const s of series) {
     const pts = s.points.map((p, i) => (p.y == null ? null : [sx(i), sy(p.y)]));
     let d = '', pen = false;
     pts.forEach((pt) => { if (!pt) { pen = false; return; } d += (pen ? 'L' : 'M') + pt[0].toFixed(1) + ' ' + pt[1].toFixed(1); pen = true; });
-    if (d) svg.append(S('path', { class: 'series-line', d, stroke: s.color, 'stroke-width': s.width || 2, 'stroke-dasharray': s.dash ? '4 4' : null, opacity: s.opacity ?? 1 }));
-    if (s.dots) pts.forEach((pt) => pt && svg.append(S('circle', { cx: pt[0], cy: pt[1], r: 4, fill: s.color, stroke: 'var(--card)', 'stroke-width': 2 })));
+    if (d) {
+      const path = S('path', { class: 'series-line', d, stroke: s.color, 'stroke-width': s.width || 2, 'stroke-dasharray': s.dash ? '4 4' : null, opacity: s.opacity ?? 1 });
+      svg.append(path);
+      if (intro) {
+        if (s.dash) path.animate([{ opacity: 0 }, { opacity: s.opacity ?? 1 }], { duration: 400, fill: 'backwards' });
+        else { path.setAttribute('pathLength', '1'); path.animate([{ strokeDasharray: '1 1', strokeDashoffset: 1 }, { strokeDasharray: '1 1', strokeDashoffset: 0 }], { duration: 400, easing: EASE_OUT, fill: 'backwards' }); }
+      }
+    }
+    if (s.dots) pts.forEach((pt, i) => {
+      if (!pt) return;
+      const dot = S('circle', { cx: pt[0], cy: pt[1], r: 4, fill: s.color, stroke: 'var(--card)', 'stroke-width': 2 });
+      svg.append(dot);
+      if (intro) { dot.style.transformBox = 'fill-box'; dot.style.transformOrigin = 'center'; dot.animate([{ opacity: 0, transform: 'scale(.3)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 160, delay: Math.min(240, 120 + (i / Math.max(1, pts.length)) * 120), easing: EASE_OUT, fill: 'backwards' }); }
+    });
   }
   const hover = S('line', { class: 'hover-line', y1: padT, y2: H - padB, visibility: 'hidden' }); svg.append(hover);
   const tip = tooltipLayer(svg, W, H);
@@ -83,16 +102,19 @@ export function barChart({ bars, target, height = 150, fmtY = (v) => String(Math
   svg.append(grid);
   const every = Math.max(1, Math.ceil(n / xLabels));
   const tip = tooltipLayer(svg, W, H);
+  const intro = canIntro();
   bars.forEach((b, i) => {
     const x = padL + i * slot + (slot - bw) / 2, v = b.value || 0, y = sy(v), base = sy(0);
     const hgt = Math.max(0, base - y);
     const fill = b.color || (colorOver && target != null && v > target ? colorOver : color);
+    if (b.hl) svg.append(S('rect', { class: 'hl-bg', x: padL + i * slot, y: padT - 2, width: slot, height: H - padT - padB + 4, rx: 6 }));
     const rect = S('path', { d: `M${x} ${base}V${y + Math.min(4, hgt)}a4 4 0 0 1 4-4h${bw - 8}a4 4 0 0 1 4 4V${base}Z`, fill, opacity: v ? 1 : 0 });
+    if (intro && v) { rect.style.transformOrigin = `${x + bw / 2}px ${base}px`; rect.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], { duration: 320, delay: Math.round((i / n) * 80), easing: EASE_OUT, fill: 'backwards' }); }
     const hit = S('rect', { x: padL + i * slot, y: padT, width: slot, height: H - padT - padB, fill: 'transparent' });
     const show = () => tip.show(x + bw / 2, y, b.tip || `${b.label}: ${fmtY(v)}`);
     hit.addEventListener('pointerenter', show); hit.addEventListener('pointerdown', show); hit.addEventListener('pointerleave', tip.hide);
     svg.append(rect, hit);
-    if (i % every === 0 || i === n - 1) svg.append(txt(x + bw / 2, H - 6, b.label, { 'text-anchor': 'middle' }));
+    if (i % every === 0 || i === n - 1) svg.append(txt(x + bw / 2, H - 6, b.label, { 'text-anchor': 'middle', class: b.hl ? 'x-hl' : null }));
   });
   if (target != null) svg.append(S('line', { class: 'target-line', x1: padL, x2: W - padR, y1: sy(target), y2: sy(target) }));
   // tooltip must sit above the bars
@@ -113,9 +135,13 @@ export function stackedBarChart({ groups, keys, height = 160, fmtY = (v) => Stri
   svg.append(grid);
   const tip = tooltipLayer(svg, W, H);
   const every = Math.max(1, Math.ceil(n / xLabels));
+  const intro = canIntro();
   groups.forEach((g, i) => {
     const x = padL + i * slot + (slot - bw) / 2; let acc = 0;
-    keys.forEach((k) => { const v = g.parts[k.key] || 0; if (!v) return; const y0 = sy(acc), y1 = sy(acc + v); svg.append(S('rect', { x, y: y1 + 1, width: bw, height: Math.max(0, y0 - y1 - 2), fill: k.color, rx: 2 })); acc += v; });
+    const col = S('g');
+    keys.forEach((k) => { const v = g.parts[k.key] || 0; if (!v) return; const y0 = sy(acc), y1 = sy(acc + v); col.append(S('rect', { x, y: y1 + 1, width: bw, height: Math.max(0, y0 - y1 - 2), fill: k.color, rx: 2 })); acc += v; });
+    svg.append(col);
+    if (intro && acc) { col.style.transformOrigin = `${x + bw / 2}px ${sy(0)}px`; col.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], { duration: 320, delay: Math.round((i / n) * 80), easing: EASE_OUT, fill: 'backwards' }); }
     const hit = S('rect', { x: padL + i * slot, y: padT, width: slot, height: H - padT - padB, fill: 'transparent' });
     const show = () => tip.show(x + bw / 2, sy(acc), `${g.label}: ${keys.filter((k) => g.parts[k.key]).map((k) => `${k.label} ${fmtY(g.parts[k.key])}`).join(' · ') || '0'}`);
     hit.addEventListener('pointerenter', show); hit.addEventListener('pointerdown', show); hit.addEventListener('pointerleave', tip.hide);

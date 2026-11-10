@@ -1,9 +1,12 @@
 // Train tab: workout home (next day, routines, history, exercise browser) and the live workout logger.
 // The live logger never rebuilds inputs while the user types: update() only refreshes the clock, rest banner and header stats.
-import { state, commit, startWorkout, finishWorkout, discardWorkout, deleteWorkout, findExercise, allExercises, searchExercises, addCustomExercise, allRoutines, exerciseHistory, lastSetsFor, bestFor, latestWeight, todayKey, dateKey, uid } from '../state.js';
-import { h, icon, sheet, toast, confirmSheet, chips, segmented, field, append, clear, emptyState, fmt, fmtDur, fmtClock, fmtDateLabel, fmtShortDate, fmtTime, haptic } from '../ui.js';
+import { state, commit, startWorkout, finishWorkout, discardWorkout, deleteWorkout, findExercise, allExercises, searchExercises, addCustomExercise, allRoutines, saveRoutine, exerciseHistory, lastSetsFor, bestFor, latestWeight, workoutsOn, todayKey, dateKey, parseKey, lastNDays, uid } from '../state.js';
+import { h, icon, sheet, toast, confirmSheet, promptSheet, chips, segmented, field, append, clear, emptyState, fmt, fmtDur, fmtClock, fmtDateLabel, fmtShortDate, fmtTime, haptic } from '../ui.js';
 import { metBurn, workoutVolume } from '../calc.js';
 import { lineChart } from '../charts.js';
+import { repRange, nextSuggestion, weeklyVolume, volumeByGroup, MUSCLE_GROUPS } from '../insights.js';
+import { bodyMap, MUSCLE_LABELS, groupColor, muscleColor, catGroup, musclesForCats, viewFor } from './body-map.js';
+import { weekPlans } from '../train-plan.js';
 
 // ---------- constants ----------
 const REST_CHOICES = [60, 90, 120, 180];
@@ -223,18 +226,81 @@ function trendChart(ex, hist) {
   return h('div', { class: 'card flat pad-s' }, h('div', { class: 'small strong' }, title),
     lineChart({ series: [{ name: '', color: 'var(--p)', dots: true, points }], fmtY: (v) => String(+v.toFixed(1)), unit: ' ' + unit, height: 150 }));
 }
+// ---------- form guide: demo media, steps, cues, mistakes, video link ----------
+const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+const exGroup = (ex) => catGroup(ex.cat) || MUSCLE_GROUPS[ex.muscles?.[0]] || null;
+const exColor = (ex) => groupColor(exGroup(ex));
+const reducedMotion = () => { try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } };
+const exerciseHeat = (ex) => Object.fromEntries((ex.muscles || []).map((m, i) => [m, i === 0 ? 1 : 0.45])); // primary strong, helpers softer
+
+// 16:10 panel. Two images crossfade every 1.2 s (start ↔ end position); tap pauses, then flips the frame by hand.
+// Without images it shows the body map with the primary muscle lit. Returns { el, stop }.
+function formMedia(ex) {
+  const urls = (Array.isArray(ex.img) ? ex.img : []).filter((u) => typeof u === 'string' && u).slice(0, 2);
+  const tc = exColor(ex), primary = ex.muscles?.[0];
+  let timer = 0;
+  const stop = () => { clearInterval(timer); timer = 0; };
+  const placeholder = () => {
+    const map = bodyMap({ heat: exerciseHeat(ex), view: primary ? viewFor(primary) : 'front' });
+    map.classList.add('bm-compact');
+    return h('div', { class: 'tr-media tr-ph', style: `--tc:${tc}` }, map,
+      h('div', { class: 'tr-ph-txt' }, h('b', null, primary ? MUSCLE_LABELS[primary] || cap(primary) : ex.cat || 'Exercise'),
+        h('span', null, 'No demo images yet. Follow the steps below or watch a form video.')));
+  };
+  if (!urls.length) return { el: placeholder(), stop };
+
+  const reduced = reducedMotion();
+  const names = ['Start', 'End'];
+  const wrap = h('div', { class: 'tr-media' + (reduced ? ' sbs' : ''), style: `--tc:${tc}` });
+  let live = [], cur = 0, paused = false;
+  const ind = h('span', { class: 'tr-media-ind', 'aria-hidden': 'true' });
+  const ppIcon = h('span', { class: 'tr-media-pp-ic' });
+  const sync = () => {
+    live.forEach((f, k) => f.classList.toggle('on', reduced || k === cur));
+    ind.textContent = `${cur + 1} / ${live.length}`;
+    clear(ppIcon); ppIcon.append(icon(paused ? 'play' : 'pause', 16));
+  };
+  const show = (i) => { cur = (i + live.length) % live.length; sync(); };
+  const drop = (frame) => {
+    live = live.filter((f) => f !== frame); frame.remove();
+    if (!live.length) { stop(); wrap.replaceWith(placeholder()); return; }
+    if (live.length < 2) { stop(); wrap.classList.add('single'); }
+    show(Math.min(cur, live.length - 1));
+  };
+  live = urls.map((u, i) => {
+    const frame = h('div', { class: 'tr-frame' }, h('img', { src: u, alt: `${ex.name}, ${names[i].toLowerCase()} position`, decoding: 'async', onError: () => drop(frame) }), reduced ? h('span', { class: 'tr-frame-tag' }, names[i]) : null);
+    wrap.append(frame); return frame;
+  });
+  if (urls.length < 2) wrap.classList.add('single');
+  if (!reduced && live.length > 1) {
+    const hit = h('button', { class: 'tr-media-hit', 'aria-label': 'Exercise demo. Tap to pause, tap again to flip between start and end position.', onClick: () => { if (!paused) { paused = true; sync(); } else show(cur + 1); } });
+    const pp = h('button', { class: 'tr-media-pp', 'aria-label': 'Play or pause the demo', onClick: (e) => { e.stopPropagation(); paused = !paused; sync(); } }, ppIcon);
+    wrap.append(hit, pp, ind);
+    timer = setInterval(() => { if (!wrap.isConnected) return stop(); if (!paused && live.length > 1) show(cur + 1); }, 1200);
+  }
+  sync();
+  return { el: wrap, stop };
+}
+
 function detailSheet(exId, { inWorkout = false } = {}) {
   const ex = findExercise(exId);
   if (!ex) return toast('Exercise not found');
   const hist = exerciseHistory(exId, 20), best = bestFor(exId), last = hist[0];
-  const list = (title, items) => (items?.length ? h('div', null, h('h3', { style: { marginBottom: '6px' } }, title), h('ul', { class: 'cue-list' }, items.map((t) => h('li', null, t)))) : null);
+  const block = (title, items, cls = '') => (items?.length ? h('div', null, h('h3', { class: 'tr-sub' }, title), h('ul', { class: 'cue-list ' + cls }, items.map((t) => h('li', null, t)))) : null);
   const stats = [best.w && ['Best weight', `${numStr(best.w)} kg`], best.e1rm && ['Best e1RM', `${numStr(best.e1rm)} kg`], ex.type === 'bodyweight' && best.reps && ['Best reps', best.reps], best.sec && ['Best hold', `${best.sec} s`]].filter(Boolean);
+  const media = formMedia(ex);
+  const meta = [ex.equipment, ex.level, ex.mechanic].filter(Boolean).map(cap).join(' · ');
+  const steps = Array.isArray(ex.steps) ? ex.steps.filter(Boolean) : [];
   sheet({
     title: ex.name,
-    content: h('div', { class: 'stack' },
-      h('div', { class: 'row wrap' }, [ex.cat, ex.equipment, ex.type].map((t) => h('span', { class: 'pill' }, t))),
-      ex.muscles?.length ? h('div', { class: 'small' }, h('span', { class: 'muted' }, 'Muscles: '), ex.muscles.join(', ')) : null,
-      list('How to do it', ex.cues), list('Common mistakes', ex.mistakes),
+    onClose: media.stop,
+    content: h('div', { class: 'stack tr-detail' },
+      media.el,
+      meta ? h('div', { class: 'tr-metaline' }, meta) : null,
+      (ex.muscles || []).length ? h('div', { class: 'tr-mus' }, ex.muscles.map((m, i) => h('span', { class: 'tr-mus-chip' + (i === 0 ? ' pri' : ''), style: `--mc:${muscleColor(m)}` }, MUSCLE_LABELS[m] || cap(m)))) : null,
+      steps.length ? h('div', null, h('h3', { class: 'tr-sub' }, 'How to'), h('ol', { class: 'tr-steps' }, steps.map((t) => h('li', null, h('span', null, t))))) : null,
+      block('Coach cues', ex.cues), block('Avoid', ex.mistakes, 'tr-avoid'),
+      h('a', { class: 'btn block tr-yt', href: 'https://www.youtube.com/results?search_query=' + encodeURIComponent(ex.name + ' proper form'), target: '_blank', rel: 'noopener' }, icon('play', 18), 'Watch form videos on YouTube'),
       stats.length ? tiles(stats) : h('div', { class: 'small muted' }, 'Not logged yet. Your bests will show here.'),
       last ? h('div', { class: 'card flat pad-s' }, h('div', { class: 'small muted' }, `Last session · ${fmtDateLabel(last.date, todayKey())}`), h('div', { class: 'strong' }, last.sets.map((s) => setText(ex.type, s, true)).join('  ·  '))) : null,
       last ? trendChart(ex, hist) : null),
@@ -244,9 +310,10 @@ function detailSheet(exId, { inWorkout = false } = {}) {
 
 // ---------- routines ----------
 function dayLines(day, max = 6) {
-  const rows = day.exercises.map((d) => [findExercise(d.ex)?.name, `${d.sets} × ${d.reps}`]).filter((r) => r[0]);
-  return h('div', { class: 'tr-lines' }, rows.slice(0, max).map(([n, t]) => h('div', { class: 'tr-line' }, h('span', { class: 'ellipsis' }, n), h('span', { class: 'muted' }, t))),
-    rows.length > max ? h('div', { class: 'small muted' }, `+ ${rows.length - max} more`) : null);
+  const rows = day.exercises.map((d) => [findExercise(d.ex), `${d.sets} × ${d.reps}`]).filter((r) => r[0]);
+  return h('div', { class: 'tr-lines' }, rows.slice(0, max).map(([ex, t]) => h('button', { class: 'tr-line', 'aria-label': `Form guide for ${ex.name}`, onClick: () => detailSheet(ex.id) },
+    h('span', { class: 'tr-line-name' }, h('span', { class: 'ellipsis' }, ex.name), icon('info', 14)), h('span', { class: 'muted' }, t))),
+  rows.length > max ? h('div', { class: 'small muted' }, `+ ${rows.length - max} more`) : null);
 }
 function startDay(r, idx) {
   if (state.active) return toast('Finish or discard your current workout first');
@@ -273,6 +340,268 @@ function routineSheet(r) {
   });
 }
 
+// ---------- session builder: planned entries, body-map picker ----------
+const EQUIP = [{ id: 'all', label: 'All' }, { id: 'machine', label: 'Machine' }, { id: 'cable', label: 'Cable' }, { id: 'barbell', label: 'Barbell' }, { id: 'dumbbell', label: 'Dumbbell' }, { id: 'bodyweight', label: 'Bodyweight' }];
+const equipMatch = (ex, f) => f === 'all' || (f === 'bodyweight' ? ex.equipment === 'bodyweight' || ex.equipment === 'none' : ex.equipment === f);
+const MY_ROUTINE_ID = 'routine_my_sessions';
+const MOBILITY_PICKS = ['cat_cow', 'worlds_greatest_stretch', 'hip_flexor_stretch', 'thoracic_rotation', 'hamstring_stretch', 'childs_pose'];
+
+// Most recent finished sets per exercise, built once per paint instead of once per row.
+function lastIndex() {
+  const m = new Map();
+  for (const w of [...state.workouts].sort((a, b) => b.start - a.start)) for (const e of w.exercises || []) {
+    if (m.has(e.exId)) continue;
+    const sets = (e.sets || []).filter((s) => s.done && isWork(s));
+    if (sets.length) m.set(e.exId, { date: dateKey(new Date(w.start)), sets });
+  }
+  return m;
+}
+function agoText(key) {
+  const d = Math.round((parseKey(todayKey()) - parseKey(key)) / 864e5);
+  if (d <= 0) return 'today'; if (d === 1) return 'yesterday'; if (d < 14) return `${d} days ago`;
+  return d < 60 ? `${Math.round(d / 7)} weeks ago` : `${Math.round(d / 30)} months ago`;
+}
+function lastGhost(ex, idx) {
+  const l = idx.get(ex.id); if (!l) return null;
+  return `Last: ${setText(ex.type, bestSet(l.sets) || l.sets[0], true)} · ${agoText(l.date)}`;
+}
+// Workout entry with planned reps from repRange and, when there is history, the weight nextSuggestion recommends.
+function plannedEntry(ex, { n, plan, restSec } = {}) {
+  const range = repRange(ex), hist = lastSetsFor(ex.id);
+  const count = Math.max(1, Math.min(6, n || hist.filter(isWork).length || 3));
+  const reps = plan?.reps || (range ? `${range[0]}-${range[1]}` : '');
+  const entry = entryFor(ex, count, { plan: { sets: count, ...(reps ? { reps } : {}), ...(plan?.restSec ? { restSec: plan.restSec } : {}) }, ...(restSec ? { restSec } : {}) });
+  if (ex.type === 'strength' || ex.type === 'bodyweight') {
+    const sug = hist.length ? nextSuggestion(ex.id, reps) : null;
+    if (sug && sug.weight > 0) entry.sets.forEach((s) => { s.w = sug.weight; });
+  } else if (ex.type === 'timed' && hist.length) {
+    entry.sets.forEach((s, i) => { const p = hist[i] || hist[hist.length - 1]; if (p?.sec) s.sec = p.sec; });
+  }
+  return entry;
+}
+const sessionName = (exs) => [...new Set(exs.map((e) => e.cat).filter((c) => c && c !== 'Mobility'))].slice(0, 3).join(' · ') || 'Workout';
+function startFromPicks(ids) {
+  if (state.active) return toast('Finish or discard your current workout first');
+  const exs = ids.map(findExercise).filter(Boolean);
+  if (!exs.length) return toast('Pick at least one exercise');
+  begin({ name: sessionName(exs), exercises: exs.map((ex) => plannedEntry(ex)) });
+}
+// "Repeat last Monday": same exercises, fresh sets, weights from nextSuggestion.
+function startFromTemplate(w, name) {
+  if (state.active) return toast('Finish or discard your current workout first');
+  const exercises = (w.exercises || []).map((e) => {
+    const def = findExercise(e.exId) || { id: e.exId, name: e.name, type: e.type, met: e.met };
+    return plannedEntry(def, { n: (e.sets || []).filter(isWork).length, plan: e.plan, restSec: e.restSec });
+  });
+  if (!exercises.length) return toast('That workout has no exercises to repeat');
+  begin({ name: name || w.name || 'Workout', exercises });
+}
+function startMobility() {
+  if (state.active) return toast('Finish or discard your current workout first');
+  const lib = allExercises().filter((e) => e.cat === 'Mobility' && e.type === 'timed');
+  const picks = MOBILITY_PICKS.map((id) => lib.find((e) => e.id === id)).filter(Boolean);
+  const pool = (picks.length >= 4 ? picks : lib).slice(0, 5);
+  if (!pool.length) return toast('No mobility exercises found');
+  begin({ name: 'Light mobility', exercises: pool.map((ex) => { const e = entryFor(ex, 2, { restSec: 15, plan: { sets: 2, reps: '45 s' } }); e.sets.forEach((s) => { s.sec = 45; }); return e; }) });
+}
+async function saveAsDay(ids, fallbackName) {
+  const name = await promptSheet('Name this routine day', fallbackName, { placeholder: 'e.g. Push day' });
+  if (!name) return;
+  const cur = state.customRoutines.find((r) => r.id === MY_ROUTINE_ID);
+  const base = cur || { id: MY_ROUTINE_ID, name: 'My sessions', level: 'custom', daysPerWeek: 1, goal: 'Built from the body map', desc: 'Days you saved from the muscle picker.', days: [] };
+  const exercises = ids.map(findExercise).filter(Boolean).map((ex) => {
+    const range = repRange(ex), n = Math.max(2, Math.min(5, lastSetsFor(ex.id).filter(isWork).length || 3));
+    return { ex: ex.id, sets: n, reps: range ? `${range[0]}-${range[1]}` : ex.type === 'cardio' ? '20 min' : '45 s', restSec: ex.type === 'strength' ? 90 : 60 };
+  });
+  const days = [...(base.days || []), { name, exercises }];
+  saveRoutine({ ...base, days, daysPerWeek: Math.min(7, days.length) });
+  toast(`Saved "${name}" to My sessions`);
+}
+
+// Thumbnail: first demo image when there is one, otherwise a muscle-group coloured tile.
+function thumb(ex) {
+  const box = h('span', { class: 'tr-thumb', style: `--tc:${exColor(ex)}`, 'aria-hidden': 'true' }, icon('dumbbell', 20));
+  const url = Array.isArray(ex.img) ? ex.img[0] : null;
+  if (url) { const img = h('img', { src: url, alt: '', loading: 'lazy', decoding: 'async', onError: () => img.remove() }); box.append(img); }
+  return box;
+}
+
+function musclePicker({ muscles = [], title = 'Build your session' } = {}) {
+  const sel = new Set(muscles), picked = [], f = { equip: 'all', q: '', show: {} };
+  const idx = lastIndex();
+  let map, selBox, selActions, list, startBtn, saveBtn, seeBtn, count = 0;
+  const syncMap = () => map.setSelected([...sel]);
+
+  function syncFooter() {
+    const n = picked.length;
+    startBtn.textContent = n ? `Start workout · ${n} exercise${n === 1 ? '' : 's'}` : 'Start workout';
+    startBtn.disabled = !n; saveBtn.disabled = !n;
+  }
+  function paintSel() {
+    clear(selBox);
+    selActions.classList.toggle('hide', !sel.size);
+    if (!sel.size) return append(selBox, h('div', { class: 'tr-sel-hint' }, 'Tap muscles on the body to see matching exercises.'));
+    append(selBox, [...sel].map((m) => h('button', { class: 'tr-mchip', style: `--mc:${muscleColor(m)}`, 'aria-label': `Remove ${MUSCLE_LABELS[m] || m}`, onClick: () => { sel.delete(m); syncMap(); paintSel(); paintList(); } }, h('i'), MUSCLE_LABELS[m] || m, icon('x', 14))));
+  }
+  function row(ex) {
+    const on = () => picked.includes(ex.id);
+    const sub = [h('span', { class: 'pill' }, cap(ex.equipment || 'other'))];
+    const ghost = lastGhost(ex, idx); if (ghost) sub.push(h('span', { class: 'tr-ghost' }, ghost));
+    const check = h('span', { class: 'tr-check' }, icon('check', 16));
+    const main = h('button', { class: 'tr-prow-main', 'aria-pressed': on() ? 'true' : 'false', 'aria-label': `${ex.name}. ${on() ? 'Selected' : 'Not selected'}` }, thumb(ex), h('div', { class: 'grow' }, h('div', { class: 'title' }, ex.name), h('div', { class: 'tr-prow-sub' }, sub)), check);
+    const el = h('div', { class: 'tr-prow' + (on() ? ' on' : '') }, main, h('button', { class: 'icon-btn plain tr-info', 'aria-label': `Form guide for ${ex.name}`, onClick: () => detailSheet(ex.id) }, icon('info', 20)));
+    main.addEventListener('click', () => {
+      const i = picked.indexOf(ex.id); if (i >= 0) picked.splice(i, 1); else picked.push(ex.id);
+      el.classList.toggle('on', on()); main.setAttribute('aria-pressed', on() ? 'true' : 'false'); main.setAttribute('aria-label', `${ex.name}. ${on() ? 'Selected' : 'Not selected'}`);
+      haptic(); syncFooter();
+    });
+    return el;
+  }
+  // Cardio and mobility last; exercises you have done before first (most recent first), then the rest in library order.
+  const rank = (e) => (e.cat === 'Cardio' || e.cat === 'Mobility' || e.type === 'cardio' ? 2 : idx.has(e.id) ? 0 : 1);
+  const byRank = (a, b) => rank(a) - rank(b) || (rank(a) === 0 ? (idx.get(b.id).date < idx.get(a.id).date ? -1 : idx.get(b.id).date > idx.get(a.id).date ? 1 : 0) : 0);
+  const PAGE = 24, SEC_PAGE = 8;
+  const more = (key, base, n) => h('button', { class: 'btn sm block ghost', onClick: () => { f.show[key] = (f.show[key] || base) + PAGE; paintList(); } }, `Show ${Math.min(n, PAGE)} more`);
+  function paintList() {
+    clear(list);
+    const pool = searchExercises(f.q, '', 400).filter((e) => equipMatch(e, f.equip));
+    const body = [];
+    if (!sel.size) {
+      count = f.q ? pool.length : 0;
+      if (!f.q) body.push(emptyState('Pick a muscle above', 'Tap the body, or search by name. The exercises that train it show up here.'));
+      else if (!pool.length) body.push(emptyState('No exercises found', `Nothing matches "${f.q}".`));
+      else body.push(h('h3', { class: 'tr-mhead' }, 'Search results'), pool.slice(0, 60).map(row));
+    } else {
+      const groups = new Map([...sel].map((m) => [m, { primary: [], secondary: [] }]));
+      for (const ex of pool) {
+        const ms = ex.muscles || [], p = [...sel].find((m) => ms[0] === m), s = p || [...sel].find((m) => ms.includes(m));
+        if (s) groups.get(s)[p ? 'primary' : 'secondary'].push(ex);
+      }
+      count = 0;
+      for (const [m, g] of groups) {
+        const pri = g.primary.sort(byRank), sec = g.secondary.sort(byRank);
+        if (!pri.length && !sec.length) continue;
+        count += pri.length + sec.length;
+        const kp = m + ':p', ks = m + ':s', nPri = f.show[kp] || PAGE, nSec = f.show[ks] || SEC_PAGE;
+        body.push(h('h3', { class: 'tr-mhead', style: `--mc:${muscleColor(m)}` }, h('i'), MUSCLE_LABELS[m] || m, h('span', { class: 'muted' }, String(pri.length + sec.length))),
+          pri.slice(0, nPri).map(row), pri.length > nPri ? more(kp, PAGE, pri.length - nPri) : null,
+          sec.length ? [h('div', { class: 'tr-subhead' }, `Also works ${(MUSCLE_LABELS[m] || m).toLowerCase()}`), sec.slice(0, nSec).map(row), sec.length > nSec ? more(ks, SEC_PAGE, sec.length - nSec) : null] : null);
+      }
+      if (!count) body.push(emptyState('No exercises match', 'Try another equipment filter or clear the search.'));
+    }
+    append(list, body);
+    seeBtn.classList.toggle('hide', !count);
+    seeBtn.textContent = `See ${count} exercise${count === 1 ? '' : 's'}`;
+  }
+
+  sheet({
+    title, full: true,
+    content: (api) => {
+      map = bodyMap({ selected: [...sel], onToggle: (m, now) => { if (now) sel.add(m); else sel.delete(m); paintSel(); paintList(); } });
+      selBox = h('div', { class: 'tr-sel' });
+      list = h('div', { class: 'tr-plist' });
+      seeBtn = h('button', { class: 'btn sm tr-see hide', onClick: () => list.scrollIntoView({ behavior: 'smooth', block: 'start' }) });
+      selActions = h('div', { class: 'tr-sel-actions hide' }, seeBtn, h('button', { class: 'tr-clear', onClick: () => { sel.clear(); syncMap(); paintSel(); paintList(); } }, 'Clear'));
+      const input = h('input', { type: 'search', placeholder: 'Search exercises', enterkeyhint: 'search', autocomplete: 'off', autocapitalize: 'none', 'aria-label': 'Search exercises', onInput: (e) => { f.q = e.target.value; f.show = {}; paintList(); } });
+      startBtn = h('button', { class: 'btn primary', disabled: true, onClick: () => { api.close(); startFromPicks(picked.slice()); } }, 'Start workout');
+      saveBtn = h('button', { class: 'btn sm ghost', disabled: true, onClick: () => saveAsDay(picked.slice(), sessionName(picked.map(findExercise).filter(Boolean))) }, 'Save as routine day…');
+      api.footer = h('div', { class: 'tr-foot' }, startBtn, saveBtn);
+      paintSel(); paintList(); syncFooter();
+      return h('div', { class: 'tr-picker stack' }, map, selBox, selActions, chips(EQUIP, f.equip, (v) => { f.equip = v; f.show = {}; paintList(); }), h('div', { class: 'search' }, icon('search'), input), list);
+    },
+    actions: (api) => api.footer,
+  });
+}
+
+// ---------- habit: "your habit says…", week strip, trained-this-week map ----------
+const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const SHORT_DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const GROUP_ORDER = ['Chest', 'Back', 'Shoulders', 'Arms', 'Legs', 'Core'];
+const dotsFor = (groups, max = 3) => groups.slice(0, max).map((g) => h('i', { class: 'tr-gdot', style: `background:${groupColor(catGroup(g))}`, title: g }));
+const heatOf = (muscles) => Object.fromEntries(muscles.map((m) => [m, 1]));
+function miniMap(opts, cls = '') { const m = bodyMap(opts); m.classList.add('bm-compact'); if (cls) m.classList.add(cls); return m; }
+const exCount = (w) => (w?.exercises || []).length;
+
+function daySheet(plan) {
+  const t = plan.template, muscles = musclesForCats(plan.groups);
+  const kids = [];
+  if (plan.kind === 'train') {
+    kids.push(
+      h('div', { class: 'tr-gchips' }, plan.groups.map((g) => h('span', { class: 'tr-gchip', style: `--mc:${groupColor(catGroup(g))}` }, h('i'), g))),
+      muscles.length ? miniMap({ heat: heatOf(muscles), view: 'both' }, 'tr-day-map') : null,
+      h('div', { class: 'small muted' }, `${plan.hits} of the last ${plan.weeksObserved} ${plan.dayName}s`),
+      plan.lastDate ? h('div', { class: 'card flat pad-s' }, h('div', { class: 'small muted' }, 'Last session'), h('div', { class: 'strong' }, `${fmtDateLabel(plan.lastDate, todayKey())}${t ? ` · ${t.name || 'Workout'} · ${exCount(t)} exercises` : ''}`)) : null);
+  } else if (plan.kind === 'rest') {
+    kids.push(h('div', { class: 'tr-rest-note' }, icon('moon', 28), h('div', null, h('b', null, 'Usually a rest day'), h('div', { class: 'small muted' }, 'Recovery is where muscle grows.'))));
+  } else {
+    kids.push(h('div', { class: 'empty' }, h('b', null, `No pattern on ${plan.dayName}s yet`), plan.dataWeeks < 2 ? 'ShredLog learns your weekly pattern after about two weeks of logging.' : 'Train on this day a few times and it will remember.'));
+  }
+  sheet({
+    title: `${plan.dayName}s`,
+    content: h('div', { class: 'stack' }, kids),
+    actions: (api) => h('div', { class: 'tr-foot' },
+      plan.kind === 'train' && t ? h('button', { class: 'btn primary', onClick: () => { api.close(); startFromTemplate(t); } }, 'Start this') : null,
+      plan.kind === 'rest' ? h('button', { class: 'btn primary', onClick: () => { api.close(); startMobility(); } }, 'Light mobility (10 min)') : null,
+      h('button', { class: plan.kind === 'unknown' ? 'btn primary' : 'btn', onClick: () => { api.close(); musclePicker({ muscles }); } }, 'Pick muscles')),
+  });
+}
+
+function weekStrip(plans) {
+  const today = new Date().getDay();
+  return h('div', { class: 'tr-week-strip', role: 'group', 'aria-label': 'Your usual training week' }, WEEK_ORDER.map((wd) => {
+    const p = plans[wd], what = p.kind === 'train' ? p.label : p.kind === 'rest' ? 'usually rest' : 'no pattern yet';
+    const mark = p.kind === 'train' ? h('span', { class: 'tr-wk-dots' }, dotsFor(p.groups)) : p.kind === 'rest' ? h('span', { class: 'tr-wk-rest' }, '–') : h('span', { class: 'tr-wk-dots' }, h('i', { class: 'tr-gdot empty' }));
+    return h('button', { class: `tr-wk ${p.kind}${wd === today ? ' today' : ''}`, 'aria-label': `${p.dayName}: ${what}`, 'aria-current': wd === today ? 'date' : null, onClick: () => daySheet(p) }, h('span', { class: 'tr-wk-d' }, SHORT_DAY[wd]), mark);
+  }));
+}
+
+// Card for today's weekday: what you usually do, one tap to repeat it, and the Mon–Sun strip.
+function habitCard(plans) {
+  const p = plans[new Date().getDay()], t = p.template, muscles = musclesForCats(p.groups);
+  const done = workoutsOn(todayKey());
+  const copy = [h('div', { class: 'micro muted' }, `${p.dayName} · Today`), h('h3', null, 'Your habit says…')];
+  const btns = [];
+  let art = null;
+  if (p.kind === 'train') {
+    copy.push(h('div', { class: 'tr-plan-sum', 'aria-label': p.summary }, h('span', { class: 'tr-plan-dots', 'aria-hidden': 'true' }, dotsFor(p.groups)), 'You usually train ', h('b', null, p.label), ` (${p.hits} of last ${p.weeksObserved} ${p.dayName}s)`));
+    if (t) copy.push(h('div', { class: 'small muted' }, `Last ${p.dayName}: ${t.name || 'Workout'} · ${exCount(t)} exercises`));
+    if (t) btns.push(h('button', { class: 'btn primary', onClick: () => startFromTemplate(t) }, icon('reset', 16), `Repeat last ${p.dayName}`));
+    btns.push(h('button', { class: 'btn', onClick: () => musclePicker({ muscles }) }, 'Pick muscles'));
+    if (muscles.length) art = miniMap({ heat: heatOf(muscles), view: 'both' }, 'tr-plan-art');
+  } else if (p.kind === 'rest') {
+    copy.push(h('div', { class: 'tr-plan-sum' }, p.summary));
+    btns.push(h('button', { class: 'btn', onClick: startMobility }, icon('moon', 16), 'Light mobility (10 min)'));
+    art = h('div', { class: 'tr-plan-moon', 'aria-hidden': 'true' }, icon('moon', 30));
+  } else {
+    copy.push(h('div', { class: p.dataWeeks < 2 ? 'small muted' : 'tr-plan-sum' }, p.summary));
+  }
+  return h('div', { class: 'card tr-plan-card tr-plan-' + p.kind },
+    h('div', { class: 'tr-plan-top' }, h('div', { class: 'tr-plan-copy' }, copy), art),
+    done.length ? h('div', { class: 'tr-plan-done' }, icon('check', 14), `Logged today: ${done.map((w) => w.name || 'Workout').join(', ')}`) : null,
+    btns.length ? h('div', { class: 'tr-plan-btns' }, btns) : null,
+    weekStrip(plans));
+}
+
+function sessionCard() {
+  const art = miniMap({ heat: { chest: 1, 'front delts': 0.7, 'side delts': 0.7, biceps: 0.5, abs: 0.35, quads: 0.6 }, view: 'both' }, 'tr-build-art');
+  return h('div', { class: 'card tr-build-card' },
+    h('div', { class: 'tr-build-copy' }, h('h3', null, "Build today's session from the body"), h('p', { class: 'small' }, 'Tap the muscles you want to train. Pick from every exercise that works them.'),
+      h('button', { class: 'btn primary', onClick: () => musclePicker() }, icon('target', 18), 'Pick muscles')),
+    art);
+}
+
+// "Trained this week": last 7 days of hard sets as a heat map (10+ sets = full colour) plus a sets-per-group bar for each group.
+function weekMapCard() {
+  const keys = lastNDays(7), vol = weeklyVolume(keys), groups = volumeByGroup(keys);
+  const heat = Object.fromEntries(Object.entries(vol).map(([m, v]) => [m, Math.min(1, v / 10)]));
+  const map = miniMap({ heat, view: 'both', formatHeat: (m) => (vol[m] ? `${fmt(vol[m], 1)} sets` : 'not yet') }, 'tr-weekmap-fig');
+  const max = Math.max(10, ...GROUP_ORDER.map((g) => groups[g] || 0)), any = Object.keys(vol).length > 0;
+  return h('div', { class: 'card tr-weekmap' },
+    h('div', { class: 'tr-weekmap-body' }, map,
+      h('div', { class: 'tr-gbars' }, GROUP_ORDER.map((g) => h('div', { class: 'tr-gbar' }, h('span', { class: 'tr-gbar-l' }, g), h('span', { class: 'tr-gbar-t' }, h('i', { style: `width:${Math.round(((groups[g] || 0) / max) * 100)}%;background:${groupColor(g)}` })), h('b', null, fmt(groups[g] || 0, 0)))))),
+    h('div', { class: 'micro muted tr-weekmap-note' }, any ? 'Hard sets in the last 7 days (helper muscles count half). Tap a muscle for its number.' : 'Nothing logged in the last 7 days. The muscles you train will light up here.'));
+}
+
 // ---------- home ----------
 function begin(w) {
   const exercises = w.exercises || [];
@@ -287,7 +616,7 @@ function nextCard() {
     h('div', { class: 'row between' }, h('div', { class: 'grow' }, h('div', { class: 'micro muted' }, `Day ${idx + 1} of ${r.days.length}`), h('h3', null, `Next: ${day.name} · ${r.name}`)),
       h('button', { class: 'btn primary', onClick: () => startDay(r, idx) }, icon('play', 16), 'Start')),
     h('div', { class: 'tr-dots', 'aria-hidden': 'true' }, r.days.map((d, i) => h('i', { class: i === idx ? 'on' : i < idx ? 'past' : '', title: d.name }))),
-    dayLines(day));
+    dayLines(day, 4));
 }
 function routinesList() {
   const all = allRoutines();
@@ -338,8 +667,11 @@ function drawHome(root) {
   const week = state.workouts.filter((w) => w.start > Date.now() - 7 * 864e5).length;
   append(root, [
     h('div', { class: 'screen-head' }, h('div', null, h('h1', null, 'Train'), h('div', { class: 'sub' }, week ? `${week} workout${week === 1 ? '' : 's'} in the last 7 days` : 'Nothing logged in the last 7 days'))),
-    h('button', { class: 'btn primary block', onClick: () => begin({ name: 'Workout' }) }, icon('plus'), 'Start empty workout'),
     nextCard(),
+    habitCard(weekPlans()),
+    sessionCard(),
+    h('button', { class: 'btn block tr-empty-start', onClick: () => begin({ name: 'Workout' }) }, icon('plus'), 'Start empty workout'),
+    section('Trained this week', weekMapCard()),
     section('Routines', routinesList()),
     section('History', historyList()),
     section('Exercises', exercisePicker(ui.ex, { mode: 'browse', onPick: (ex) => detailSheet(ex.id) }),
@@ -452,6 +784,7 @@ function buildCard(ex, ei) {
   return h('section', { class: 'card tr-ex' },
     h('div', { class: 'tr-ex-head' },
       h('button', { class: 'tr-ex-name', onClick: () => detailSheet(ex.exId, { inWorkout: true }) }, ex.name),
+      h('button', { class: 'icon-btn plain tr-info', 'aria-label': `Form guide for ${ex.name}`, onClick: () => detailSheet(ex.exId, { inWorkout: true }) }, icon('info', 20)),
       h('button', { class: 'icon-btn plain', 'aria-label': `Options for ${ex.name}`, onClick: () => exerciseMenu(ei) }, icon('more'))),
     h('div', { class: 'small muted' }, [muscles, plan].filter(Boolean).join(' · ')),
     hint ? h('div', { class: 'tr-hint' }, h('span', { class: 'pill ' + hint.cls }, hint.text)) : null,

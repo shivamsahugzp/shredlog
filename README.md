@@ -16,7 +16,7 @@ Free, private, installable fitness tracker for Indian food and Indian gym life. 
 | Food | 400 Indian foods with katori / roti / cup / glass servings, per-100 g scaling, oil & ghee teaspoon stepper, text logging ("2 roti, 1 katori dal"), pot-recipe builder (cook once, log by katori), saved meals and starter plates, custom foods, copy yesterday, partial-day flag |
 | Macros & micros | Calories, protein, carbs, fat, fibre, sugar plus 10 micronutrients (iron, calcium, D, B12, C, zinc, magnesium, potassium, folate, sodium) against ICMR-NIN RDAs, with Indian food fixes and meal ideas for your gaps |
 | Targets | Mifflin-St Jeor start, then an adaptive estimate of your real burn from your own food + weight logs (MacroFactor-style), weekly budget view |
-| Training | Set × reps × weight logger with last-session ghost values, auto rest timer that survives backgrounding, PR detection, double-progression suggestions, plateau and deload alerts, weekly hard sets per muscle, routine templates, plate calculator, warm-up generator, 198 exercises with form cues and common mistakes |
+| Training | Set × reps × weight logger with last-session ghost values, auto rest timer that survives backgrounding, PR detection, double-progression suggestions, plateau and deload alerts, weekly hard sets per muscle, routine templates, plate calculator, warm-up generator, 600 exercises (machines, cables, free weights, bodyweight, mobility) with step-by-step form, start/end-position images, coach cues and common mistakes, a tap-to-pick muscle body map, and a weekday pattern learner that remembers what you train on each day |
 | Habits | One-tap chai (with sugar), cigarettes (time since last, money, baseline streak, health milestones), water, sleep, steps |
 | Body & feel | Post-meal tags (bloating, gas, acidity, cramps, sleepy, garmi), evening check-in (energy, mood, hunger, cravings, stool, skin, sleep), measurements, and food-to-symptom pattern detection with statistical gates and plain-language guardrails |
 | Budget | Protein per rupee ranking filtered by your diet (veg / egg / non-veg / vegan / Jain) and budget |
@@ -30,3 +30,5 @@ Everything is stored on the device (IndexedDB with a localStorage mirror). Expor
 Static files, no build step. Serve the folder (`python3 -m http.server`) and open `index.html`. Regenerate the service worker precache with `python3 scripts/build-sw.py`. Headless smoke test: `node test/smoke.mjs`.
 
 Food values are based on the Indian Food Composition Tables (NIN 2017) and typical home recipes. They are estimates. Nothing here is medical advice.
+
+Exercise illustrations and step-by-step instructions: free-exercise-db (public domain, Unlicense); images load from GitHub when online.

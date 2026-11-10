@@ -1,7 +1,8 @@
 // App shell: boot, tab router, re-render on state change, service worker updates.
 import { state, load, on, todayKey, flush, storage } from './state.js';
-import { h, icon, toast, clear } from './ui.js';
+import { h, icon, toast, clear, fmtClock, haptic } from './ui.js';
 import { renderLock } from './lock.js';
+import { prefersReducedMotion, celebrate, EASE_OUT } from './motion.js';
 
 const VIEWS = {
   today: () => import('./views/today.js'),
@@ -24,11 +25,16 @@ let current = { tab: 'today', params: {} };
 let date = todayKey();
 let updater = null;
 let raf = 0;
+let renderToken = 0;
+// Position in the left-to-right slide order. Settings is "one past" Progress so it pushes in from the right and Back slides out to the left.
+const ORDER = ['today', 'food', 'train', 'body', 'progress', 'settings'];
+const $ = (id) => document.getElementById(id);
 
 export function ctx() {
   return {
     date, today: todayKey(),
-    setDate(k) { date = k; rerender(true); },
+    // opts.skipOut: the caller already animated the old view away (Today's swipe)
+    setDate(k, opts = {}) { const dir = k < date ? -1 : k > date ? 1 : 0; date = k; return rerender(true, { dir, skipOut: !!opts.skipOut }); },
     go, params: current.params,
     refresh: () => rerender(true),
   };
@@ -36,31 +42,114 @@ export function ctx() {
 
 export async function go(tab, params = {}) {
   if (!VIEWS[tab]) tab = 'today';
+  const prev = current.tab;
   current = { tab, params };
   if (tab !== 'onboarding') { try { history.replaceState(null, '', '#' + tab); } catch (e) { /* ignore */ } }
   renderTabbar();
-  await rerender(true);
+  const dir = tab !== prev && ORDER.includes(tab) && ORDER.includes(prev) ? Math.sign(ORDER.indexOf(tab) - ORDER.indexOf(prev)) : 0;
+  await rerender(true, { dir, top: true });
   window.scrollTo({ top: 0 });
 }
 
-async function rerender(full) {
-  const app = document.getElementById('app');
-  if (!full && typeof updater === 'function') { updater(); return; }
-  const mod = await VIEWS[current.tab]();
-  clear(app);
-  updater = mod.render(app, ctx()) || null;
+const hasFixed = (el) => !!(el && el.querySelector('.rest-banner:not(.hide), [data-mo-fixed]')); // a transformed ancestor would re-anchor position:fixed children
+function errorCard(e) {
+  return h('div', { class: 'card' }, h('div', { class: 'empty' }, h('b', null, 'This screen hit a problem'), 'Your data is safe. ', h('div', { class: 'row', style: { justifyContent: 'center', marginTop: '12px' } },
+    h('button', { class: 'btn primary', onClick: () => location.reload() }, 'Reload'), current.tab !== 'today' ? h('button', { class: 'btn', onClick: () => go('today') }, 'Go to Today') : null)));
+}
+const sleepMs = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function rerender(full, opts = {}) {
+  const app = $('app');
+  if (!full && typeof updater === 'function') {
+    try { updater(); } catch (e) { console.error(e); const st = app.querySelector('.mo-view'); if (st && !st.firstElementChild?.childElementCount) { clear(st); st.append(errorCard(e)); } }
+    return;
+  }
+  const token = ++renderToken;
+  const old = app.querySelector(':scope > .mo-view');
+  const dir = opts.dir || 0;
+  const slide = dir !== 0 && !prefersReducedMotion() && !!old && !!old.animate;
+  const modP = VIEWS[current.tab]();
+  let outAnim = null;
+  if (slide && !opts.skipOut) {
+    outAnim = old.animate(hasFixed(old) ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 1, transform: 'translateX(0)' }, { opacity: 0, transform: `translateX(${-dir * 12}px)` }], { duration: 90, easing: 'ease-in', fill: 'forwards' });
+  }
+  let mod;
+  try { mod = await modP; } catch (e) { console.error(e); if (outAnim) outAnim.cancel(); toast('Could not open that screen. Check your connection.'); return; }
+  if (outAnim) { try { await outAnim.finished; } catch (e) { /* cancelled */ } }
+  if (token !== renderToken) return; // a newer navigation took over
+  // Swap. The stage wrapper is what animates, so views keep appending into the container they are handed.
+  const stage = h('div', { class: 'mo-view' });
+  clear(app); app.append(stage);
+  if (opts.top) window.scrollTo(0, 0);
+  try { updater = mod.render(stage, ctx()) || null; }
+  catch (e) { console.error(e); updater = null; clear(stage); stage.append(errorCard(e)); }
+  if (!stage.firstElementChild) stage.append(errorCard(new Error('empty view')));
+  if (slide && stage.animate) {
+    stage.animate(hasFixed(stage) ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: `translateX(${dir * 12}px)` }, { opacity: 1, transform: 'translateX(0)' }], { duration: 190, easing: EASE_OUT });
+  }
 }
 
-function schedule() { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => rerender(false)); }
+function schedule() { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => { rerender(false); updateRestPill(); }); }
 
+// ---- tab bar: built once; the active indicator slides, the rest pill floats above it ----
+function tabPress(id) {
+  if (id === current.tab && window.scrollY > 40) { window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' }); return; } // iOS habit: tap the active tab to scroll to top
+  go(id);
+}
 function renderTabbar() {
-  const bar = document.getElementById('tabbar');
-  clear(bar);
+  const bar = $('tabbar');
   if (current.tab === 'onboarding') { bar.classList.add('hide'); return; }
   bar.classList.remove('hide');
-  for (const t of TABS) {
-    bar.append(h('button', { class: current.tab === t.id ? 'on' : '', 'aria-current': current.tab === t.id ? 'page' : null, onClick: () => go(t.id) }, icon(t.icon, 24), t.label));
+  if (!bar.querySelector('.mo-ind')) {
+    clear(bar);
+    bar.append(h('span', { class: 'mo-ind', 'aria-hidden': 'true' }, h('i')));
+    for (const t of TABS) bar.append(h('button', { dataset: { id: t.id }, onClick: () => tabPress(t.id) }, icon(t.icon, 24), t.label));
+    bar.append(h('button', { class: 'mo-rest', hidden: true, 'aria-label': 'Rest timer running. Open Train', onClick: () => go('train') }, icon('timer', 18), h('span', { class: 't' }), h('span', { class: 'n' })));
   }
+  const ind = bar.querySelector('.mo-ind'), idx = TABS.findIndex((t) => t.id === current.tab);
+  for (const b of bar.querySelectorAll('button[data-id]')) {
+    const on = b.dataset.id === current.tab;
+    if (on && !b.classList.contains('on') && ind.classList.contains('ready') && !prefersReducedMotion()) { b.classList.remove('mo-popin'); void b.offsetWidth; b.classList.add('mo-popin'); }
+    b.classList.toggle('on', on);
+    if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  }
+  ind.style.transform = `translateX(${Math.max(0, idx) * 100}%)`;
+  ind.classList.toggle('show', idx >= 0);
+  if (!ind.classList.contains('ready')) requestAnimationFrame(() => requestAnimationFrame(() => ind.classList.add('ready'))); // first placement must not slide in from tab 0
+  updateRestPill();
+}
+
+// Rest timer pill: visible on every tab except Train (which has its own banner) while a rest countdown is running.
+let restTick = 0, restNotified = 0;
+function updateRestPill() {
+  const bar = $('tabbar'), pill = bar && bar.querySelector('.mo-rest');
+  if (!pill) return;
+  const r = state.active && state.active.rest, show = !!r && current.tab !== 'train' && current.tab !== 'onboarding' && !bar.classList.contains('hide');
+  if (!r) { restNotified = 0; }
+  if (!show) { if (!pill.hidden) pill.hidden = true; clearInterval(restTick); restTick = 0; return; }
+  const left = Math.ceil((r.endAt - Date.now()) / 1000);
+  if (left < -180) { pill.hidden = true; clearInterval(restTick); restTick = 0; return; } // stale: the timer ended long ago and Train was never opened
+  const t = pill.querySelector('.t'), n = pill.querySelector('.n');
+  const txt = left > 0 ? fmtClock(left) : 'Go';
+  if (t.textContent !== txt) t.textContent = txt;
+  const ex = state.active.exercises && state.active.exercises.find((e) => e.exId === r.exId);
+  const name = left > 0 ? (ex ? ex.name : 'Rest') : 'Rest over';
+  if (n.textContent !== name) n.textContent = name;
+  pill.classList.toggle('soon', left > 0 && left <= 10); pill.classList.toggle('done', left <= 0);
+  if (pill.hidden) pill.hidden = false;
+  if (left <= 0 && restNotified !== r.endAt) { restNotified = r.endAt; haptic('success'); }
+  if (!restTick) restTick = setInterval(updateRestPill, 1000);
+}
+
+// New personal record: a light confetti burst from the top of the screen, from whichever tab the workout ends on.
+let workoutCount = 0;
+function watchPRs() {
+  workoutCount = state.workouts.length;
+  on('workout', () => {
+    const n = state.workouts.length, last = state.workouts[n - 1];
+    if (n > workoutCount && last && last.prs && last.prs.length) { celebrate(null, { kind: 'pr' }); haptic('success'); }
+    workoutCount = n;
+  });
 }
 
 export function applyTheme() {
@@ -99,6 +188,8 @@ async function boot() {
   await lockIfNeeded();
   on('change', schedule);
   on('settings', applyTheme);
+  watchPRs();
+  document.addEventListener('touchstart', () => {}, { passive: true }); // iOS only applies :active press feedback when a touch listener exists
   window.addEventListener('pagehide', () => { flush(); });
   document.addEventListener('visibilitychange', async () => {
     if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); flush(); return; }

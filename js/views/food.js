@@ -14,6 +14,7 @@ import {
   buildEntry, measuresLine, measuresMap, lookup, buildRecipeFood, recipeTotals, splitParts, parsePart, resolveUnit,
   PRESETS, resolvePreset,
 } from './food-extras.js';
+import { openScanner, cameraIcon } from './food-scan.js';
 
 // ---- constants ----
 const MAX_RESULTS = 60;
@@ -634,6 +635,7 @@ function searchPane() {
   requestAnimationFrame(() => showActiveChip(slots.chips));
   slots.browse = h('div', null, slots.chips,
     h('div', { class: 'fd-actions' },
+      btn('primary fd-wide fd-scan', [cameraIcon(18), 'Scan plate'], () => openScanner(C, { date: C.date, meal: mealByTime() })),
       btn('', [icon('plus', 16), 'Quick add'], () => openQuickSheet()),
       btn('', [icon('plus', 16), 'Create food'], () => openCreateSheet(query.trim())),
       btn('fd-wide', [icon('bowl', 16), 'Build a recipe'], () => openRecipeSheet())),

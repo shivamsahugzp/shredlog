@@ -5,6 +5,7 @@ import { cigStats } from '../calc.js';
 import { SYMPTOMS, TAG_LABELS, RED_FLAGS, symptomPatterns } from '../insights.js';
 import { barChart, lineChart, legend } from '../charts.js';
 import { h, icon, sheet, toast, stepper, append, clear, fmt, fmtTime, fmtDateLabel, fmtShortDate, fmtDow, sinceText, haptic } from '../ui.js';
+import { quiet, stagger, growBars } from '../motion.js';
 
 let seenParams = null; // one-shot ctx.params handling (params keep the same identity until go() is called again)
 
@@ -26,7 +27,15 @@ export function render(container, ctx) {
   const root = h('div', { class: 'bd' });
   container.append(root);
   const ui = { pending: null, since: null };
-  const draw = () => { clear(root); ui.since = null; root.append(build(ctx, ui, draw)); };
+  let drawn = false;
+  // Build first, swap second (a throwing build cannot blank the screen). Chart intros and the card stagger play on the first draw only.
+  const draw = () => {
+    const run = () => { ui.since = null; const next = build(ctx, ui, draw); clear(root); root.append(next); };
+    if (drawn) quiet(run); else run();
+    growBars(root, '.mini-bar > i', { key: 'bd' });
+    if (!drawn) stagger(root.firstElementChild, { key: 'body' });
+    drawn = true;
+  };
   draw();
   const timer = setInterval(() => { if (!root.isConnected) clearInterval(timer); else paintSince(ui); }, 30000);
   if (ctx.params && ctx.params.open === 'checkin' && ctx.params !== seenParams) { seenParams = ctx.params; checkinSheet(ctx.params.date || ctx.date, ctx.today); }
@@ -340,7 +349,7 @@ function addWater(c, ml) {
 function waterCard(c) {
   const { key, today, t } = c;
   const glass = state.settings.glassMl || 250, goal = (t.water || 8) * glass, ml = waterMl(key);
-  const bars = lastNDays(7, key).map((k) => ({ label: fmtDow(k).slice(0, 2), value: waterMl(k), tip: `${fmtDateLabel(k, today)}: ${fmt(waterMl(k) / 1000, 2)} L` }));
+  const bars = lastNDays(7, key).map((k) => ({ label: fmtDow(k)[0], hl: k === today, value: waterMl(k), tip: `${fmtDateLabel(k, today)}: ${fmt(waterMl(k) / 1000, 2)} L` }));
   return h('div', { class: 'card bd-wide' }, head('drop', 'water', 'Water', h('span', { class: 'small muted' }, `${fmt(ml / glass, 1)} of ${t.water || 8} glasses`)),
     h('div', { class: 'bd-num' }, fmt(ml / 1000, 2), h('small', null, ` L of ${fmt(goal / 1000, 1)} L`)),
     bar((ml / goal) * 100, ml >= goal ? 'var(--good)' : 'var(--water)'),

@@ -100,6 +100,49 @@ try {
   const draft = await evalJs(`(async()=>{const s=await import('./js/state.js'); const dr=s.state.settings.onboardingDraft; return JSON.stringify({onb:!!document.querySelector('.onb'), step:dr?.step, name:dr?.d?.name, lit:document.querySelectorAll('.onb .steps i.on').length})})()`);
   check('onboarding resumes where it left off', /"onb":true/.test(draft) && /"step":1/.test(draft) && /"name":"Draft"/.test(draft) && /"lit":2/.test(draft), draft);
   await shot('09-onboarding-resumed');
+  // ---- phase 2: catalogue, body map, weekday learner, form guide, plate scanner ----
+  await evalJs(`(async()=>{const s=await import('./js/state.js'); s.setProfile({name:'Test',sex:'male',age:28,heightCm:175,weightKg:78,activity:'moderate',goal:'cut',diet:'egg',region:'north',budget:'moderate',chaiCups:2,chaiFoodId:'chai_milk_1tsp',coffee:false,smoker:false,sleepTarget:7.5}); s.setWeight(s.todayKey(),78);
+    // seed 4 Mondays of chest/triceps/shoulders and 4 Wednesdays of back/biceps
+    const DAY=864e5; const now=new Date(); const mk=(exId,name,cat,w)=>({exId,name,cat,type:'strength',met:5,sets:[{k:'a',t:'N',done:true,w,r:10},{k:'b',t:'N',done:true,w,r:9},{k:'c',t:'N',done:true,w,r:8}]});
+    for (let k=1;k<=4;k++){ for (const [dow,exs] of [[1,[mk('barbell_bench_press','Barbell Bench Press','Chest',60),mk('tricep_pushdown_rope','Tricep Pushdown (Rope)','Triceps',25),mk('seated_dumbbell_shoulder_press','Seated Dumbbell Shoulder Press','Shoulders',20)]],[3,[mk('lat_pulldown_wide','Lat Pulldown (Wide)','Back',50),mk('barbell_curl','Barbell Curl','Biceps',25)]]]) { const d=new Date(now); d.setDate(d.getDate()-((d.getDay()-dow+7)%7)-7*k); d.setHours(18,0,0,0); s.state.workouts.push({id:'seed'+dow+k,name:'Seed',start:d.getTime(),end:d.getTime()+3600e3,exercises:exs,kcal:200,volume:3000}); } }
+    s.save(true); return s.state.data.exercises.length; })()`).then((n) => check('catalogue has 600 exercises', n === 600, `n=${n}`));
+  const pat = await evalJs(`(async()=>{const p=await import('./js/train-plan.js'); const w=p.weekdayPattern(); return JSON.stringify({mon:w[1].kind, monG:w[1].groups, wed:w[3].kind, sun:w[0].kind})})()`);
+  check('weekday learner finds Monday pattern', /"mon":"train"/.test(pat) && /Chest/.test(pat) && /"wed":"train"/.test(pat) && /"sun":"rest"/.test(pat), pat);
+  await evalJs(`location.hash='#train'`); await sleep(1500);
+  check('train home shows plan card + week strip', await evalJs(`!!document.querySelector('.tr-plan-card') && document.querySelectorAll('.tr-week-strip .tr-wk').length === 7`));
+  const paths = await evalJs(`new Set([...document.querySelectorAll('.bm-svg path[data-muscle]')].map(p=>p.dataset.muscle)).size`); check('body map covers all 19 muscles', paths === 19, `muscles=${paths}`);
+  await shot('10-train-home');
+  await evalJs(`document.querySelector('.tr-build-card button.primary').click()`); await sleep(900);
+  check('muscle picker opens', await evalJs(`!!document.querySelector('.tr-picker')`));
+  await evalJs(`(()=>{const p=document.querySelector('.tr-picker .bm-svg path[data-muscle="chest"][role=button]'); p.dispatchEvent(new MouseEvent('click',{bubbles:true})); if(!p.classList.contains('on')) p.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true})); return p.classList.contains('on')})()`); await sleep(700);
+  const rows = await evalJs(`document.querySelectorAll('.tr-picker .tr-prow').length`); check('picking chest lists chest exercises', rows > 5, `rows=${rows}`);
+  await shot('11-picker');
+  await evalJs(`document.querySelector('.tr-picker .tr-prow .tr-prow-main').click()`); await sleep(300);
+  await evalJs(`document.querySelector('.tr-foot button.primary, .tr-foot button').click()`); await sleep(1500);
+  check('picker starts a workout', await evalJs(`(async()=>{const s=await import('./js/state.js'); return !!s.state.active && !!document.querySelector('.set-row')})()`));
+  await evalJs(`document.querySelector('.tr-ex-head .tr-info')?.click()`); await sleep(900);
+  const guide = await evalJs(`JSON.stringify({d:!!document.querySelector('.tr-detail'), media:!!document.querySelector('.tr-media'), steps:document.querySelectorAll('.tr-steps li').length, yt:!!document.querySelector('.tr-yt')})`);
+  check('form guide shows media, steps and video link', /"d":true/.test(guide) && /"media":true/.test(guide) && /"steps":[1-9]/.test(guide) && /"yt":true/.test(guide), guide);
+  await shot('12-form-guide');
+  await evalJs(`(async()=>{const s=await import('./js/state.js'); s.discardWorkout(); document.querySelectorAll('.sheet .close, [aria-label=Close]').forEach(b=>b.click()); return true})()`); await sleep(500);
+  // plate scanner with the mock model and a generated photo
+  await evalJs(`(()=>{const c=document.createElement('canvas'); c.width=320; c.height=240; const g=c.getContext('2d'); g.fillStyle='#d9a441'; g.fillRect(0,0,320,240); g.fillStyle='#7a4a12'; g.beginPath(); g.arc(160,120,80,0,7); g.fill(); window.__shredlogMockImage=c.toDataURL('image/jpeg');
+    const items=[{name:'Dal tadka',desc:'1 katori',qty:1,unit:'katori',grams:150,kcal:180,protein_g:9,carbs_g:24,fat_g:5,fiber_g:6,confidence:0.8,match_hint:'dal tadka'},{name:'Roti',desc:'2 rotis',qty:2,unit:'roti',grams:80,kcal:240,protein_g:8,carbs_g:44,fat_g:3,fiber_g:4,confidence:0.65,match_hint:'roti'}];
+    window.__shredlogMockAI={delayMs:200,responses:[{items,questions:[{id:'dal_fat',text:'How much ghee went into the dal?',options:['Light (1 tsp)','Normal (2 tsp)','Heavy (1 tbsp+)'],affects:['Dal tadka']}],notes:''},{items:[{...items[0],kcal:150,fat_g:2.5},items[1]],questions:[],notes:''}]}; return true})()`);
+  await evalJs(`location.hash='#food'`); await sleep(1200);
+  await evalJs(`document.querySelector('.fd-scan').click()`); await sleep(600);
+  check('scanner opens on capture step', await evalJs(`!!document.querySelector('.sc-sheet .sc-capture')`));
+  await evalJs(`document.querySelector('.sc-btn-gallery').click()`); await sleep(1800);
+  const rev = await evalJs(`JSON.stringify({review:!!document.querySelector('.sc-review'), items:document.querySelectorAll('.sc-item').length, q:document.querySelectorAll('.sc-question').length})`);
+  check('scanner shows items and a question', /"review":true/.test(rev) && /"items":2/.test(rev) && /"q":1/.test(rev), rev);
+  await shot('13-scan-review');
+  await evalJs(`document.querySelector('.sc-question .sc-opt').click()`); await sleep(200);
+  await evalJs(`document.querySelector('.sc-reestimate').click()`); await sleep(1500);
+  const before = await evalJs(`(async()=>{const s=await import('./js/state.js'); return s.dayTotals(s.todayKey()).kcal})()`);
+  await evalJs(`document.querySelector('.sc-log').click()`); await sleep(900);
+  const after = await evalJs(`(async()=>{const s=await import('./js/state.js'); return JSON.stringify({kcal:s.dayTotals(s.todayKey()).kcal, pref:!!s.state.settings.foodMemory?.prefs?.dal_fat, dish:Object.keys(s.state.settings.foodMemory?.dishes||{}).length})})()`);
+  check('scan logs items and remembers the answer', JSON.parse(after).kcal > before + 300 && /"pref":true/.test(after) && /"dish":[1-9]/.test(after), `before=${before} ${after}`);
+  await shot('14-scan-logged');
 } catch (e) { check('script', false, e.message); }
 await sleep(300);
 console.log('\nConsole errors/warnings:'); for (const l of [...errors, ...logs]) console.log('  ' + l.split('\n')[0].slice(0, 220));

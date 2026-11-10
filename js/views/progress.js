@@ -4,18 +4,32 @@ import { adaptiveTdee, trendWeights, tdee, GOALS, bmi, e1rm } from '../calc.js';
 import { weightInsight, nutritionGaps, budgetProtein, volumeByGroup, volumeStatus, recoveryByGroup, deloadAdvice, suggestDay, nextSuggestion } from '../insights.js';
 import { lineChart, barChart, stackedBarChart, legend } from '../charts.js';
 import { h, icon, toast, confirmSheet, segmented, emptyState, fmt, fmtShortDate, fmtDow, clear } from '../ui.js';
+import { countUp, pop, quiet, stagger, growBars } from '../motion.js';
 
 const RANGES = [{ id: 14, label: '2 weeks' }, { id: 28, label: '4 weeks' }, { id: 90, label: '3 months' }];
 let rangeDays = 28; // survives tab switches
 const openMicros = new Set(); // expanded <details> survive redraws
+let jobs = []; // motion work queued while building, run once the new DOM is attached
 const MINUS = '−';
 
 export function render(container, ctx) {
   const root = h('div', { class: 'pg' });
   container.append(root);
-  const draw = () => { const y = window.scrollY; clear(root); root.append(build(ctx, draw)); if (y) window.scrollTo(0, y); };
+  let drawn = false;
+  // Build first, swap second. Only the first draw (or a range change) replays the chart intros; data-change redraws stay quiet.
+  const draw = (intro) => {
+    const y = window.scrollY;
+    jobs = [];
+    const run = () => { const next = build(ctx, () => draw(true)); clear(root); root.append(next); };
+    if (drawn && intro !== true) quiet(run); else run();
+    if (y) window.scrollTo(0, y);
+    growBars(root, '.mini-bar > i, .pg-cmp-track > i, .pg-track > i, .pg-bar, .pg-split .bar > span', { key: 'pg' });
+    for (const j of jobs) { try { j(); } catch (e) { console.error(e); } }
+    if (!drawn) stagger(root.firstElementChild, { key: 'progress' });
+    drawn = true;
+  };
   draw();
-  return draw;
+  return () => draw();
 }
 
 // ---------- small helpers ----------
@@ -99,7 +113,7 @@ function weightChart(c, ws, target) {
   const labels = c.keys.map(fmtShortDate);
   const raw = { name: 'Weight', color: 'var(--muted)', dots: true, width: 1, opacity: 0.7, points: c.keys.map((k, i) => ({ x: labels[i], y: byDate.get(k)?.kg ?? null })) };
   const trend = { name: 'Trend', color: 'var(--p)', width: 2.5, points: c.keys.map((k, i) => ({ x: labels[i], y: trendAt(k) })) };
-  const svg = tidy(lineChart({ series: [raw, trend], target: target || undefined, height: 190, fmtY: num1, unit: ' kg', xLabels: 5 }));
+  const svg = tidy(lineChart({ series: [raw, trend], target: target || undefined, clampTarget: true, height: 190, fmtY: num1, unit: ' kg', xLabels: 5 }));
   // charts.css pins .series-line to 2 px; inline style wins, so raw stays hairline and trend gets 2.5 px
   const lines = svg.querySelectorAll('path.series-line');
   if (lines[0]) lines[0].style.strokeWidth = '1';
@@ -115,15 +129,24 @@ function paceOf(rate, goalRate) {
   return r > 1.5 ? ['warn', 'faster than plan'] : r < 0.5 ? ['warn', 'slower than plan'] : ['good', 'on pace'];
 }
 
+const RATE_KEY = 'shredlog-mo-rate';
+function lastRate() { try { const v = parseFloat(localStorage.getItem(RATE_KEY)); return isFinite(v) ? v : null; } catch (e) { return null; } }
+function saveRate(v) { try { localStorage.setItem(RATE_KEY, String(v)); } catch (e) { /* private mode */ } }
+
 function weightNotes(c) {
   const wi = weightInsight(), goal = GOALS.find((g) => g.id === c.p.goal);
   const goalRate = goal ? +(goal.kcal * 7 / 7700).toFixed(2) : null;
   let line = 'Log weight 3+ times a week to see a trend';
   const pills = [];
   if (wi?.rate != null) {
-    line = `Trend: ${signed(wi.rate)} kg/week` + (goalRate != null ? ` · goal ${signed(goalRate)}` : '')
-      + (wi.eta && wi.target ? ` · at this rate you reach ${num1(wi.target)} kg around ${fmtShortDate(dateKey(wi.eta))}` : '');
+    const rateEl = h('b', { class: 'pg-rate' }, signed(wi.rate, Math.abs(wi.rate) < 0.1 ? 2 : 1));
+    line = ['Trend: ', rateEl, ' kg/week' + (goalRate != null ? ` · goal ${signed(goalRate)}` : '')
+      + (wi.eta && wi.target ? ` · at this rate you reach ${num1(wi.target)} kg around ${fmtShortDate(dateKey(wi.eta))}` : '')];
     const pc = paceOf(wi.rate, goalRate); if (pc) pills.push(pill(pc[0], pc[1]));
+    // the number pops when the trend has moved towards the goal since the last time this screen was drawn
+    const target = goalRate != null ? goalRate : 0, prev = lastRate(), dist = (r) => Math.abs(r - target);
+    if (prev != null && dist(wi.rate) < dist(prev) - 0.04) jobs.push(() => pop(rateEl));
+    saveRate(wi.rate);
   }
   const lw = latestWeight();
   if (lw?.kg && c.p.heightCm) {
@@ -149,7 +172,9 @@ function measuredBlock(c, res) {
   const suggested = Math.max(1200, Math.round((res.tdee + goal.kcal) / 10) * 10); // measured burn minus the goal's deficit (plus for a bulk)
   const rows = [['Formula says', formula, 'var(--muted)'], ['Measured burn', res.tdee, 'var(--p)'], ['You ate (avg)', res.avgIntake, 'var(--c)']].filter((r) => r[1]);
   const top = Math.max(...rows.map((r) => r[1]));
-  const out = [h('div', { class: 'small muted' }, 'Your measured burn'), h('div', { class: 'pg-hero' }, '≈ ', fmt(res.tdee), h('small', null, ' kcal/day')),
+  const heroNum = h('span', null, fmt(res.tdee));
+  jobs.push(() => countUp(heroNum, res.tdee, { key: 'pg:tdee', fmt: (v) => fmt(v) }));
+  const out = [h('div', { class: 'small muted' }, 'Your measured burn'), h('div', { class: 'pg-hero' }, '≈ ', heroNum, h('small', null, ' kcal/day')),
     rows.map(([l, v, col]) => h('div', { class: 'pg-cmp' }, h('span', null, l), h('div', { class: 'pg-cmp-track' }, h('i', { style: { width: (v / top * 100) + '%', background: col } })), h('b', null, fmt(v)))),
     note(`Based on ${res.days} logged days over ${res.span} days. Weight trend ${signed(res.slopePerWeek)} kg/week.`)];
   if (c.t.kcal && Math.abs(suggested - c.t.kcal) >= 75) {

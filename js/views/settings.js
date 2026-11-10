@@ -3,6 +3,7 @@ import { state, setProfile, setTargets, recomputeTargets, setSetting, exportJSON
 import { ACTIVITY, GOALS, tdee, defaultTargets } from '../calc.js';
 import { h, icon, sheet, toast, confirmSheet, stepper, segmented, chips, field, toggle, downloadText, pickFile, clear, fmt, relTime } from '../ui.js';
 import { hashPin, renderLock } from '../lock.js';
+import { aiSettingsSection } from './food-scan.js';
 
 export function render(container, ctx) {
   const root = h('div'); container.append(root);
@@ -40,6 +41,8 @@ function build(ctx) {
       field('Rest timer default', segmented([60, 90, 120, 150, 180].map((v) => ({ id: v, label: v + 's' })), s.restSec || 90, (v) => setSetting('restSec', v))),
       field('Water glass', segmented([200, 250, 300].map((v) => ({ id: v, label: v + ' ml' })), s.glassMl || 250, (v) => setSetting('glassMl', v))),
       field('Sleep target', h('div', { class: 'row' }, stepper({ value: p.sleepTarget || 7.5, min: 4, max: 12, step: 0.5, onChange: (v) => setProfile({ sleepTarget: v }) }), h('span', { class: 'muted small' }, 'hours')))),
+
+    aiSettingsSection(ctx),
 
     h('div', { class: 'section-head', style: { marginTop: '18px' } }, h('h2', null, 'Appearance')),
     h('div', { class: 'card' }, segmented([{ id: 'auto', label: 'Auto' }, { id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }], s.theme || 'auto', (v) => setSetting('theme', v))),
