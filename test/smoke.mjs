@@ -49,6 +49,15 @@ try {
   const tot = await evalJs(`(async()=>{const s=await import('./js/state.js');return JSON.stringify({t:s.dayTotals(s.todayKey()),cig:s.habitCount(s.todayKey(),'cig'),water:s.waterMl(s.todayKey())})})()`);
   check('quick logs stored', /"kcal":[1-9]/.test(tot) && /"cig":1/.test(tot) && /"water":250/.test(tot), tot);
   await shot('03-today-logged');
+  // v2: counter tiles can undo an accidental tap with the minus button; accent setting applies to the document
+  await evalJs(`document.querySelector('.quick .qt .minus')?.dispatchEvent(new MouseEvent('click',{bubbles:true}))`); await sleep(400);
+  const afterMinus = await evalJs(`(async()=>{const s=await import('./js/state.js');return JSON.stringify({chai:s.chaiCount(s.todayKey()),cig:s.habitCount(s.todayKey(),'cig'),minus:document.querySelectorAll('.quick .qt .minus').length})})()`);
+  check('tile minus removes the latest chai', /"chai":0/.test(afterMinus) && /"cig":1/.test(afterMinus), afterMinus);
+  await evalJs(`(async()=>{const s=await import('./js/state.js'); s.setSetting('accent','neel'); return 1})()`); await sleep(200);
+  check('accent setting applies to the document', await evalJs(`document.documentElement.getAttribute('data-accent')==='neel'`));
+  await evalJs(`(async()=>{const s=await import('./js/state.js'); s.setSetting('accent','haldi'); return 1})()`); await sleep(100);
+  const segOk = await evalJs(`(()=>{const el=document.querySelector('.seg'); if(!el) return 'noseg'; const n=el.querySelectorAll('button[data-id]').length; const th=el.querySelector('.seg-thumb'); return th && Math.abs(th.getBoundingClientRect().width*n - (el.clientWidth-6)) < 12 ? 'ok' : 'bad '+n+' '+(th&&th.getBoundingClientRect().width)+' '+el.clientWidth})()`);
+  check('segmented thumb sized to its options', segOk === 'ok' || segOk === 'noseg', segOk);
   const H1 = { food: 'Food', train: 'Train', body: 'Body', progress: 'Progress', settings: 'Settings' };
   for (const tab of ['food', 'train', 'body', 'progress', 'settings']) {
     await evalJs(`location.hash='#${tab}'`); await sleep(1000);

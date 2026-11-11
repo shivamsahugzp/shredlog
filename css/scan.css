@@ -1,133 +1,179 @@
-/* AI plate scanner (all classes prefixed sc-; reuses tokens and components from app.css, so light and dark follow the theme) */
+/* AI plate scanner (all classes prefixed sc-; tokens and components come from app.css, so light, dark and the accent swap follow the theme). No hex. */
 
-/* sheet chrome */
+/* ---------- sheet chrome ---------- */
 .sc-sheet { display: flex; flex-direction: column; padding-bottom: 0; }
 .sc-sheet .sheet-body { flex: 1; padding-bottom: 12px; }
 .sc-sheet.sc-nofoot .sheet-body { padding-bottom: calc(16px + var(--sab)); }
 /* sticky footer: opaque all the way to the screen edge, safe-area aware, so scrolled content never shows beneath it */
 .sc-sheet .actions { bottom: 0; z-index: 4; margin: 0 -16px; padding: 10px 16px calc(14px + var(--sab)); border-top: 1px solid var(--line); background: var(--card); }
 .sc-foot { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.sc-foot .btn { min-height: 52px; font-size: 16px; }
-.sc-link { color: var(--p); font-weight: 600; font-size: inherit; padding: 6px 2px; min-height: 32px; }
-.seg.sc-meals button { font-size: 13px; padding: 10px 0; min-height: 42px; min-width: 0; }
+.sc-foot .btn { min-height: 54px; font-size: 16px; border-radius: 18px; }
+.sc-link { position: relative; color: var(--accent-text); font-weight: 650; font-size: inherit; padding: 6px 2px; min-height: 32px; }
+.sc-link::after { content: ''; position: absolute; inset: -8px -6px; } /* 44 px hit area without growing the layout */
+.seg.sc-meals button { font-size: 13px; padding: 10px 0; min-height: 44px; min-width: 0; }
 
-/* no key yet */
+/* spot illustrations: two palette tones */
+.sc-spot { display: block; }
+.sc-spot svg { width: 100%; height: 100%; }
+.sc-spot .t1 { fill: var(--accent); }
+.sc-spot .t2 { fill: var(--card-3); }
+.sc-spot .t3 { fill: var(--accent); opacity: .4; }
+.sc-spot .s { fill: none; stroke: var(--accent-text); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- no key yet ---------- */
 .sc-setup { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; padding: 8px 4px 12px; }
-.sc-hero { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+.sc-hero { width: 84px; height: 84px; }
 .sc-setup h3 { font-size: 22px; }
 .sc-lede { color: var(--ink-2); max-width: 32ch; }
 .sc-privacy { text-align: left; width: 100%; font-size: 13.5px; }
 .sc-free { margin-top: -4px; }
 
-/* capture */
-.sc-capture { display: flex; flex-direction: column; gap: 16px; }
-.sc-pickrow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.sc-pickbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 150px; padding: 16px 10px; border-radius: var(--r-lg); background: var(--card-2); border: 1px solid var(--line); color: var(--ink); text-align: center; transition: transform .08s ease; }
-.sc-pickbtn:active { transform: scale(.98); }
-.sc-pickbtn b { font: 700 16px var(--display); }
-.sc-pickbtn .small { color: var(--muted); }
-.sc-pickico { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--card); color: var(--ink-2); box-shadow: var(--shadow); }
-.sc-pickbtn.primary { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
-.sc-pickbtn.primary .small { color: color-mix(in srgb, var(--accent-ink) 70%, transparent); }
-.sc-pickbtn.primary .sc-pickico { background: rgba(255,255,255,.35); color: var(--accent-ink); box-shadow: none; }
-.sc-tip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); background: var(--card-2); color: var(--ink-2); font-size: 14px; }
-.sc-tip svg { flex: none; color: var(--accent); }
+/* ---------- capture ---------- */
+.sc-capture { display: flex; flex-direction: column; gap: 14px; }
+.sc-finder { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 16px 16px; border-radius: var(--r-lg); background: var(--card-2); border: 1px dashed var(--line-2); }
+.sc-plate { width: 132px; height: 106px; }
+.sc-tip { font-size: 14px; color: var(--ink-2); text-align: center; max-width: 30ch; }
+.sc-pickrow { display: grid; grid-template-columns: 1.25fr 1fr; gap: 10px; }
+.sc-pickbtn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 112px; padding: 14px 10px; border-radius: var(--r-lg); background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow), inset 0 1px 0 var(--hl); color: var(--ink); text-align: center; transition: transform .12s ease; }
+.sc-pickbtn:active { transform: scale(.97); }
+.sc-pickbtn b { font: 700 16px var(--font); }
+.sc-pickbtn .small { color: var(--muted); font-size: 12px; }
+.sc-pickico { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--card-2); color: var(--ink-2); margin-bottom: 2px; }
+.sc-pickbtn.primary { background: var(--accent); border-color: transparent; color: var(--accent-ink); box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--accent) 80%, transparent); }
+.sc-pickbtn.primary .small { color: color-mix(in srgb, var(--accent-ink) 72%, transparent); }
+.sc-pickbtn.primary .sc-pickico { background: color-mix(in srgb, var(--accent-ink) 12%, transparent); color: var(--accent-ink); }
+.sc-meal { display: flex; flex-direction: column; gap: 6px; }
+.sc-meal-l { font-size: 13px; font-weight: 650; color: var(--ink-2); }
 .sc-using { text-align: center; }
 
-/* analysing: photo with a light sweep */
+/* ---------- analysing: the photo with a sweep, then skeleton cards ---------- */
 .sc-analysing, .sc-error { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.sc-prev { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--r-lg); overflow: hidden; background: var(--card-2); border: 1px solid var(--line); }
+.sc-prev { position: relative; width: 100%; aspect-ratio: 4 / 3; max-height: 34vh; border-radius: var(--r-lg); overflow: hidden; background: var(--card-2); border: 1px solid var(--line); }
 .sc-prev img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .sc-scanning img { filter: saturate(.85) brightness(.82); }
-.sc-scanning::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 32%, rgba(255,255,255,.55) 50%, transparent 68%); transform: translateX(-100%); animation: sc-sweep 1.5s ease-in-out infinite; pointer-events: none; }
-.sc-prev-label { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 14px; border-radius: 999px; background: rgba(15, 19, 34, .72); color: #fff; font-weight: 600; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.sc-scanning::after { content: ''; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 32%, color-mix(in srgb, var(--accent) 50%, transparent) 50%, transparent 68%); transform: translateX(-100%); animation: sc-sweep 1.5s ease-in-out infinite; pointer-events: none; }
+.sc-prev-label { position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 14px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 82%, transparent); color: var(--bg); font-weight: 650; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .sc-wait { text-align: center; }
 .sc-spin { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid color-mix(in srgb, currentColor 25%, transparent); border-top-color: var(--accent); display: inline-block; flex: none; animation: sc-spin .8s linear infinite; }
+.sc-skel { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.sc-skel-tot { display: flex; align-items: center; gap: 14px; padding: 4px 2px; }
+.sc-sk-ring { width: 64px; height: 64px; border-radius: 50%; flex: none; }
+.sc-sk-lines { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.sc-sk-l1 { height: 16px; width: 55%; }
+.sc-sk-l2 { height: 12px; width: 88%; }
+.sc-skel-item { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.sc-sk-l3 { height: 16px; width: 52%; }
+.sc-sk-l4 { height: 40px; width: 68%; border-radius: 12px; }
+.sc-sk-l5 { height: 12px; width: 84%; }
 .sc-error .callout { width: 100%; }
 .sc-error .callout > div { min-width: 0; overflow-wrap: anywhere; }
 .sc-detail { margin-top: 4px; font-weight: 400; }
 .sc-errbtns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 
-/* review */
-.sc-review { display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px; }
-.sc-totals { position: sticky; top: 0; z-index: 3; display: flex; gap: 12px; align-items: center; margin: 0 -16px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--line); }
-.sc-thumbbox { flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.sc-thumb { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; display: block; border: 1px solid var(--line); }
-.sc-thumbbox .sc-link { font-size: 12px; min-height: 24px; padding: 2px; }
+/* ---------- review: totals ring, items, questions as chips ---------- */
+.sc-review { display: flex; flex-direction: column; gap: 14px; padding-bottom: 8px; }
+.sc-totals { position: sticky; top: 0; z-index: 3; display: flex; gap: 12px; align-items: center; margin: 0 -16px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--line); box-shadow: 0 -12px 0 0 var(--card); } /* the shadow hides scrolled content in the sheet's top padding */
+.sc-thumbbox { flex: none; width: 56px; display: flex; flex-direction: column; align-items: center; gap: 0; }
+.sc-thumb { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; display: block; border: 1px solid var(--line); }
+.sc-thumbbox .sc-link { font-size: 12px; min-height: 28px; padding: 4px 2px; }
+.sc-ring { flex: none; }
+.sc-kcal { font-size: 22px; }
 .sc-tmain { flex: 1; min-width: 0; }
-.sc-tk { font: 800 30px/1 var(--display); letter-spacing: -0.02em; }
-.sc-tk small { font: 600 13px var(--body); color: var(--muted); letter-spacing: 0; }
-.sc-tgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
-.sc-tm .lbl { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
-.sc-tm .val { font-size: 12px; color: var(--muted); white-space: nowrap; }
-.sc-tm .val b { font: 700 15px var(--display); color: var(--ink); }
+.sc-tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+.sc-tm { min-width: 0; }
+.sc-tm .lbl { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); font-weight: 600; }
+.sc-tm .val { font-size: 12px; color: var(--muted); white-space: nowrap; margin-top: 2px; }
+.sc-tm .val b { font-size: 17px; color: var(--ink); }
 .sc-note { padding: 0 2px; }
 .sc-busybar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--r-md); background: var(--accent-soft); font-size: 14px; font-weight: 600; }
 .sc-items { display: flex; flex-direction: column; gap: 10px; }
 
-/* an item */
-.sc-item { position: relative; background: var(--card-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 6px 8px 12px; display: flex; flex-direction: column; gap: 6px; }
+/* an item: a status bar on the left says how sure the AI was (green, amber, red) next to the word on the pill */
+.sc-item { position: relative; overflow: hidden; background: var(--card-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 6px 10px 16px; display: flex; flex-direction: column; gap: 8px; }
+.sc-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--good); }
+.sc-item[data-conf="mid"]::before { background: var(--warn); }
+.sc-item[data-conf="low"]::before { background: var(--bad); }
 .sc-item-top { display: flex; align-items: center; gap: 8px; }
 .sc-name { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; min-height: 40px; text-align: left; color: var(--ink); }
-.sc-name-t { font: 700 16px var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-name-t { font: 700 17px var(--font); font-stretch: var(--wdth-head); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sc-name svg { flex: none; color: var(--muted); }
-.sc-del { width: 40px; height: 40px; flex: none; color: var(--muted); }
+.sc-del { width: 44px; height: 44px; flex: none; color: var(--muted); }
 .sc-conf { flex: none; padding: 2px 9px; }
-.sc-desc { font-size: 13px; color: var(--muted); margin-top: -4px; padding-right: 6px; }
-.sc-qty { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-right: 6px; }
-.sc-qty .stepper button { width: 42px; height: 42px; }
+.sc-desc { font-size: 13px; color: var(--muted); margin-top: -6px; padding-right: 10px; }
+.sc-qty { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-right: 10px; }
+.sc-qty .stepper button { width: 44px; height: 44px; }
 .sc-qty .stepper input { width: 64px; }
-.sc-unit { font-weight: 600; color: var(--ink-2); }
+.sc-unit { font-weight: 650; color: var(--ink-2); }
 .sc-grams { font-size: 13px; color: var(--muted); }
-.sc-macros { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; color: var(--ink-2); padding-right: 6px; }
-.sc-m { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-.sc-mk b { font: 800 17px var(--display); color: var(--ink); }
-.sc-item .toggle { padding: 4px 6px 2px 0; border-top: 1px dashed var(--line); margin-top: 2px; gap: 12px; }
+.sc-macros { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 13px; color: var(--ink-2); padding-right: 10px; }
+.sc-m { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; }
+.sc-m .dot { align-self: center; }
+.sc-m .num { font-size: 15px; color: var(--ink); }
+.sc-m small { font-size: 11px; color: var(--muted); font-weight: 600; margin-left: -2px; }
+.sc-mk .num { font-size: 22px; }
+.sc-item .toggle { padding: 6px 8px 2px 0; border-top: 1px dashed var(--line-2); margin-top: 2px; gap: 12px; }
 .sc-item .toggle .strong { font-size: 14px; font-weight: 600; }
 .sc-empty { background: var(--card-2); border-radius: var(--r-md); }
-.sc-add { min-height: 46px; }
+.sc-add { min-height: 48px; border-style: dashed; border-color: var(--line-2); background: transparent; }
 .sc-busy .sc-item { opacity: .55; pointer-events: none; }
 .sc-busy .sc-del { visibility: hidden; }
 .sc-busy .sc-item::after { content: ''; position: absolute; top: 18px; right: 20px; width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid var(--line); border-top-color: var(--accent); animation: sc-spin .8s linear infinite; }
 
-/* questions */
-.sc-questions { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+/* questions: each is a small card, its answers are chips */
+.sc-questions { display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
 .sc-qhead h3 { font-size: 17px; }
-.sc-question { background: var(--card-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-.sc-question.applied { border-color: color-mix(in srgb, var(--good) 45%, var(--line)); }
-.sc-qtext { font-weight: 600; }
+.sc-question { position: relative; overflow: hidden; background: var(--card-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 12px 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.sc-question::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); }
+.sc-question.applied::before { background: var(--good); }
+.sc-qtext { font-weight: 650; }
 .sc-qaff { font-size: 12px; color: var(--muted); margin-top: -4px; }
 .sc-opts { display: flex; flex-wrap: wrap; gap: 8px; }
-.sc-opt { min-height: 40px; padding: 8px 14px; text-align: left; line-height: 1.2; }
+.sc-opt { min-height: 44px; padding: 8px 14px; text-align: left; line-height: 1.2; }
 .sc-other { border-style: dashed; }
-.sc-applied { display: flex; align-items: center; gap: 6px; color: var(--good); font-weight: 600; }
+.sc-applied { display: flex; align-items: center; gap: 6px; color: var(--good); font-weight: 650; }
 .sc-remember { padding: 4px 0; }
 .sc-remember .strong { font-size: 15px; }
-.sc-reestimate { min-height: 48px; }
+.sc-reestimate { min-height: 50px; }
 .sc-pendhint { align-items: center; }
 .sc-disclaimer { text-align: center; padding: 2px 8px; }
 
 /* add-item sheet sits above the full sheet */
 .sc-addsheet { max-height: 80vh; }
 
-/* settings section */
+/* ---------- Settings section ---------- */
 .sc-settings { scroll-margin-top: 14px; }
 .sc-settings.sc-flash .sc-card { animation: sc-flash 1.6s ease 1; }
+.sc-settings .section-head .pill { gap: 4px; }
+.sc-intro { display: flex; gap: 12px; align-items: flex-start; color: var(--ink-2); }
+.sc-introico { width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-text); flex: none; }
+.sc-list { background: var(--card-2); box-shadow: none; border-color: transparent; }
+.sc-lrow { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.sc-lrow + .sc-lrow { border-top: 1px solid var(--line); }
+.sc-lab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; font-weight: 650; color: var(--ink-2); }
+.sc-lab-n { font-weight: 500; font-size: 12px; color: var(--muted); text-align: right; }
+.sc-lrow input, .sc-lrow select { background: var(--card); }
+.sc-lrow .hint { font-size: 12px; color: var(--muted); }
 .sc-card .row .sc-key { flex: 1; min-width: 0; }
-.sc-showkey { flex: none; min-width: 64px; }
-.sc-actions { gap: 8px; }
-.sc-actions .btn { min-height: 44px; flex: 1; }
+.sc-showkey { flex: none; min-width: 64px; min-height: 48px; }
+.sc-actions { display: flex; gap: 8px; }
+.sc-actions .btn { min-height: 48px; flex: 1; }
 .sc-testres { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.sc-testres:empty { display: none; }
 .sc-keyhint:empty { display: none; }
-.sc-how { background: var(--card-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 10px 12px; }
-.sc-how .cue-list { margin-top: 8px; padding-left: 20px; font-size: 14px; }
+.sc-how { background: var(--card-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 0 14px; }
+.sc-how summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px; color: var(--ink); }
+.sc-how summary svg { color: var(--muted); flex: none; transition: transform .2s ease; }
+.sc-how[open] summary svg { transform: rotate(180deg); }
+.sc-steps { counter-reset: sc-step; list-style: none; margin: 0; padding: 0 0 14px; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.sc-steps li { counter-increment: sc-step; position: relative; padding-left: 32px; min-height: 22px; }
+.sc-steps li::before { content: counter(sc-step); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 800 12px/22px var(--font); text-align: center; }
 .sc-memhead { margin-top: 4px; }
-.sc-memgroup > summary { padding: 6px 0; }
+.sc-memgroup > summary { padding: 6px 0; min-height: 44px; display: flex; align-items: center; }
 .sc-memgroup .list { margin-top: 6px; box-shadow: none; border: 1px solid var(--line); }
 .sc-memrow { min-height: 48px; padding: 8px 6px 8px 12px; }
 .sc-memrow .title { font-size: 14px; }
 .sc-memrow .sub { overflow-wrap: anywhere; }
-.sc-memdel { flex: none; width: 40px; height: 40px; color: var(--muted); }
+.sc-memdel { flex: none; width: 44px; height: 44px; color: var(--muted); }
 
 @keyframes sc-sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
 @keyframes sc-spin { to { transform: rotate(360deg); } }

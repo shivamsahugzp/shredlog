@@ -1,10 +1,13 @@
 // AI plate scanner UI: capture -> analyse -> review (edit, answer questions) -> log. Plus the Settings section (key, memory).
 // Engine, prompt and memory live in ../scan.js. Called from the Food tab (and a Today tile): openScanner(ctx, { date, meal }).
 import { state, todayKey, parseKey, recentFoods, addCustomFood, logFoods, removeFoods } from '../state.js';
-import { h, icon, sheet, toast, confirmSheet, promptSheet, stepper, segmented, toggle, field, clear, fmt, haptic } from '../ui.js';
+import { h, icon, sheet, toast, confirmSheet, promptSheet, stepper, segmented, toggle, field, clear, ring, fmt, haptic } from '../ui.js';
+import { fill, stagger } from '../motion.js';
 import { scaleFood } from '../calc.js';
-import { MEALS, MEAL_LABEL, scaleMicro, lookup, r1, r2 } from './food-extras.js';
+import { MEALS, MEAL_LABEL, scaleMicro, lookup, r1, r2, SPOTS, segFix } from './food-extras.js';
 import * as AI from '../scan.js';
+
+const seg = (options, value, onChange, cls) => segFix(segmented(options, value, onChange, cls), options, value);
 
 // ---- icons (ui.js has no camera; use its own if one is ever added) ----
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -76,11 +79,11 @@ export function openScanner(ctx, opts = {}) {
   function drawSetup() {
     st.step = 'setup'; clear(root); setFoot();
     root.append(h('div', { class: 'sc-setup' },
-      h('div', { class: 'sc-hero' }, cameraIcon(34)),
+      h('span', { class: 'sc-spot sc-hero', html: SPOTS.key }),
       h('h3', null, 'Scan your plate'),
       h('p', { class: 'sc-lede' }, 'Snap a photo and AI estimates the carbs, protein and portion size. If it cannot tell something, it asks you once and remembers your answer.'),
       h('div', { class: 'callout sc-privacy' }, icon('info'), h('div', null, 'Photos go from your phone straight to the AI provider you choose. ShredLog has no server. The key stays on this phone and is never in backups.')),
-      h('button', { class: 'btn primary block sc-goset', onClick: goSettings }, 'Set up in Settings'),
+      h('button', { class: 'btn primary block lg sc-goset', onClick: goSettings }, 'Set up in Settings'),
       h('div', { class: 'small muted sc-free' }, 'Gemini has a free tier, no card needed.')));
   }
 
@@ -99,12 +102,12 @@ export function openScanner(ctx, opts = {}) {
     const cam = fileInput('sc-input-cam', true), gal = fileInput('sc-input-gal', false);
     const cfg = AI.getAI(), P = cfg && AI.PROVIDERS[cfg.provider];
     root.append(h('div', { class: 'sc-capture' },
+      h('div', { class: 'sc-finder' }, h('span', { class: 'sc-spot sc-plate', html: SPOTS.plate }), h('div', { class: 'sc-tip' }, 'Fit the whole plate in the frame and shoot from above.')),
       h('div', { class: 'sc-pickrow' },
-        pickBtn('sc-btn-camera primary', cameraIcon(32), 'Take photo', 'Opens the camera', cam),
-        pickBtn('sc-btn-gallery', imageIcon(32), 'Choose from gallery', 'Use a saved photo', gal)),
-      h('div', { class: 'sc-tip' }, icon('info', 18), 'Works best with the whole plate in frame, from above.'),
-      field('Log it to', segmented(mealOptions(st.meal), st.meal, (id) => { st.meal = id; }, 'sc-meals')),
-      h('div', { class: 'small muted sc-using' }, P ? `Using ${P.label} · ${cfg.model} · ` : 'Test mode · ', h('button', { class: 'sc-link', onClick: goSettings }, 'AI settings')),
+        pickBtn('sc-btn-camera primary', cameraIcon(26), 'Take photo', 'Opens the camera', cam),
+        pickBtn('sc-btn-gallery', imageIcon(26), 'Gallery', 'Use a saved photo', gal)),
+      h('div', { class: 'sc-meal' }, h('div', { class: 'sc-meal-l' }, 'Log it to'), seg(mealOptions(st.meal), st.meal, (id) => { st.meal = id; }, 'sc-meals')),
+      h('div', { class: 'small muted sc-using' }, P ? `Using ${P.label}, ${cfg.model}. ` : 'Test mode. ', h('button', { class: 'sc-link', onClick: goSettings }, 'AI settings')),
       cam, gal));
   }
 
@@ -125,7 +128,11 @@ export function openScanner(ctx, opts = {}) {
     scanning ? h('div', { class: 'sc-prev-label' }, h('span', { class: 'sc-spin' }), label || 'Reading your plate…') : null);
   function drawAnalysing(label) {
     st.step = 'analysing'; clear(root); setFoot();
+    const skel = (cls) => h('span', { class: 'skeleton ' + cls });
     root.append(h('div', { class: 'sc-analysing' }, preview(true, label),
+      h('div', { class: 'sc-skel', 'aria-hidden': 'true' },
+        h('div', { class: 'sc-skel-tot' }, skel('sc-sk-ring'), h('div', { class: 'sc-sk-lines' }, skel('sc-sk-l1'), skel('sc-sk-l2'))),
+        [0, 1, 2].map(() => h('div', { class: 'sc-skel-item' }, skel('sc-sk-l3'), skel('sc-sk-l4'), skel('sc-sk-l5')))),
       h('div', { class: 'small muted sc-wait' }, 'This usually takes 5 to 15 seconds.'),
       h('button', { class: 'btn ghost sc-cancel', onClick: () => { st.run++; if (st.ctl) st.ctl.abort(); drawCapture(); } }, 'Cancel')));
   }
@@ -173,16 +180,18 @@ export function openScanner(ctx, opts = {}) {
     const t = totals();
     tot.kcal.textContent = fmt(t.kcal);
     tot.p.textContent = fmt(t.p, 1); tot.c.textContent = fmt(t.c, 1); tot.f.textContent = fmt(t.f, 1); tot.fiber.textContent = fmt(t.fiber, 1);
+    const T = state.targets && state.targets.kcal, pct = T > 0 ? Math.min(100, (t.kcal / T) * 100) : 0;
+    if (tot.ring) { fill(tot.ring.fillEl, pct, { axis: 'ring', key: 'sc:ring', ms: 420 }); tot.ring.title = T > 0 ? `${Math.round((t.kcal / T) * 100)}% of today's calories` : ''; }
     if (logBtn) {
-      logBtn.textContent = `Log to ${MEAL_LABEL[st.meal]} · ${plural(st.items.length, 'item')}`;
+      logBtn.textContent = st.items.length ? `Log to ${MEAL_LABEL[st.meal]} · ${fmt(t.kcal)} kcal` : 'Nothing to log';
       logBtn.disabled = !st.items.length || st.busy;
     }
   }
 
   function itemRow(it) {
-    const kc = h('b', { class: 'sc-kc' }), gramsEl = h('span', { class: 'sc-grams' }), unitEl = h('span', { class: 'sc-unit' });
-    const m = { p: h('span'), c: h('span'), f: h('span'), fiber: h('span') };
-    const chip = (k, label, el) => h('span', { class: 'sc-m' }, h('i', { class: 'dot ' + k }), label + ' ', el);
+    const kc = h('b', { class: 'num sc-kc' }), gramsEl = h('span', { class: 'sc-grams' }), unitEl = h('span', { class: 'sc-unit' });
+    const m = { p: h('b', { class: 'num' }), c: h('b', { class: 'num' }), f: h('b', { class: 'num' }), fiber: h('b', { class: 'num' }) };
+    const chip = (k, label, el) => h('span', { class: 'sc-m' }, h('i', { class: 'dot ' + k }), label + ' ', el, h('small', null, ' g'));
     const upd = () => {
       const v = AI.computeItem(it);
       kc.textContent = fmt(v.kcal);
@@ -193,7 +202,7 @@ export function openScanner(ctx, opts = {}) {
     };
     const w = isWeight(it.unit);
     const conf = it.conf >= 0.75 ? null : h('span', { class: 'pill sc-conf ' + (it.conf >= 0.5 ? '' : 'warn') }, it.conf >= 0.5 ? 'estimate' : 'guess');
-    const row = h('div', { class: 'sc-item', dataset: { uid: it.uid, name: it.name } },
+    const row = h('div', { class: 'sc-item', dataset: { uid: it.uid, name: it.name, conf: it.conf >= 0.75 ? 'hi' : it.conf >= 0.5 ? 'mid' : 'low' } },
       h('div', { class: 'sc-item-top' },
         h('button', { class: 'sc-name', 'aria-label': `Rename ${it.name}`, onClick: () => rename(it) }, h('span', { class: 'sc-name-t' }, it.name), icon('edit', 14)),
         conf,
@@ -268,7 +277,7 @@ export function openScanner(ctx, opts = {}) {
       h('div', { class: 'sc-qtext' }, q.text),
       q.affects.length ? h('div', { class: 'sc-qaff' }, 'Affects ' + q.affects.join(', ')) : null,
       h('div', { class: 'sc-opts' },
-        opts.map((o) => h('button', { class: 'chip sc-opt' + (q.answer === o ? ' on' : ''), 'aria-pressed': q.answer === o ? 'true' : 'false', onClick: () => set(o) }, o)),
+        opts.map((o) => h('button', { class: 'chip sc-opt' + (q.answer === o ? ' on accent' : ''), 'aria-pressed': q.answer === o ? 'true' : 'false', onClick: () => set(o) }, o)),
         h('button', { class: 'chip sc-opt sc-other', onClick: async () => { const v = await promptSheet(q.text, q.custom || '', { placeholder: 'Type your answer', ok: 'Use this' }); if (v) { q.custom = v.slice(0, 60); q.answer = q.custom; q.applied = false; paintQuestion(q); } } }, 'Other…')),
       q.applied ? h('div', { class: 'sc-applied small' }, icon('check', 14), 'Applied') : null);
   }
@@ -351,12 +360,13 @@ export function openScanner(ctx, opts = {}) {
     const made = logFoods(date, entries); // commits memory + custom foods + entries together
     const kcal = Math.round(sumBy(made, 'kcal'));
     haptic('success'); api.close();
-    toast(`Logged ${plural(made.length, 'item')} · ${fmt(kcal)} kcal`, { ms: 5000, undo: () => removeFoods(date, made.map((e) => e.id)) });
+    toast(`Logged ${plural(made.length, 'item')} · ${fmt(kcal)} kcal`, { ms: 5000, kind: 'success', undo: () => removeFoods(date, made.map((e) => e.id)) });
   }
 
   function drawReview() {
     st.step = 'review'; clear(root);
-    tot = { kcal: h('span', { class: 'num sc-kcal' }), p: h('b'), c: h('b'), f: h('b'), fiber: h('b') };
+    tot = { kcal: h('span', { class: 'num sc-kcal' }), p: h('b', { class: 'num' }), c: h('b', { class: 'num' }), f: h('b', { class: 'num' }), fiber: h('b', { class: 'num' }) };
+    tot.ring = ring({ size: 78, stroke: 8, pct: 0, cls: 'sc-ring', children: [tot.kcal, h('small', null, 'kcal')] });
     const mac = (k, label, el) => h('div', { class: 'sc-tm' }, h('div', { class: 'lbl' }, h('i', { class: 'dot ' + k }), label), h('div', { class: 'val' }, el, h('small', null, ' g')));
     thumbBox = h('div', { class: 'sc-thumbbox' }, st.img ? h('img', { class: 'sc-thumb', src: st.img.dataUrl, alt: 'Your plate' }) : null,
       h('button', { class: 'sc-link', onClick: () => { st.items = []; st.qs = []; drawCapture(); } }, 'Retake'));
@@ -366,16 +376,16 @@ export function openScanner(ctx, opts = {}) {
     noteEl = h('div', { class: 'small muted sc-note' + (st.notes ? '' : ' hide') }, st.notes);
     logBtn = h('button', { class: 'btn primary block sc-log', onClick: doLog });
     root.append(h('div', { class: 'sc-review' },
-      h('div', { class: 'sc-totals' }, thumbBox,
-        h('div', { class: 'sc-tmain' }, h('div', { class: 'sc-tk' }, tot.kcal, h('small', null, ' kcal')),
-          h('div', { class: 'sc-tgrid' }, mac('p', 'Protein', tot.p), mac('c', 'Carbs', tot.c), mac('f', 'Fat', tot.f), mac('fiber', 'Fibre', tot.fiber)))),
-      field('Log it to', segmented(mealOptions(st.meal), st.meal, (id) => { st.meal = id; refreshTotals(); }, 'sc-meals')),
+      h('div', { class: 'sc-totals' }, thumbBox, tot.ring,
+        h('div', { class: 'sc-tmain' }, h('div', { class: 'sc-tgrid' }, mac('p', 'Protein', tot.p), mac('c', 'Carbs', tot.c), mac('f', 'Fat', tot.f), mac('fiber', 'Fibre', tot.fiber)))),
+      field('Log it to', seg(mealOptions(st.meal), st.meal, (id) => { st.meal = id; refreshTotals(); }, 'sc-meals')),
       noteEl, busyEl, listEl,
       h('button', { class: 'btn block sc-add', onClick: openAdd }, icon('plus', 18), 'Add item'),
       qBox,
       h('div', { class: 'small muted sc-disclaimer' }, 'AI estimates are a good guess, not a lab number. Tap a name to fix it, or use the stepper to change the amount.')));
     paintItems(); paintQuestions();
     setFoot(logBtn); refreshTotals();
+    stagger(listEl, { key: 'sc-items:' + st.run, step: 40 }); // the review is its own moment: items rise in, at most six
   }
 
   // ---- go ----
@@ -409,7 +419,7 @@ export function aiSettingsSection(ctx) {
 
     const keyIn = h('input', { class: 'sc-key', type: 'password', placeholder: P.keyHint, value: cfg.key, autocomplete: 'off', autocapitalize: 'off', autocorrect: 'off', spellcheck: 'false', 'aria-label': `${P.label} API key` });
     const keyHint = h('div', { class: 'hint sc-keyhint' });
-    const showBtn = h('button', { class: 'btn sm sc-showkey', type: 'button', onClick: () => { const show = keyIn.type === 'password'; keyIn.type = show ? 'text' : 'password'; showBtn.textContent = show ? 'Hide' : 'Show'; } }, 'Show');
+    const showBtn = h('button', { class: 'btn sm sc-showkey', 'aria-label': 'Show or hide the key', type: 'button', onClick: () => { const show = keyIn.type === 'password'; keyIn.type = show ? 'text' : 'password'; showBtn.textContent = show ? 'Hide' : 'Show'; } }, 'Show');
     keyIn.addEventListener('input', () => {
       const v = keyIn.value.trim(), g = AI.guessProvider(v);
       lastTest = null;
@@ -418,7 +428,7 @@ export function aiSettingsSection(ctx) {
     });
     keyHint.textContent = hintMsg; hintMsg = '';
 
-    const testBtn = h('button', { class: 'btn sc-test', onClick: async () => {
+    const testBtn = h('button', { class: 'btn soft sc-test', onClick: async () => {
       testBtn.disabled = true; clear(resultEl); resultEl.append(h('span', { class: 'pill' }, 'Testing…'));
       AI.setAI({ key: keyIn.value.trim() });
       lastTest = await AI.testKey();
@@ -433,19 +443,20 @@ export function aiSettingsSection(ctx) {
       ? [h('li', null, 'Open ', ml(P), ' (aistudio.google.com/apikey) and sign in with Google.'), h('li', null, 'Tap “Create API key” and copy it.'), h('li', null, 'Paste it above and tap “Test key”.')]
       : [h('li', null, 'Open ', ml(P), ' and sign in.'), h('li', null, 'Create an API key and copy it.'), h('li', null, 'Paste it above and tap “Test key”. Add a little credit if the test fails.')];
 
+    const lrow = (label, note, ...body) => h('div', { class: 'sc-lrow' }, h('div', { class: 'sc-lab' }, h('span', null, label), note ? h('span', { class: 'sc-lab-n' }, note) : null), ...body);
     wrap.append(
-      h('div', { class: 'section-head', style: { marginTop: '18px' } }, h('h2', null, 'AI plate scanner'), h('span', { class: 'pill ' + (ready ? 'good' : '') }, ready ? 'Ready' : 'Not set up')),
+      h('div', { class: 'section-head', style: { marginTop: '18px' } }, h('h2', null, 'AI plate scanner'), h('span', { class: 'pill ' + (ready ? 'good' : '') }, ready ? [icon('check', 12), 'Ready'] : 'Not set up')),
       h('div', { class: 'card stack sc-card' },
-        h('div', { class: 'small muted' }, 'Take a photo of your plate and AI estimates the carbs, protein and portion. You bring your own key; it is used only from this phone.'),
-        field('Provider', segmented(Object.values(AI.PROVIDERS).map((p) => ({ id: p.id, label: p.tab })), cfg.provider, (id) => {
-          const keep = AI.guessProvider(cfg.key) === id ? cfg.key : ''; // keep the key only if it belongs to the new provider
-          AI.setAI({ provider: id, key: keep }); lastTest = null; draw();
-        }, 'sc-provider'), P.free),
-        field('Model', h('select', { class: 'sc-model', onChange: (e) => { AI.setAI({ model: e.target.value }); lastTest = null; showResult(); } }, models.map((m) => h('option', { value: m.id, selected: m.id === cfg.model }, m.label)))),
-        field('API key', h('div', { class: 'row' }, keyIn, showBtn), P.keyNote),
-        keyHint,
-        h('div', { class: 'row wrap sc-actions' }, testBtn, removeBtn), resultEl,
-        h('details', { class: 'sc-how', open: !ready }, h('summary', null, cfg.provider === 'gemini' ? 'How to get a free Gemini key' : `How to get a ${P.label} key`), h('ol', { class: 'cue-list' }, steps)),
+        h('div', { class: 'sc-intro' }, h('span', { class: 'sc-introico' }, cameraIcon(22)), h('div', { class: 'small' }, 'Photograph your plate and AI estimates the carbs, protein and portion. You bring your own key; it is used only from this phone.')),
+        h('div', { class: 'list sc-list' },
+          lrow('Provider', null, seg(Object.values(AI.PROVIDERS).map((p) => ({ id: p.id, label: p.label })), cfg.provider, (id) => {
+            const keep = AI.guessProvider(cfg.key) === id ? cfg.key : ''; // keep the key only if it belongs to the new provider
+            AI.setAI({ provider: id, key: keep }); lastTest = null; draw();
+          }, 'sc-provider'), h('div', { class: 'hint' }, P.free)),
+          lrow('Model', null, h('select', { class: 'sc-model', 'aria-label': 'Model', onChange: (e) => { AI.setAI({ model: e.target.value }); lastTest = null; showResult(); } }, models.map((m) => h('option', { value: m.id, selected: m.id === cfg.model }, m.label)))),
+          lrow('API key', P.keyNote, h('div', { class: 'row' }, keyIn, showBtn), keyHint)),
+        h('div', { class: 'sc-actions' }, testBtn, removeBtn), resultEl,
+        h('details', { class: 'sc-how', open: !ready }, h('summary', null, h('span', null, cfg.provider === 'gemini' ? 'How to get a free Gemini key' : `How to get a ${P.label} key`), icon('down', 16)), h('ol', { class: 'sc-steps' }, steps)),
         h('div', { class: 'sc-memhead' }, h('div', { class: 'strong' }, 'What it remembers')),
         memoryBlock(),
         h('div', { class: 'callout small' }, icon('info'), h('div', null, 'Photos go from your phone straight to the AI provider you choose. ShredLog has no server. The key stays on this phone and is never in backups.'))));

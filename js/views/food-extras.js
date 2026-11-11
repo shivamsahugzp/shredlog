@@ -196,3 +196,41 @@ export function resolvePreset(p) {
   }
   return { id: p.id, name: p.name, items, kcal: items.reduce((a, e) => a + e.kcal, 0), p: r1(items.reduce((a, e) => a + e.p, 0)) };
 }
+
+// ---- Food tab presentation data (strings only) ----
+// Everyday foods shown first when the user has no recents yet (ids verified with findFood at runtime; missing ids are skipped).
+export const STAPLE_IDS = [
+  'roti_plain', 'dal_tadka', 'rice_white_boiled', 'egg_boiled', 'paneer_raw', 'curd_full_fat', 'chai_milk_1tsp', 'mix_veg',
+  'whey_concentrate', 'milk_toned', 'banana', 'idli', 'dosa_plain', 'poha', 'rajma_curry', 'chole', 'paratha_plain', 'paneer_bhurji',
+  'omelette_2egg', 'oats_porridge_milk', 'soya_chunks_cooked', 'moong_sprouts', 'peanuts_roasted', 'almonds', 'khichdi', 'sambar',
+  'chicken_biryani', 'butter_chicken', 'bread_brown', 'apple',
+];
+const CAT_SHORT = {
+  'Roti & Breads': 'Roti', 'Rice & Grains': 'Rice', 'Dal & Legumes': 'Dal', 'Sabzi (Veg)': 'Sabzi', 'Paneer & Dairy': 'Dairy', Eggs: 'Egg',
+  Chicken: 'Chicken', 'Mutton, Fish & Seafood': 'Meat & fish', 'Mutton, Fish & Seafood ': 'Meat & fish', 'Breakfast & Tiffin': 'Tiffin',
+  'Snacks & Street Food': 'Snack', 'Sweets & Desserts': 'Sweet', Beverages: 'Drink', Fruits: 'Fruit', 'Nuts, Seeds & Dry Fruits': 'Nuts',
+  'Protein & Supplements': 'Protein', 'Oils, Ghee & Condiments': 'Oil & ghee', 'Western & Fast Food': 'Fast food', Alcohol: 'Alcohol',
+  [RECIPE_CAT]: 'Recipe', 'Scanned dishes': 'Scanned', Scanned: 'Scanned', 'Quick add': 'Quick add',
+};
+export const shortCat = (f) => (f.recipe ? 'Recipe' : CAT_SHORT[f.cat] || String(f.cat || 'Food').split(/[ ,&(]/)[0]);
+
+// Spot illustrations: inline SVG, two palette tones (accent + card-3) and a muted stroke. The colours come from the
+// .t1 / .t2 / .t3 / .s classes in food.css and scan.css, so they follow light and dark themes and the accent swap.
+const SVG = (vb, inner) => `<svg viewBox="${vb}" aria-hidden="true" focusable="false">${inner}</svg>`;
+const BOWL = '<ellipse class="t2" cx="36" cy="63" rx="22" ry="3.6"/><path class="t1" d="M11 35h50c0 14-10 24-25 24S11 49 11 35z"/><ellipse class="t3" cx="36" cy="35" rx="25" ry="6"/>';
+const STEAM = '<path class="s" d="M26 25c-3-4 3-6 0-12M38 25c-3-4 3-6 0-12M50 25c-3-4 3-6 0-12"/>';
+export const SPOTS = {
+  bowl: SVG('0 0 72 72', BOWL + STEAM),
+  search: SVG('0 0 72 72', BOWL + '<path class="s" d="M30 25c-3-4 3-6 0-12M42 25c-3-4 3-6 0-12"/><circle class="s" cx="54" cy="50" r="9"/><path class="s" d="M61 57l7 7"/>'),
+  star: SVG('0 0 72 72', BOWL + '<path class="t1" transform="translate(22 1) scale(1.1)" d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>'),
+  plate: SVG('0 0 120 96', '<path class="s" d="M10 30V16a6 6 0 0 1 6-6h14M90 10h14a6 6 0 0 1 6 6v14M110 66v14a6 6 0 0 1-6 6H90M30 86H16a6 6 0 0 1-6-6V66"/><circle class="t2" cx="60" cy="48" r="29"/><circle class="t3" cx="60" cy="48" r="22"/><circle class="t1" cx="52" cy="43" r="8"/><circle class="t1" cx="69" cy="53" r="6"/><path class="s" d="M54 62c3 3 8 3 11 0"/>'),
+  key: SVG('0 0 72 72', '<ellipse class="t2" cx="38" cy="62" rx="24" ry="3.6"/><circle class="t1" cx="22" cy="34" r="14"/><circle class="t2" cx="22" cy="34" r="5.5"/><rect class="t1" x="34" y="31" width="32" height="6" rx="3"/><rect class="t1" x="50" y="35" width="5" height="11" rx="2"/><rect class="t1" x="59" y="35" width="5" height="7" rx="2"/>'),
+};
+
+// ui.js segmented() sets --n / --i through Object.assign(el.style), which ignores custom properties, so the thumb is always
+// sized for two options and starts on the first. Set them properly (a no-op once ui.js is fixed).
+export function segFix(el, options, value) {
+  el.style.setProperty('--n', String(options.length));
+  el.style.setProperty('--i', String(Math.max(0, options.findIndex((o) => o.id === value))));
+  return el;
+}

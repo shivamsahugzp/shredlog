@@ -1,0 +1,189 @@
+/* Today tab (classes prefixed td-; tokens and components come from app.css) */
+
+/* the swipe target: vertical scroll stays native, horizontal drags change the day */
+.td { touch-action: pan-y; }
+.td-page { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.td-page > * { min-width: 0; }
+.td-page > .card + .card { margin-top: 0; }
+.td-sec { margin-top: 10px; }
+.td-sec .section-head { margin-bottom: 8px; }
+
+/* ---------- greeting ---------- */
+.td-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin: 2px 0 0; }
+.td-head h1 { font-size: clamp(25px, 7.4vw, 30px); letter-spacing: -0.025em; overflow-wrap: anywhere; }
+.td-line { margin-top: 5px; font-size: 15px; line-height: 1.35; color: var(--ink-2); max-width: 30ch; }
+.td-head .icon-btn { margin-top: -2px; }
+
+/* ---------- date nav ---------- */
+.td-nav { display: flex; align-items: center; gap: 8px; }
+.td-nav-mid { flex: 1; min-width: 0; text-align: center; }
+.td-nav-day { font: 750 18px/1.15 var(--font); font-stretch: var(--wdth-head); letter-spacing: -0.015em; }
+.td-nav-sub { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px 8px; margin-top: 3px; font-size: 12px; color: var(--muted); }
+.td-pill { position: relative; display: inline-flex; align-items: center; gap: 5px; min-height: 26px; padding: 0 10px; border-radius: 999px; font: 700 12px var(--font); white-space: nowrap; background: var(--accent-soft); color: var(--accent-text); transition: transform .12s ease; }
+.td-pill::after { content: ''; position: absolute; inset: -9px -6px; }
+.td-pill:active { transform: scale(.95); }
+.td-pill.wait { background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 55%, transparent); }
+.td-flame { display: inline-grid; place-items: center; color: var(--accent-text); }
+
+/* ---------- hero: the calorie dial ---------- */
+.card.td-fuel { position: relative; overflow: hidden; padding: 16px; border-radius: var(--r-xl);
+  background: radial-gradient(85% 75% at 14% 8%, color-mix(in srgb, var(--accent) 17%, transparent), transparent 66%), var(--card); }
+.card.td-fuel.over { background: radial-gradient(85% 75% at 14% 8%, color-mix(in srgb, var(--bad) 15%, transparent), transparent 66%), var(--card); }
+.td-fuel-main { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; }
+.td-fuel .ring { width: 156px !important; height: 156px !important; justify-self: start; }
+.td-ring svg { overflow: visible; }
+.td-ring .fill { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 50%, transparent)); }
+.td-ring.over .fill { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--bad) 50%, transparent)); }
+.td-ring.over .fill:not(.lap2) { opacity: .4; }
+.td-ring .track { stroke: var(--card-2); }
+.td-dial line { stroke: var(--line-2); stroke-linecap: round; }
+.td-dial line.on { stroke: var(--accent); opacity: .9; }
+.td-ring.over .td-dial line.on { stroke: var(--bad); opacity: .7; }
+.td-knob circle { fill: var(--accent-ink); opacity: .6; }
+.td-ring.over .td-knob circle { fill: var(--card); opacity: .9; }
+.td-ring .ring-in { padding-top: 2px; }
+.td-num { font-size: 44px; letter-spacing: -0.04em; color: var(--ink); }
+.td-num.bad { color: var(--bad); }
+.td-kcal { display: inline-flex; }
+.td-ring .ring-in small { margin-top: 3px; font-size: 12px; color: var(--muted); }
+
+.td-macros { display: flex; flex-direction: column; gap: 13px; min-width: 0; }
+.td-macro { min-width: 0; --m: var(--p); }
+.td-macro.c { --m: var(--c); }
+.td-macro.f { --m: var(--f); }
+.td-macro-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 13px; font-weight: 650; color: var(--ink-2); }
+.td-macro-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.td-hit { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--good-soft); color: var(--good); flex: none; }
+.td-macro-val { display: flex; align-items: baseline; gap: 3px; margin-top: 3px; font: 800 21px/1.1 var(--font); font-stretch: var(--wdth-num); letter-spacing: -0.025em; white-space: nowrap; }
+.td-macro-val small { font: 500 12px var(--font); font-stretch: 100%; color: var(--muted); letter-spacing: 0; }
+.td-track { height: 6px; border-radius: 3px; background: var(--card-2); margin-top: 6px; overflow: hidden; }
+.td-track i { display: block; height: 100%; border-radius: 3px; background: var(--m, var(--accent)); }
+.td-track.water i { background: var(--water); }
+.td-facts { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.td-fact { min-width: 0; padding: 0 10px; }
+.td-fact:first-child { padding-left: 0; }
+.td-fact + .td-fact { border-left: 1px solid var(--line); }
+.td-fact-l { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.td-fact b { display: block; margin-top: 3px; font: 800 18px/1.1 var(--font); font-stretch: var(--wdth-num); letter-spacing: -0.02em; white-space: nowrap; }
+.td-fact small { font: 500 12px var(--font); font-stretch: 100%; color: var(--muted); letter-spacing: 0; }
+.td-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.td-pills .pill { min-width: 0; }
+.td-pills .dot { width: 7px; height: 7px; }
+
+/* ---------- quick-log tiles ---------- */
+.td-quick { gap: 8px; }
+.td-quick .qt { min-height: 118px; padding: 34px 4px 12px; justify-content: flex-start; gap: 5px; border-radius: var(--r-lg); }
+.td-quick .qt .well { width: 40px; height: 40px; }
+.td-quick .qt .well svg { width: 21px; height: 21px; }
+.td-quick .qt .lbl { font-size: 13px; font-weight: 700; color: var(--ink); }
+.td-quick .qt .sub { max-width: 100%; padding: 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.td-quick .qt .count { font-size: 16px; }
+/* the shared rule .qt > *:not(.under) makes every child position:relative, which pulls the count and the minus button into the flow */
+.td-quick .qt > .count { position: absolute; top: 9px; right: 10px; z-index: 2; }
+.td-quick .qt > .minus { position: absolute; top: 6px; left: 6px; z-index: 3; }
+/* the shared .qt rule lifts every child above the water fill; the ripple has to stay behind the label */
+.td-quick .qt > .mo-ripple { position: absolute; z-index: 0; }
+.td-quick .qt .under { background: color-mix(in srgb, var(--water) 22%, transparent); box-shadow: inset 0 1.5px 0 color-mix(in srgb, var(--water) 55%, transparent); }
+.td-note { margin-top: -4px; text-align: center; font-size: 12px; color: var(--muted); }
+
+/* ---------- check-in ---------- */
+.td-ck-card .row { gap: 12px; }
+.td-ck { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+.td-ck-top { display: flex; align-items: baseline; justify-content: space-between; gap: 4px; font-size: 12px; color: var(--muted); }
+.td-ck-top b { font: 800 13px var(--font); font-stretch: var(--wdth-num); color: var(--ink); white-space: nowrap; }
+.td-pips { display: flex; gap: 3px; margin-top: 6px; }
+.td-pips i { flex: 1; height: 6px; border-radius: 3px; background: var(--card-2); }
+.td-pips i.on { background: var(--accent); }
+
+/* ---------- training ---------- */
+.td-train { display: flex; flex-direction: column; gap: 12px; }
+.td-train-top { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.td-train-top h3 { min-width: 0; }
+.td-train-top .small { overflow-wrap: anywhere; }
+.td-live-h { display: flex; align-items: center; gap: 8px; }
+.td-live { position: relative; width: 9px; height: 9px; border-radius: 50%; background: var(--good); flex: none; }
+.td-groups { display: flex; flex-wrap: wrap; gap: 6px; }
+.td-grp { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 11px 0 9px; border-radius: 999px; font-size: 13px; font-weight: 650; color: var(--ink); background: color-mix(in srgb, var(--g, var(--muted)) 16%, transparent); }
+.td-grp i { width: 8px; height: 8px; border-radius: 50%; background: var(--g, var(--muted)); }
+.card.td-rest { background: linear-gradient(135deg, color-mix(in srgb, var(--sleep) 14%, var(--card)), var(--card) 70%); border-color: color-mix(in srgb, var(--sleep) 25%, transparent); }
+.td-done.next { padding-top: 12px; border-top: 1px solid var(--line); }
+.td-done { display: flex; flex-direction: column; gap: 12px; }
+.td-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.td-stat { background: var(--card-2); border-radius: var(--r-md); padding: 9px 10px; min-width: 0; }
+.td-stat .num-sm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.td-done-sub { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; }
+.td-done-sub .pr-tag { display: inline-flex; align-items: center; }
+
+/* ---------- day ledger ---------- */
+.td-led { position: relative; padding: 2px 14px 2px 12px; }
+.td-led::before { content: ''; position: absolute; left: 20px; top: 28px; bottom: 28px; width: 2px; background: var(--line-2); border-radius: 1px; }
+.td-row { position: relative; padding-left: 22px; }
+.td-row + .td-row > .td-main { border-top: 1px solid var(--line); }
+.td-row .mo-swipe-act { top: 1px; bottom: 1px; right: 1px; border-radius: var(--r-sm); }
+.td-pin { position: absolute; left: 3px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: var(--muted); border: 2px solid var(--card); box-shadow: 0 0 0 1.5px var(--line-2); z-index: 1; }
+.td-pin.food { background: var(--accent); }
+.td-pin.chai { background: var(--chai); }
+.td-pin.cig { background: var(--cig); }
+.td-pin.train { background: var(--p); }
+.td-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 58px; padding: 9px 0; text-align: left; transition: background-color .15s ease; }
+.td-item:active { background: var(--card-2); }
+.td-time { width: 56px; flex: none; font-size: 12px; line-height: 1.25; color: var(--ink-2); font-weight: 600; white-space: nowrap; }
+.td-meal { font-size: 11px; font-weight: 500; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.td-name { font-weight: 650; font-size: 15px; line-height: 1.25; }
+.td-meta { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.td-kc { flex: none; min-width: 44px; text-align: right; font: 800 16px/1.1 var(--font); font-stretch: var(--wdth-num); letter-spacing: -0.02em; white-space: nowrap; }
+.td-kc small { display: block; margin-top: 1px; font: 500 11px var(--font); font-stretch: 100%; color: var(--muted); letter-spacing: 0; }
+.td-empty { padding: 22px 16px 18px; }
+.td-empty b { margin-bottom: 6px; }
+.td-spot { display: block; width: 92px; height: 92px; margin: 0 auto 6px; }
+.td-spot svg { width: 100%; height: 100%; }
+.td-spot .a { fill: var(--accent); }
+.td-spot .a2 { fill: color-mix(in srgb, var(--accent) 72%, var(--ink)); }
+.td-spot .b { fill: var(--card-3); }
+.td-spot .s { fill: none; stroke: var(--muted); stroke-width: 2.4; stroke-linecap: round; opacity: .55; }
+.td-spot .hl { fill: none; stroke: var(--card); stroke-width: 3; stroke-linecap: round; opacity: .55; }
+
+.td-water { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 10px 14px 10px 10px; border-radius: var(--r-lg); background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow), inset 0 1px 0 var(--hl); }
+.td-water-line { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13px; }
+.td-water-line b { font: 800 17px var(--font); font-stretch: var(--wdth-num); letter-spacing: -0.02em; white-space: nowrap; }
+.td-water-line span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.td-water .td-track { margin-top: 7px; }
+
+/* ---------- this week ---------- */
+.td-week .td-pills { margin-top: 10px; }
+
+/* ---------- sticky call to action while the day is empty ---------- */
+.td-cta.glass { background: color-mix(in srgb, var(--card) 93%, transparent); }
+.td-cta { display: flex; gap: 8px; padding: 8px; border-radius: 26px; }
+.td-cta .btn { flex: 1 1 0; min-width: 0; }
+.td-cta .btn.primary { flex: 1.45 1 0; }
+
+/* ---------- count sheet (long-press on a tile) ---------- */
+.td-cs-list { display: flex; flex-direction: column; max-height: 36vh; overflow: auto; margin: 0 -4px; padding: 0 4px; }
+.td-cs-row { display: flex; align-items: center; gap: 10px; min-height: 52px; }
+.td-cs-row + .td-cs-row { border-top: 1px solid var(--line); }
+.td-cs-time { width: 64px; flex: none; font: 700 13px var(--font); color: var(--ink-2); white-space: nowrap; }
+.td-cs-empty { padding: 10px 0; }
+.td-cs-set { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--r-md); background: var(--card-2); }
+.td-wdelta { text-align: center; }
+
+/* ---------- motion: only when welcome ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes td-live { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(2.6); opacity: 0; } }
+  .td-live::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: var(--good); animation: td-live 1.6s ease-out infinite; }
+  .td-item, .td-pill { transition: background-color .15s ease, transform .12s ease; }
+}
+
+/* ---------- small phones (360 x 740) ---------- */
+@media (max-width: 374px) {
+  .card.td-fuel { padding: 14px; }
+  .td-fuel-main { gap: 12px; }
+  .td-fuel .ring { width: 140px !important; height: 140px !important; }
+  .td-num { font-size: 38px; }
+  .td-macro-val { font-size: 19px; }
+  .td-fact { padding: 0 8px; }
+  .td-fact b { font-size: 16px; }
+  .td-quick .qt { min-height: 112px; }
+  .td-time { width: 52px; }
+  .td-ck { gap: 8px; }
+}

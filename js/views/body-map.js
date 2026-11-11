@@ -6,6 +6,7 @@ import { MUSCLE_GROUPS } from '../insights.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const W = 150, H = 330;
+const TRAIN_ORDER = (m) => Math.max(0, ['chest', 'front delts', 'side delts', 'rear delts', 'biceps', 'triceps', 'forearms', 'abs', 'obliques', 'hip flexors', 'lats', 'upper back', 'traps', 'lower back', 'glutes', 'quads', 'hamstrings', 'adductors', 'calves'].indexOf(m));
 
 // ---------- vocabulary ----------
 export const MUSCLES = ['chest', 'front delts', 'side delts', 'rear delts', 'biceps', 'triceps', 'forearms', 'abs', 'obliques', 'hip flexors', 'lats', 'upper back', 'traps', 'lower back', 'glutes', 'quads', 'hamstrings', 'adductors', 'calves'];
@@ -96,6 +97,11 @@ const BACK = [
   ['hamstrings', 'M 76.6 190.5 C 82 197 92 200.5 100.5 198 C 104.5 196.5 108 194 111 190.5 C 111.2 205 108.8 218 106.3 229 C 104.2 238 101.8 244 101 248 C 96.5 249.5 91 249.5 85 247.5 C 83 245 82 242 81.2 237.5 C 79.5 224 77.5 206 76.6 190.5 Z'],
   ['calves', 'M 84.3 253.5 C 90 250.5 98 250.5 101.6 254.5 C 103.4 264 103 276 99.8 287 C 98.3 293 95.5 300 94.2 308.5 C 90.5 310.5 87 310.5 84 308.5 C 84.5 298 84.2 288 83.4 277 C 82.8 268 83.2 260 84.3 253.5 Z'],
 ];
+/** Raw geometry for canvas drawing (share card): new Path2D(d) works on every string. Left and right sides are separate entries. */
+export function bodyShapes() {
+  const both = (defs) => defs.flatMap(([m, d]) => [[m, d], [m, mirror(d)]]);
+  return { W, H, body: BODY, head: HEAD, front: both(FRONT), back: both(BACK) };
+}
 const DETAIL_FRONT = ['M 85.5 250 C 89 248.5 93.5 248.5 97.5 250 C 94 252.2 89 252.2 85.5 250 Z'];  // kneecap
 const DETAIL_BACK = ['M 75 46 L 75 107', 'M 85 249.5 C 90 251.5 96 251.5 100.5 249.5'];             // spine, knee crease
 
@@ -183,7 +189,7 @@ export function bodyMap({ selected = [], onToggle, heat = null, view = 'both', f
       const first = !seen.has(m + side); seen.add(m + side);
       // one path per body side so left and right both carry data-muscle; only the first is a tab stop
       [d, mirror(d)].forEach((dd, i) => {
-        const attrs = { d: dd, class: 'bm-p', 'data-muscle': m, style: `--bm-c:${muscleColor(m)}` };
+        const attrs = { d: dd, class: 'bm-p', 'data-muscle': m, style: `--bm-c:${muscleColor(m)};--bm-i:${TRAIN_ORDER(m)}` };
         if (!isHeat) Object.assign(attrs, { role: 'button', 'aria-label': label(m), 'aria-pressed': 'false', tabindex: i === 0 && first ? '0' : '-1', 'aria-hidden': i === 0 ? null : 'true' });
         const p = svg('path', attrs, isHeat ? null : svg('title', null));
         if (!isHeat) p.firstChild.textContent = label(m);

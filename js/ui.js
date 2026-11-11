@@ -6,7 +6,7 @@ export function h(tag, props, ...children) {
   if (props) for (const [k, v] of Object.entries(props)) {
     if (v == null || v === false) continue;
     if (k === 'class') el.className = v;
-    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k === 'style' && typeof v === 'object') { for (const [sk, sv] of Object.entries(v)) { if (sv == null) continue; if (sk.startsWith('--')) el.style.setProperty(sk, String(sv)); else el.style[sk] = sv; } }
     else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
     else if (k === 'html') el.innerHTML = v;
     else if (k === 'dataset') Object.assign(el.dataset, v);
@@ -64,6 +64,16 @@ const P = {
   oil: 'M9 2h6v3l2 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V8l2-3zM7 14h10',
   reset: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5',
   warn: 'M12 3l10 18H2zM12 10v4M12 18h.01',
+  sparkle: 'M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM19 15l1 2 2 1-2 1-1 2-1-2-2-1 2-1z',
+  arrowUp: 'M12 19V5M5 12l7-7 7 7', arrowDown: 'M12 5v14M5 12l7 7 7-7',
+  body: 'M12 7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM8 9h8l-1 6h-1l-1 7h-2l-1-7h-1z',
+  plate: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+  leaf: 'M5 20c0-8 4-14 14-15-1 10-6 15-14 15zM5 20c3-5 6-8 10-10',
+  lock: 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5zM12 15v3',
+  sun: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  palette: 'M12 3a9 9 0 0 0 0 18c1 0 1.5-.6 1.5-1.4 0-.5-.3-.8-.6-1.1-.3-.3-.5-.6-.5-1 0-.8.6-1.5 1.5-1.5H16a5 5 0 0 0 5-5c0-4.4-4-8-9-8zM7.5 12a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM10 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM14 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM16.5 12a1 1 0 1 1 0-2 1 1 0 0 1 0 2z',
+  rest: 'M3 12h18M7 8v8M17 8v8M4 10v4M20 10v4',
+  zap: 'M13 2L4 14h6l-1 8 9-12h-6z',
 };
 export function icon(name, size = 20, cls = '') {
   const d = P[name] || P.info;
@@ -129,16 +139,15 @@ export function confirmSheet(message, { ok = 'Yes', danger = false, title = 'Are
 }
 
 // ---- toasts ----
-export function toast(msg, { action, onAction, undo, ms = 2600 } = {}) {
+export function toast(msg, { action, onAction, undo, ms = 2800, kind } = {}) {
   if (undo) { action = 'Undo'; onAction = undo; }
   const root = document.getElementById('toasts');
-  while (root.children.length >= 2) root.firstChild.remove(); // a burst of quick logs must not pile up over the UI
-  const t = h('div', { class: 'toast' }, msg, action ? h('button', { onClick: () => { onAction && onAction(); t.remove(); } }, action) : null);
+  while (root.children.length >= 3) root.firstChild.remove(); // a burst of quick logs stacks, it never piles up over the UI
+  const t = h('div', { class: 'toast' + (kind ? ' ' + kind : '') }, kind === 'success' ? h('span', { class: 'ok' }, icon('check', 16)) : null, h('span', { class: 'msg' }, msg), action ? h('button', { onClick: () => { onAction && onAction(); t.remove(); } }, action) : null);
   root.append(t);
   setTimeout(() => { if (!t.isConnected) return; if (prefersReducedMotion()) return t.remove(); t.classList.add('mo-out'); setTimeout(() => t.remove(), 200); }, ms);
   return t;
 }
-
 export function promptSheet(title, value = '', { placeholder = '', ok = 'Save' } = {}) {
   return new Promise((res) => {
     const input = h('input', { type: 'text', value, placeholder, autocomplete: 'off' });
@@ -147,13 +156,19 @@ export function promptSheet(title, value = '', { placeholder = '', ok = 'Save' }
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { const v = input.value.trim(); res(v || null); s.onClose = null; s.close(); } });
   });
 }
-export function setActive(el, id) { [...el.children].forEach((b) => b.classList.toggle('on', b.dataset.id === String(id))); }
+export function setActive(el, id) { if (el.classList.contains('seg')) return segSelect(el, id); [...el.children].forEach((b) => b.classList.toggle('on', b.dataset.id === String(id))); }
 
 // ---- controls ----
 export function segmented(options, value, onChange, cls = '') {
-  const el = h('div', { class: 'seg ' + cls, role: 'tablist' });
-  for (const o of options) el.append(h('button', { class: o.id === value ? 'on' : '', role: 'tab', 'aria-selected': o.id === value ? 'true' : 'false', onClick: () => { [...el.children].forEach((b) => b.classList.remove('on')); el.querySelector(`[data-id="${o.id}"]`)?.classList.add('on'); onChange(o.id); }, dataset: { id: o.id } }, o.label));
+  const el = h('div', { class: 'seg ' + cls, role: 'tablist', style: { '--n': String(options.length), '--i': String(Math.max(0, options.findIndex((o) => o.id === value))) } });
+  el.append(h('span', { class: 'seg-thumb', 'aria-hidden': 'true' }));
+  options.forEach((o, i) => el.append(h('button', { class: o.id === value ? 'on' : '', role: 'tab', 'aria-selected': o.id === value ? 'true' : 'false', onClick: () => { segSelect(el, o.id); onChange(o.id); }, dataset: { id: o.id, i: String(i) } }, o.label)));
   return el;
+}
+// Move the thumb and the .on class to the option with this id (used by segmented() and by views that change value programmatically).
+export function segSelect(el, id) {
+  const btns = [...el.querySelectorAll('button[data-id]')];
+  btns.forEach((b) => { const on = b.dataset.id === String(id); b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); if (on) el.style.setProperty('--i', b.dataset.i || '0'); });
 }
 export function chips(options, value, onChange) {
   const el = h('div', { class: 'chips' });
@@ -186,6 +201,56 @@ export function toggle(label, on, onChange, sub) {
   return h('div', { class: 'toggle' }, h('div', null, h('div', { class: 'strong' }, label), sub ? h('div', { class: 'small muted' }, sub) : null), sw);
 }
 export function emptyState(title, sub, action, { ico } = {}) { return h('div', { class: 'empty' }, ico ? h('span', { class: 'mo-empty-ico' }, icon(ico, 22)) : null, h('b', null, title), sub, action ? h('div', { style: { marginTop: '12px' } }, action) : null); }
+
+
+// ---- action sheet: a vertical list of actions ----
+export function actionSheet(title, items, { sub } = {}) {
+  return sheet({ title, content: (api) => h('div', null, sub ? h('p', { class: 'small muted', style: { marginBottom: '8px' } }, sub) : null,
+    h('div', { class: 'stack', style: { gap: '2px' } }, items.filter(Boolean).map((it) => h('button', { class: 'menu-item' + (it.danger ? ' danger' : ''), onClick: () => { api.close(); it.onClick && it.onClick(); } },
+      h('span', { class: 'well' + (it.cls ? ' ' + it.cls : '') }, icon(it.icon || 'more', 20)), h('span', { class: 'grow' }, h('div', null, it.label), it.sub ? h('div', { class: 'sub' }, it.sub) : null), it.trail ? h('span', { class: 'small muted' }, it.trail) : null)))) });
+}
+
+// ---- long press (fires once; a normal tap still clicks) ----
+export function longPress(el, fn, ms = 550) {
+  let t = 0, fired = false;
+  const clear_ = () => { clearTimeout(t); t = 0; };
+  el.addEventListener('pointerdown', (e) => { if (e.pointerType === 'mouse' && e.button !== 0) return; fired = false; clear_(); t = setTimeout(() => { fired = true; haptic(); fn(e); }, ms); });
+  ['pointerup', 'pointercancel', 'pointerleave', 'pointermove'].forEach((ev) => el.addEventListener(ev, (e) => { if (ev === 'pointermove' && t && Math.hypot(e.movementX || 0, e.movementY || 0) < 6) return; clear_(); }));
+  el.addEventListener('click', (e) => { if (fired) { e.stopPropagation(); e.preventDefault(); fired = false; } }, true);
+  el.addEventListener('contextmenu', (e) => e.preventDefault());
+  return el;
+}
+
+// ---- progress ring ----
+// Returns a .ring element; the fill circle has class "fill" and is animated with motion.fill(el, pct, {axis:'ring', key}).
+export function ring({ size = 120, stroke = 10, pct = 0, color = 'var(--accent)', track, children, cls = '' } = {}) {
+  const r = (size - stroke) / 2, C = 2 * Math.PI * r;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', `0 0 ${size} ${size}`); svg.setAttribute('aria-hidden', 'true');
+  const mk = (cl) => { const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); c.setAttribute('cx', size / 2); c.setAttribute('cy', size / 2); c.setAttribute('r', r); c.setAttribute('stroke-width', stroke); c.setAttribute('class', cl); return c; };
+  const t = mk('track'); if (track) t.style.stroke = track;
+  const f = mk('fill'); f.style.stroke = color; f.setAttribute('stroke-dasharray', C.toFixed(2)); f.setAttribute('stroke-dashoffset', (C * (1 - Math.max(0, Math.min(100, pct)) / 100)).toFixed(2));
+  svg.append(t, f);
+  const el = h('div', { class: 'ring ' + cls, style: { width: size + 'px', height: size + 'px' } }, svg, h('div', { class: 'ring-in' }, children));
+  el.fillEl = f;
+  return el;
+}
+
+// ---- display number with unit ----
+export function hero(num, unit, { size = 'lg', cls = '' } = {}) { return h('div', { class: `num-${size} ${cls}` }, h('span', null, num), unit ? h('small', null, unit) : null); }
+
+// ---- quick-log counter tile ----
+// Tap the tile = +1 (onAdd). When count > 0 a small minus button sits top-left (onRemove). Long-press opens the entries (onOpen).
+export function counterTile({ cls = '', ico, label, count = 0, sub, bad = false, onAdd, onRemove, onOpen, under, extra = '' }) {
+  const b = h('button', { class: 'qt ' + (bad ? 'over ' : '') + extra, 'aria-label': `${label}${count ? `, ${count} today` : ''}. Tap to add one.` },
+    under || null,
+    count > 0 && onRemove ? h('span', { class: 'minus', role: 'button', 'aria-label': `Remove one ${label}`, onClick: (e) => { e.stopPropagation(); e.preventDefault(); haptic('warn'); onRemove(e); } }, icon('minus', 14)) : null,
+    count > 0 ? h('span', { class: 'count' + (bad ? ' bad' : '') }, String(count)) : null,
+    h('span', { class: 'well ' + cls }, icon(ico)), h('span', { class: 'lbl' }, label), sub ? h('span', { class: 'sub' }, sub) : null);
+  b.addEventListener('click', (e) => { if (e.target.closest('.minus')) return; onAdd && onAdd(e); });
+  if (onOpen) longPress(b, onOpen);
+  return b;
+}
 
 // ---- formatting ----
 export const fmt = (n, d = 0) => (n == null || isNaN(n) ? '–' : (+n).toLocaleString('en-IN', { maximumFractionDigits: d, minimumFractionDigits: 0 }));

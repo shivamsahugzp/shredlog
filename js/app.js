@@ -153,8 +153,9 @@ function watchPRs() {
 }
 
 export function applyTheme() {
-  const t = state.settings.theme || 'auto';
+  const t = state.settings.theme || 'auto', a = state.settings.accent || 'haldi';
   if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t);
+  if (a === 'haldi') document.documentElement.removeAttribute('data-accent'); else document.documentElement.setAttribute('data-accent', a);
 }
 
 function registerSW() {

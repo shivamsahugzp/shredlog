@@ -173,7 +173,7 @@ export function waterMl(key) { return habitEntries(key, 'water').reduce((a, h) =
 export const isChai = (e) => /^(chai|tea|black_tea|green_tea|masala_chai|kadak|cutting)/.test(e.foodId || '') || /\b(chai|tea)\b/i.test(e.name || '');
 export const isCoffee = (e) => /coffee/.test(e.foodId || '') || /coffee/i.test(e.name || '');
 export function chaiCount(key) { return (dayIfAny(key)?.food || []).filter(isChai).length; }
-export function coffeeCount(key) { return (dayIfAny(key)?.food || []).filter(isCoffee).length; }
+export function coffeeCount(key) { return (dayIfAny(key)?.food || []).filter(isCoffee).length + habitCount(key, 'coffee'); }
 
 // ---- check-ins & symptoms ----
 export function setCheckin(key, patch) { day(key).checkin = { ...(day(key).checkin || {}), ts: Date.now(), ...patch }; commit('checkin'); }

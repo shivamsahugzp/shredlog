@@ -7,6 +7,20 @@ const canAnimate = () => !prefersReducedMotion() && typeof Element !== 'undefine
 
 export const EASE_OUT = 'cubic-bezier(.22,1,.36,1)';
 export const EASE_SPRING = 'cubic-bezier(.2,.9,.25,1.15)';
+export const EASE_IN = 'cubic-bezier(.4,0,1,1)';
+export const EASE_SHEET = 'cubic-bezier(.32,.72,0,1)'; // Vaul's drawer curve
+// Real spring easing as a CSS linear() curve (Safari 17.2+, Chrome 113+). duration in s, bounce 0..1. Falls back to EASE_SPRING.
+// Settles in about 2x `d`, so use that as the transition/animation duration.
+export function springEase(d = 0.5, b = 0.2, n = 40) {
+  try { if (typeof CSS === 'undefined' || !CSS.supports('transition-timing-function', 'linear(0, 1)')) return EASE_SPRING; } catch (e) { return EASE_SPRING; }
+  const w = 2 * Math.PI / d, z = Math.min(0.99, 1 - b), wd = w * Math.sqrt(1 - z * z), T = 2 * d;
+  const f = (t) => 1 - Math.exp(-z * w * t) * (Math.cos(wd * t) + (z * w / wd) * Math.sin(wd * t));
+  return `linear(${Array.from({ length: n + 1 }, (_, i) => (i === n ? 1 : +f((T * i) / n).toFixed(4))).join(',')})`;
+}
+export const SPRING_SOFT = springEase(0.4, 0.15); // toggles, thumbs, chips (barely bouncy); duration 800 ms
+export const SPRING_POP = springEase(0.5, 0.3);   // PR / goal pops only (noticeable bounce); duration 1000 ms
+// Durations (ms): micro taps, element enters, hero moments.
+export const DUR = { micro: 150, enter: 260, hero: 520 };
 
 // Last painted value per key. Views rebuild their DOM on every state change, so this is what lets a number
 // tick from its previous value instead of replaying from zero, and what makes "first paint only" possible.
@@ -126,6 +140,77 @@ export function celebrate(anchorEl, { kind = 'pr', count = 10 } = {}) {
   }
   document.body.append(box);
   setTimeout(() => box.remove(), 1200);
+}
+
+
+// ---- odometer: digits roll up/down like a mechanical counter (NumberFlow-style), only the digits that changed move ----
+// el is a container; call again with a new value to animate. Uses the key memory so a redraw continues from the last value.
+export function odometer(el, value, { fmt = (v) => String(Math.round(v)), key } = {}) {
+  if (!el) return;
+  const text = fmt(value);
+  const prevText = key != null && mem.has('odo:' + key) ? mem.get('odo:' + key) : el.dataset.odo;
+  if (key != null) mem.set('odo:' + key, text);
+  el.dataset.odo = text;
+  el.classList.add('mo-odo');
+  if (!canAnimate() || prevText == null || prevText === text) { el.textContent = ''; for (const ch of text) el.append(digit(ch)); return; }
+  // align right: compare from the end so "1,530" -> "1,480" only rolls the changed digits
+  const a = [...prevText], b = [...text];
+  el.textContent = '';
+  const n = Math.max(a.length, b.length);
+  for (let i = 0; i < b.length; i++) {
+    const ch = b[i], old = a[i - (b.length - a.length)];
+    const d = digit(ch);
+    if (old !== ch) {
+      d.classList.add('in');
+      if (old != null) { const o = digit(old); o.classList.add('out'); const wrap = document.createElement('span'); wrap.className = 'd'; wrap.style.position = 'relative'; wrap.append(d, o); d.classList.remove('d'); d.style.display = 'inline-block'; el.append(wrap); setTimeout(() => o.remove(), 320); continue; }
+    }
+    el.append(d);
+  }
+  void n;
+}
+function digit(ch) { const s = document.createElement('span'); s.className = 'd'; s.textContent = ch; return s; }
+
+// ---- swipe a row sideways to reveal a destructive action (iOS Mail style) ----
+// row: the element to wrap in place. onAction fires on a full swipe or a tap on the revealed button. Returns a teardown.
+const swipeOpen = new Set();
+if (typeof document !== 'undefined') document.addEventListener('pointerdown', (e) => { for (const fn of [...swipeOpen]) fn(e); }, { passive: true });
+export function swipeReveal(row, { label = 'Delete', onAction, width = 96 } = {}) {
+  if (!row || !row.parentNode) return () => {};
+  const wrap = document.createElement('div'); wrap.className = 'mo-swipe';
+  const act = document.createElement('button'); act.className = 'mo-swipe-act'; act.type = 'button'; act.textContent = label;
+  const body = document.createElement('div'); body.className = 'mo-swipe-body';
+  row.parentNode.insertBefore(wrap, row); body.append(row); wrap.append(act, body);
+  let id = null, x0 = 0, y0 = 0, dx = 0, open = false, locked = false, dead = false, raf = 0;
+  const paint = () => { raf = 0; body.style.transform = `translate3d(${dx}px,0,0)`; };
+  const settle = (to) => { dx = to; open = to < 0; wrap.classList.toggle('open', open); if (canAnimate()) body.style.transition = 'transform .24s cubic-bezier(.22,1,.36,1)'; body.style.transform = `translate3d(${to}px,0,0)`; setTimeout(() => { body.style.transition = ''; if (!open) wrap.classList.remove('dragging'); }, 260); };
+  const down = (e) => { if (e.pointerType === 'mouse' && e.button !== 0) return; id = e.pointerId; x0 = e.clientX; y0 = e.clientY; locked = false; dead = false; body.style.transition = ''; };
+  const move = (e) => {
+    if (e.pointerId !== id || dead) return;
+    const mx = e.clientX - x0 + (open ? -width : 0), my = e.clientY - y0;
+    if (!locked) { if (Math.abs(my) > 8 && Math.abs(my) > Math.abs(mx - (open ? -width : 0))) { dead = true; return; } if (Math.abs(mx - (open ? -width : 0)) < 8) return; locked = true; wrap.classList.add('dragging'); }
+    dx = Math.min(0, Math.max(-wrap.clientWidth, mx)); if (dx < -width) dx = -width - (-dx - width) * 0.25;
+    if (!raf) raf = requestAnimationFrame(paint);
+    e.preventDefault();
+  };
+  const up = (e) => {
+    if (e.pointerId !== id) return; id = null; if (!locked) return;
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    if (dx < -wrap.clientWidth * 0.6) { settle(-wrap.clientWidth); setTimeout(() => onAction && onAction(), 120); }
+    else if (dx < -width * 0.5) settle(-width); else settle(0);
+    body.addEventListener('click', (ev) => { ev.stopPropagation(); ev.preventDefault(); }, { capture: true, once: true });
+  };
+  body.addEventListener('pointerdown', down); body.addEventListener('pointermove', move); body.addEventListener('pointerup', up); body.addEventListener('pointercancel', up);
+  act.addEventListener('click', () => { settle(-wrap.clientWidth); setTimeout(() => onAction && onAction(), 120); });
+  // one document listener for every row: tapping anywhere else closes the open row; detached rows drop out of the set by themselves
+  const closer = (e) => { if (!wrap.isConnected) { swipeOpen.delete(closer); return; } if (open && !wrap.contains(e.target)) settle(0); };
+  swipeOpen.add(closer);
+  return () => { swipeOpen.delete(closer); body.removeEventListener('pointerdown', down); body.removeEventListener('pointermove', move); body.removeEventListener('pointerup', up); body.removeEventListener('pointercancel', up); };
+}
+
+// ---- small attention shake (wrong PIN, invalid input) ----
+export function shake(el) {
+  if (!el || !canAnimate()) return;
+  el.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }], { duration: 360, easing: 'ease-out' });
 }
 
 // ---- lists ----

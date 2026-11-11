@@ -111,3 +111,30 @@ export function weekPlans(now = new Date(), weeks = 8) {
 export function dayPlan(weekday, now = new Date(), weeks = 8) { return weekPlans(now, weeks)[weekday]; }
 /** The plan for the weekday of `date` (default: today). */
 export function todayPlan(date = new Date()) { return dayPlan(date.getDay(), date); }
+
+/**
+ * This calendar week, Monday first, with what was actually trained on each day.
+ * Each entry: { key, weekday (0 = Sunday), isToday, isFuture, trained: [groups], workouts: [ids] }.
+ * `groups` are the same exercise categories weekPlans() uses, so a trained day and a planned day colour the same way.
+ */
+export function weekThisWeek(now = new Date()) {
+  const today = dateKey(now);
+  const monday = shiftDate(today, -((now.getDay() + 6) % 7));
+  const sessions = state.workouts.map(sessionOf).filter(Boolean);
+  return Array.from({ length: 7 }, (_, i) => {
+    const key = shiftDate(monday, i), mine = sessions.filter((s) => s.date === key);
+    return { key, weekday: parseKey(key).getDay(), isToday: key === today, isFuture: key > today, trained: [...new Set(mine.flatMap((s) => s.groups))], workouts: mine.map((s) => s.id) };
+  });
+}
+
+/** Consecutive training weeks (Monday to Sunday), counted back from this week. A week that is still empty does not break the streak. */
+export function weekStreak(now = new Date()) {
+  const today = dateKey(now);
+  const monday = shiftDate(today, -((now.getDay() + 6) % 7));
+  const days = new Set(state.workouts.map(sessionOf).filter(Boolean).map((s) => s.date));
+  const has = (start) => Array.from({ length: 7 }, (_, i) => shiftDate(start, i)).some((k) => days.has(k));
+  const thisWeek = has(monday);
+  let weeks = thisWeek ? 1 : 0, start = shiftDate(monday, -7);
+  for (let i = 0; i < 260 && has(start); i++) { weeks++; start = shiftDate(start, -7); }
+  return { weeks, thisWeek };
+}
