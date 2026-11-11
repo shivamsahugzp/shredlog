@@ -6,6 +6,7 @@ import { hashPin, renderLock } from '../lock.js';
 import { aiSettingsSection } from './food-scan.js';
 import { countUp, growBars, stagger, quiet, pop, pulse } from '../motion.js';
 
+import { VERSION as BUILD, BUILT } from '../version.js';
 const APP_VERSION = '2.0';
 const ACCENTS = [{ id: 'haldi', label: 'Haldi' }, { id: 'neel', label: 'Neel' }, { id: 'pudina', label: 'Pudina' }, { id: 'sindoor', label: 'Sindoor' }];
 const THEMES = [{ id: 'auto', label: 'Auto' }, { id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }];
@@ -197,7 +198,8 @@ function build(ctx) {
 
   // ---- about ----
   const about = h('div', { class: 'card st-about' },
-    h('div', { class: 'st-about-head' }, h('div', { class: 'mark' }, 'S'), h('div', { class: 'grow' }, h('div', { class: 'st-about-name' }, 'ShredLog'), h('div', { class: 'small muted' }, `Version ${APP_VERSION}`))),
+    h('div', { class: 'st-about-head' }, h('div', { class: 'mark' }, 'S'), h('div', { class: 'grow' }, h('div', { class: 'st-about-name' }, 'ShredLog'), h('div', { class: 'small muted' }, `Version ${APP_VERSION} · build ${BUILD} · ${BUILT}`))),
+    h('button', { class: 'btn sm block st-update', style: { marginTop: '12px' }, onClick: checkForUpdate }, icon('reset', 18), 'Check for update'),
     h('p', { class: 'small ink2' }, 'Free and personal. No account, no ads, no server: your data never leaves this phone unless you export it.'),
     h('div', { class: 'st-credits' },
       h('div', { class: 'st-credit' }, h('span', { class: 'muted' }, 'Exercises'), h('span', null, 'free-exercise-db (Unlicense)')),
@@ -224,6 +226,20 @@ function build(ctx) {
     section('About', null, about));
 }
 
+// Ask the service worker for a newer build right now; if one is already downloaded, switch to it (app.js reloads on controllerchange).
+async function checkForUpdate() {
+  if (!('serviceWorker' in navigator)) return toast('Updates need the installed app');
+  toast('Checking for a newer build…');
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) return toast('Open the app from the Home Screen icon to get updates');
+    await reg.update();
+    const apply = (w) => { toast('New build found. Reloading…', { ms: 4000 }); w.postMessage('SKIP_WAITING'); };
+    if (reg.waiting) return apply(reg.waiting);
+    if (reg.installing) { reg.installing.addEventListener('statechange', (e) => { if (e.target.state === 'installed' && reg.waiting) apply(reg.waiting); }); return; }
+    toast(`You are on the latest build (${BUILD})`);
+  } catch (e) { toast('Could not check: ' + (e.message || 'no connection')); }
+}
 function storageLabel() {
   if (storage.blocked) return 'Not saving';
   const stores = (storage.ls === 'ok' ? 1 : 0) + (storage.idb === 'ok' ? 1 : 0);

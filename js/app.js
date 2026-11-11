@@ -165,11 +165,16 @@ function registerSW() {
       const nw = reg.installing; if (!nw) return;
       nw.addEventListener('statechange', () => {
         if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-          toast('Update ready', { action: 'Reload', ms: 15000, onAction: () => nw.postMessage('SKIP_WAITING') });
+          toast('Update ready', { action: 'Reload', ms: 30000, onAction: () => nw.postMessage('SKIP_WAITING') });
         }
       });
     });
+    // A build downloaded on an earlier visit but never applied: offer it straight away.
+    if (reg.waiting && navigator.serviceWorker.controller) toast('Update ready', { action: 'Reload', ms: 30000, onAction: () => reg.waiting && reg.waiting.postMessage('SKIP_WAITING') });
     setInterval(() => reg.update().catch(() => {}), 60 * 60 * 1000);
+    // Home-screen apps resume from the background without reloading, so check on every return to the foreground (at most once a minute).
+    let lastCheck = Date.now();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - lastCheck > 60 * 1000) { lastCheck = Date.now(); reg.update().catch(() => {}); } });
   }).catch((e) => console.warn('SW registration failed', e));
   // Reload only when a *new* worker replaces an old one. The very first claim must not reload: it would throw away onboarding mid-way.
   let controlled = !!navigator.serviceWorker.controller, reloading = false;
