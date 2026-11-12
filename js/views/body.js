@@ -1,4 +1,4 @@
-// Body: how you feel (symptoms, evening check-in), habits (cigarettes, chai & coffee, water, sleep, steps),
+// Body: how you feel (symptoms, evening check-in), habits (steps, cigarettes, chai & coffee, sleep, and water only when it is switched on in Settings),
 // measurements, and food-to-symptom patterns. Screen CSS: css/body.css (prefix bd-).
 //
 // Rules this file follows (docs/design.md):
@@ -6,7 +6,8 @@
 //  - First open of the session plays one orchestrated moment: glance rings fill, hero number counts, bars grow, cards stagger (max 6).
 //  - Every counter has a visible minus (removes the latest entry, Undo toast) and a list of today's entries (long-press or the list button).
 //  - Past-day logs carry a noon timestamp (metaFor) so they never reset "since last" or land at the wrong hour; times are never shown for those.
-import { state, day, dayIfAny, dateKey, setCheckin, logSymptom, removeSymptom, setRedFlags, logHabit, removeHabit, habitEntries, habitCount, habitByDate, lastHabitTs, waterMl, chaiCount, coffeeCount, setMeasurements, measurementSeries, setWeight, latestWeight, weights, lastNDays, shiftDate, commit, isChai, isCoffee } from '../state.js';
+import { state, day, dayIfAny, dateKey, setCheckin, logSymptom, removeSymptom, setRedFlags, logHabit, removeHabit, habitEntries, habitCount, habitByDate, lastHabitTs, waterMl, chaiCount, coffeeCount, setMeasurements, measurementSeries, setWeight, latestWeight, weights, lastNDays, shiftDate, commit, isChai, isCoffee, trackWater, setSteps, stepsOn } from '../state.js';
+import { stepsKcal } from '../verdict.js';
 import { cigStats } from '../calc.js';
 import { SYMPTOMS, TAG_LABELS, RED_FLAGS, symptomPatterns } from '../insights.js';
 import { h, icon, sheet, toast, stepper, ring, longPress, append, clear, fmt, fmtTime, fmtDateLabel, fmtShortDate, fmtDow, haptic } from '../ui.js';
@@ -153,28 +154,28 @@ function redFlagBanner({ today }) {
 const stepGoal = () => state.settings.stepTarget || 8000;
 const scrollTo = (id) => { const el = document.querySelector(`.bd [data-card="${id}"]`); if (el) el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' }); };
 
-// ---------- 1. Today at a glance: four rings, the first-open moment ----------
+// ---------- 1. Today at a glance: three or four rings, the first-open moment ----------
+// Water is opt-in (Settings): off by default, so the row is Steps, Sleep and Cigarettes (or Check-in).
 function glanceCard(c) {
   const { key, p, t } = c, d = dayIfAny(key) || {};
-  const glass = state.settings.glassMl || 250, wGoal = (t.water || 8) * glass, ml = waterMl(key);
   const sGoal = stepGoal(), steps = d.steps || 0;
   const sTarget = p.sleepTarget || 7.5, hrs = d.sleep > 0 ? d.sleep : 0;
   const n = habitCount(key, 'cig'), lim = t.cigLimit || 0;
   const kfmt = (v) => (v >= 1000 ? n1(v / 1000) + 'k' : String(Math.round(v)));
-  const items = [
-    { id: 'water', card: 'water', label: 'Water', raw: (ml / wGoal) * 100, color: 'var(--water)', to: ml / 1000, f: (v) => n1(v), unit: 'L' },
+  const items = [];
+  if (trackWater()) { const glass = state.settings.glassMl || 250, wGoal = (t.water || 8) * glass, ml = waterMl(key); items.push({ id: 'water', card: 'water', label: 'Water', raw: (ml / wGoal) * 100, color: 'var(--water)', to: ml / 1000, f: (v) => n1(v), unit: 'L' }); }
+  items.push(
     { id: 'steps', card: 'steps', label: 'Steps', raw: (steps / sGoal) * 100, color: 'var(--p)', to: steps, f: kfmt, unit: '' },
     { id: 'sleep', card: 'sleep', label: 'Sleep', raw: (hrs / sTarget) * 100, color: 'var(--sleep)', to: hrs, f: n1, unit: 'h' },
     p.smoker
       ? { id: 'cig', card: 'cig', label: 'Cigarettes', raw: lim ? (n / lim) * 100 : n ? 100 : 0, color: lim && n > lim ? 'var(--bad)' : lim && n >= lim * 0.8 ? 'var(--warn)' : 'var(--cig)', to: n, f: (v) => String(Math.round(v)), unit: lim ? `/${lim}` : '' }
-      : { id: 'ck', card: 'checkin', label: 'Check-in', raw: d.checkin ? 100 : 0, color: 'var(--accent)', icon: d.checkin ? 'check' : 'edit' },
-  ];
-  const card = h('div', { class: 'card bd-glance' });
+      : { id: 'ck', card: 'checkin', label: 'Check-in', raw: d.checkin ? 100 : 0, color: 'var(--accent)', icon: d.checkin ? 'check' : 'edit' });
+  const card = h('div', { class: 'card bd-glance', style: { '--n': items.length } });
   items.forEach((it, i) => {
     let center;
     if (it.icon) center = h('span', { class: 'bd-gl-n ico' }, icon(it.icon, 22));
     else { const numEl = h('span', null); center = h('span', { class: 'bd-gl-n' }, numEl, it.unit ? h('small', null, it.unit) : null); c.jobs.push(() => countUp(numEl, it.to, { key: `bd:gl:${it.id}:${key}`, ms: 700, fmt: it.f })); if (changed(`bd:glv:${it.id}:${key}`, it.to)) c.jobs.push(() => pop(center)); }
-    const r = pRing(c, { id: 'gl-' + it.id, size: 68, stroke: 7, raw: it.raw, color: it.color, children: center, delay: i * 90 });
+    const r = pRing(c, { id: 'gl-' + it.id, size: items.length > 3 ? 68 : 76, stroke: 7, raw: it.raw, color: it.color, children: center, delay: i * 90 });
     card.append(h('button', { class: 'bd-gl pressable', 'aria-label': `${it.label}. Jump to it.`, onClick: () => { haptic(); scrollTo(it.card); } }, r, h('span', { class: 'bd-gl-l' }, it.label)));
   });
   return card;
@@ -396,7 +397,7 @@ function saveCheckin(key, today, d, ck, draft, extra) {
 // ---------- 4. Habits ----------
 function habitsSection(c) {
   const stack = mk('bd-stack');
-  append(stack, [...(c.p.smoker ? cigCards(c) : []), chaiCard(c), waterCard(c), sleepCard(c), stepsCard(c)]);
+  append(stack, [stepsCard(c), ...(c.p.smoker ? cigCards(c) : []), chaiCard(c), trackWater() ? waterCard(c) : null, sleepCard(c)]);
   return sec('habits', 'Habits', stack);
 }
 
@@ -512,7 +513,10 @@ function cigCards(c) {
   const n = habitCount(key, 'cig'), beaten = habitCount(key, 'craving'), lim = t.cigLimit || 0, base = p.cigBaseline || 0, last = lastHabitTs('cig');
   const first = firstLogKey();
   const used = Object.fromEntries(Object.entries(habitByDate('cig', 30, key)).filter(([k]) => first && k >= first));
-  const cs = cigStats(used, base, p.cigCost);
+  // a day that is still running has not "saved" anything yet: it counts toward what was spent, not toward what was avoided
+  const dayOpen = key === today && new Date().getHours() < 20;
+  const cs = dayOpen ? cigStats(Object.fromEntries(Object.entries(used).filter(([k]) => k !== key)), base, p.cigCost) : cigStats(used, base, p.cigCost);
+  const spentAll = dayOpen ? cigStats(used, base, p.cigCost).moneySpent : cs.moneySpent;
   const wk = Object.entries(habitByDate('cig', 7, key)).filter(([k]) => first && k >= first).map(([, v]) => v), wkAvg = avg(wk), streak = lowerStreak(key, base);
   const free = smokeFree(key), sameRun = free >= 1 && free === streak; // same run: show smoke-free as the headline instead of "under usual"
   const label = key === today ? 'Today' : fmtDateLabel(key, today);
@@ -535,13 +539,13 @@ function cigCards(c) {
 
   const pills = [];
   if (over) pills.push(h('span', { class: 'pill bad' }, `${n - lim} over your limit`));
-  else if (base) pills.push(n < base ? h('span', { class: 'pill good' }, `${base - n} fewer than usual`) : n === base ? h('span', { class: 'pill' }, 'Same as usual') : h('span', { class: 'pill bad' }, `${n - base} more than usual`));
+  else if (base) pills.push(n < base ? h('span', { class: 'pill good' }, dayOpen ? `${base - n} under usual so far` : `${base - n} fewer than usual`) : n === base ? h('span', { class: 'pill' }, 'Same as usual') : h('span', { class: 'pill bad' }, `${n - base} more than usual`));
   if (sameRun) pills.push(h('span', { class: 'pill good' }, `Smoke-free ${free} day${free > 1 ? 's' : ''}`));
   else { if (streak) pills.push(h('span', { class: 'pill good' }, `Under usual ${streak} day${streak > 1 ? 's' : ''} running`)); if (free >= 1) pills.push(h('span', { class: 'pill good' }, `Smoke-free ${free} day${free > 1 ? 's' : ''}`)); }
 
   const tiles = [mk('bd-stat', h('div', { class: 'num-sm' }, wkAvg != null ? n1(wkAvg) : '–', h('small', null, ' a day')), h('div', { class: 'micro muted' }, base ? `7-day avg, usual ${base}` : '7-day average'),
     wkAvg != null && base ? h('span', { class: 'bd-delta ' + (wkAvg <= base ? 'good' : 'bad') }, icon(wkAvg <= base ? 'arrowDown' : 'arrowUp', 12), `${Math.abs(Math.round((1 - wkAvg / base) * 100))}%`) : null)];
-  if (p.cigCost) tiles.push(mk('bd-stat', h('div', { class: 'num-sm good' }, '₹ ', fmt(cs.moneySaved)), h('div', { class: 'micro muted' }, 'saved, 30 days')), mk('bd-stat', h('div', { class: 'num-sm' }, '₹ ', fmt(cs.moneySpent)), h('div', { class: 'micro muted' }, 'spent, 30 days')));
+  if (p.cigCost) tiles.push(mk('bd-stat', h('div', { class: 'num-sm good' }, '₹ ', fmt(cs.moneySaved)), h('div', { class: 'micro muted' }, 'saved, 30 days')), mk('bd-stat', h('div', { class: 'num-sm' }, '₹ ', fmt(spentAll)), h('div', { class: 'micro muted' }, 'spent, 30 days')));
 
   const counter = h('div', { class: 'card bd-cig' }, head('cig', 'cig', 'Cigarettes', h('button', { class: 'icon-btn plain', 'aria-label': 'Show today’s entries', onClick: () => cigEntries(c) }, icon('list'))),
       mk('bd-hero', mk('bd-hero-l', h('div', { class: 'bd-cap' }, 'Since last'), big, h('div', { class: 'small muted' }, lastTxt)), mk('bd-hero-r', ringBtn, h('div', { class: 'bd-cap center' }, label))),
@@ -714,31 +718,83 @@ function sleepCard(c) {
   return tagCard(card, 'sleep');
 }
 
-// ---- steps ----
+// ---- steps: the day's movement. Paste from the clipboard (an iPhone Shortcut puts the number there), tap a rough count, or type it. ----
+// A web app cannot read Apple Health; stepsGuideSheet() explains the Shortcut that does the reading.
+const SHORTCUT_URL = 'https://shivamsahugzp.github.io/shredlog/#today?steps=';
+const quickSteps = (goal) => [...new Set([0.5, 0.75, 1, 1.25].map((m) => Math.round((goal * m) / 500) * 500))].filter((v) => v > 0);
+
+// The first number in a piece of text ("6,543", "6543.0", "Steps: 6543"), or null when there is none or it is not a believable step count.
+export function parseSteps(text) {
+  const m = /\d[\d,]*(?:\.\d+)?/.exec(String(text == null ? '' : text));
+  if (!m) return null;
+  const n = Math.round(parseFloat(m[0].replace(/,/g, '')));
+  return Number.isFinite(n) && n >= 0 && n <= 100000 ? n : null;
+}
+
+function setStepsUndoable(key, n, msg) {
+  const prev = dayIfAny(key)?.steps ?? null;
+  setSteps(key, n); haptic('success');
+  toast(msg, { undo: () => { day(key).steps = prev; commit('habit'); } });
+}
+
+// Call this straight from a tap handler: clipboard.readText() needs the user gesture, and iOS shows its own "Paste" callout.
+export async function pasteSteps(key) {
+  if (!navigator.clipboard || !navigator.clipboard.readText) { toast('This browser cannot read the clipboard. Type the number instead.'); return false; }
+  let text;
+  try { text = await navigator.clipboard.readText(); }
+  catch (e) { toast('Could not read the clipboard. Allow paste when asked, or type the number.'); return false; }
+  const n = parseSteps(text);
+  if (n == null) { toast('No step count on the clipboard. Run your Shortcut first, then tap Paste steps.'); return false; }
+  setStepsUndoable(key, n, `Steps set to ${fmt(n)}`);
+  return true;
+}
+
 function stepsCard(c) {
-  const { key } = c;
-  const goal = stepGoal(), steps = dayIfAny(key)?.steps || 0;
-  const days = lastNDays(7, key), vals = days.map((k) => dayIfAny(k)?.steps || 0), wk = vals.filter((v) => v > 0), wkAvg = avg(wk);
-  const numEl = h('span', { class: 'num-md' });
-  const center = h('span', { class: 'bd-ring-c' }, numEl, h('small', null, `of ${fmt(goal)}`));
-  c.jobs.push(() => countUp(numEl, steps, { key: `bd:steps:${key}`, ms: 700, fmt: (v) => fmt(Math.round(v)) }));
-  if (changed(`bd:stepsv:${key}`, steps)) c.jobs.push(() => pop(center));
-  const r = pRing(c, { id: 'steps', size: 112, stroke: 10, raw: (steps / goal) * 100, color: steps >= goal ? 'var(--good)' : 'var(--p)', children: center, delay: 100 });
-  const str = strength(key, (k) => clamp((dayIfAny(k)?.steps || 0) / goal, 0, 1));
-  const card = h('div', { class: 'card bd-steps' }, head('steps', 'train', 'Steps'),
-    mk('bd-hero compact', mk('bd-ringbtn', r), mk('bd-hero-l', steps ? h('div', { class: 'strong' }, steps >= goal ? 'Goal reached' : `${fmt(goal - steps)} to go`) : h('div', { class: 'small ink2' }, 'Read today’s count from your phone’s health app.'),
-      str ? mk('bd-pillrow', h('span', { class: 'pill accent' }, `Habit strength ${str.pct}%`)) : null,
-      h('button', { class: 'btn ' + (steps ? '' : 'primary') + ' bd-enter', onClick: () => stepsSheet(key) }, icon('edit', 16), steps ? 'Edit steps' : 'Add steps'))),
-    wk.length === 0 ? null : wk.length >= 2 ? miniBars(c, { id: 'steps', days, vals, target: goal, tone: 'var(--p)', fmtV: (v) => (v ? `${fmt(v)} steps` : 'not logged'), note: `Last 7 days · average ${fmt(wkAvg)} · dashed line is your goal` })
-      : mk('bd-quiet', spot('lens', 'var(--p)'), h('p', null, 'Add your steps for a few days to see the week.')));
+  const { key, p } = c;
+  const goal = stepGoal(), d = dayIfAny(key) || {}, steps = d.steps || 0, kg = d.weight || p.weightKg || 70;
+  const days = lastNDays(7, key), vals = days.map((k) => stepsOn(k)), wk = vals.filter((v) => v > 0), wkAvg = avg(wk);
+  const pct = goal ? (steps / goal) * 100 : 0, reached = steps >= goal && steps > 0;
+  const numEl = h('span', null), pctEl = h('span', null);
+  c.jobs.push(() => { countUp(numEl, steps, { key: `bd:steps:${key}`, ms: 700, fmt: (v) => fmt(Math.round(v)) }); countUp(pctEl, Math.min(999, Math.round(pct)), { key: `bd:stepspct:${key}`, ms: 700 }); });
+  if (changed(`bd:stepsv:${key}`, steps)) c.jobs.push(() => pop(numEl));
+  const center = h('span', { class: 'bd-ring-c' }, h('span', { class: 'num-md' }, pctEl, h('small', null, '%')), h('small', null, 'of goal'));
+  const r = pRing(c, { id: 'steps', size: 100, stroke: 10, raw: pct, color: reached ? 'var(--good)' : 'var(--p)', children: center, delay: 100 });
+  const ringBtn = h('button', { class: 'bd-ringbtn pressable', 'aria-label': `${fmt(steps)} of ${fmt(goal)} steps. Edit steps and goal.`, onClick: () => stepsSheet(key) }, r);
+  const str = strength(key, (k) => clamp(stepsOn(k) / goal, 0, 1));
+  const pills = [];
+  if (!steps) pills.push(h('span', { class: 'pill' }, 'Not logged yet'));
+  else {
+    pills.push(reached ? h('span', { class: 'pill good' }, icon('check', 12), 'Goal reached') : h('span', { class: 'pill accent' }, `${fmt(goal - steps)} to go`));
+    pills.push(h('span', { class: 'pill', title: 'Estimate from your weight and a 0.75 m stride' }, icon('flame', 12), `About ${fmt(stepsKcal(steps, kg))} kcal walking`));
+  }
+  if (str) pills.push(h('span', { class: 'pill accent', title: 'Average of daily results with a 13-day half-life' }, `Habit strength ${str.pct}%`));
+  const goalBtn = h('button', { class: 'pill bd-goalpill pressable', 'aria-label': `Daily goal ${fmt(goal)} steps. Change it.`, onClick: () => stepsSheet(key) }, icon('target', 12), `Goal ${fmt(goal)}`);
+  const rough = h('div', { class: 'chips bd-qs', role: 'group', 'aria-label': 'Set a rough step count' }, quickSteps(goal).map((v) => h('button', { class: 'chip' + (steps === v ? ' on' : ''), 'aria-pressed': steps === v ? 'true' : 'false', 'aria-label': `Set steps to ${fmt(v)}`, onClick: () => { haptic(); setStepsUndoable(key, v, `Steps set to ${fmt(v)}`); } }, fmt(v))));
+  const card = h('div', { class: 'card bd-steps' }, head('steps', 'train', 'Steps', goalBtn),
+    mk('bd-steps-hero', mk('bd-steps-l', h('div', { class: 'bd-cap' }, key === c.today ? 'Today' : fmtDateLabel(key, c.today)), h('div', { class: 'num-xl bd-steps-big' }, numEl), h('div', { class: 'bd-steps-unit' }, 'steps')), ringBtn),
+    mk('bd-steps-pills', pills),
+    mk('bd-steps-act',
+      h('button', { class: 'btn primary bd-paste pressable', onClick: () => pasteSteps(key) }, icon('clipboard', 18), 'Paste steps'),
+      h('button', { class: 'btn bd-type pressable', onClick: () => stepsSheet(key) }, icon('edit', 18), 'Type it')),
+    h('div', { class: 'bd-cap bd-qs-cap' }, 'Or set a rough count'), rough,
+    wk.length ? miniBars(c, { id: 'steps', days, vals, target: goal, tone: 'var(--p)', fmtV: (v) => (v ? `${fmt(v)} steps, about ${fmt(stepsKcal(v, kg))} kcal` : 'not logged'), note: `Last 7 days · average ${fmt(wkAvg)} · dashed line is your goal` })
+      : mk('bd-quiet', spot('lens', 'var(--p)'), h('p', null, 'Paste or type today’s steps and your week shows up here.')),
+    h('button', { class: 'bd-auto pressable', onClick: () => stepsGuideSheet(key) }, h('span', { class: 'well food' }, icon('zap')),
+      mk('grow', h('b', null, 'Set up automatic steps'), h('div', { class: 'micro muted' }, 'An iPhone Shortcut copies the number for you')), icon('right', 18)));
   return tagCard(card, 'steps');
 }
 
 function stepsSheet(key) {
   const d = dayIfAny(key) || {}; let goal = stepGoal();
   const input = h('input', { type: 'number', inputmode: 'numeric', min: 0, max: 100000, placeholder: 'For example 6500', value: d.steps ?? '' });
+  const fromClip = h('button', { type: 'button', class: 'btn sm bd-clipfill', onClick: async () => {
+    if (!navigator.clipboard || !navigator.clipboard.readText) { toast('This browser cannot read the clipboard.'); return; }
+    let text; try { text = await navigator.clipboard.readText(); } catch (e) { toast('Could not read the clipboard. Allow paste when asked.'); return; }
+    const n = parseSteps(text); if (n == null) { toast('No step count on the clipboard.'); return; }
+    input.value = String(n); haptic();
+  } }, icon('clipboard', 16), 'Fill from clipboard');
   sheet({ title: 'Steps', content: h('div', { class: 'stack' },
-    numField('Steps today', input, 'Read it from your phone’s health app.'),
+    numField('Steps', input, 'Read it from the Health app, or let a Shortcut copy it for you.'), fromClip,
     numField('Daily goal', h('div', { class: 'row' }, stepper({ value: goal, min: 1000, max: 30000, step: 500, onChange: (v) => { goal = v; } }), h('span', { class: 'muted' }, 'steps')))),
   actions: (api) => [h('button', { class: 'btn', onClick: api.close }, 'Cancel'), h('button', { class: 'btn primary', onClick: () => {
     const v = parseInt(input.value, 10), prev = d.steps ?? null;
@@ -747,6 +803,24 @@ function stepsSheet(key) {
     toast('Steps saved', { undo: () => { day(key).steps = prev; commit(); } });
   } }, 'Save')] });
   setTimeout(() => { try { input.focus(); } catch (e) { /* ignore */ } }, 380);
+}
+
+// "Set up automatic steps": what the Shortcut does and how to build it. Also opened from Settings.
+export function stepsGuideSheet(key = dateKey()) {
+  const node = (ico, title, sub) => mk('bd-gnode', h('span', { class: 'well lg food' }, icon(ico, 22)), h('b', null, title), h('span', { class: 'micro muted' }, sub));
+  const flow = mk('bd-gflow', node('heart', 'Health', 'Your phone counts the steps'), icon('right', 16), node('zap', 'Shortcut', 'Reads and copies the total'), icon('right', 16), node('steps', 'ShredLog', 'Paste it in one tap'));
+  const copyUrl = () => { try { navigator.clipboard.writeText(SHORTCUT_URL).then(() => toast('Link copied'), () => toast('Could not copy. Press and hold the link to copy it.')); } catch (e) { toast('Could not copy. Press and hold the link to copy it.'); } };
+  const step = (title, body, extra, opt) => h('li', null, h('span', { class: 'bd-gn' }, ''), mk('bd-gt', h('b', null, title, opt ? h('em', { class: 'pill' }, 'Optional') : null), h('p', null, body), extra || null));
+  const list = h('ol', { class: 'bd-gsteps' },
+    step('Make an automation', 'Open Shortcuts, then Automation, New Automation, Time of Day. Pick a time like 9 pm and choose Run Immediately.'),
+    step('Read your steps', 'Add Find Health Samples: Type is Steps, Start Date is Today. Then add Calculate Statistics and choose Sum.'),
+    step('Copy the total', 'Add Copy to Clipboard. Now the number is waiting for you.'),
+    step('Open the app', 'Add Open URL with the link below and put the Sum right after “steps=”. It opens Safari, which keeps its data apart from the Home Screen icon, so skip this if you use the icon.',
+      mk('bd-gurl', h('code', null, SHORTCUT_URL), h('button', { class: 'btn sm', 'aria-label': 'Copy the link', onClick: copyUrl }, icon('copy', 16), 'Copy')), true),
+    step('Fill it in', 'Open ShredLog from its icon and tap Paste steps, here or on Today. Safari may ask you to allow paste.'));
+  [...list.children].forEach((li, i) => { li.querySelector('.bd-gn').textContent = String(i + 1); });
+  sheet({ title: 'Automatic steps', content: mk('bd-g', flow, h('div', { class: 'callout info small' }, icon('info'), h('div', null, 'A web app cannot read Apple Health. A Shortcut can, and it hands the number over.')), list),
+    actions: (api) => [h('button', { class: 'btn', onClick: api.close }, 'Close'), h('button', { class: 'btn primary', onClick: () => { pasteSteps(key).then((ok) => { if (ok) api.close(); }); } }, icon('clipboard', 18), 'Paste steps now')] });
 }
 
 // ---------- 5. Measurements ----------

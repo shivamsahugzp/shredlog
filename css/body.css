@@ -53,7 +53,7 @@
 .bd-quiet .bd-spot { width: 56px; height: 56px; }
 
 /* ---------- glance rings ---------- */
-.bd-glance { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 14px 8px 10px; margin-top: 12px; }
+.bd-glance { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: 4px; padding: 14px 8px 10px; margin-top: 12px; }
 .bd-gl { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; padding: 2px 0 4px; border-radius: var(--r-md); }
 .bd-gl .ring-in { width: 100%; }
 .bd-gl-n { display: inline-flex; align-items: baseline; justify-content: center; gap: 1px; font: 800 17px/1 var(--font); font-stretch: var(--wdth-num); letter-spacing: -0.03em; }
@@ -289,8 +289,44 @@
 .bd-sl-in .stepper input { width: 62px; height: 46px; }
 .bd-save { flex: 1; min-width: 0; }
 
-/* steps */
-.bd-enter { margin-top: 12px; min-height: 44px; }
+/* steps: the main daily-movement card */
+.bd-steps-hero { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.bd-steps-l { min-width: 0; flex: 1; }
+.bd-steps-big { font-size: 52px; margin: 6px 0 4px; white-space: nowrap; }
+.bd-steps-unit { font-size: 13px; font-weight: 650; color: var(--muted); }
+.bd-steps-pills { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.bd-steps-pills .pill { white-space: normal; }
+.bd-goalpill { position: relative; flex: none; border: 0; }
+.bd-goalpill::before { content: ''; position: absolute; inset: -9px -6px; }
+.bd-steps-act { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 14px; }
+.bd-steps-act .btn { min-height: 48px; border-radius: 16px; white-space: nowrap; }
+.bd-qs-cap { margin-top: 14px; }
+.bd-qs { margin-top: 6px; }
+.bd-qs .chip { min-height: 44px; font-weight: 750; font-stretch: var(--wdth-num); }
+.bd-auto { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 14px; padding: 10px 12px; min-height: 60px; border-radius: var(--r-md); background: var(--card-2); text-align: left; color: inherit; }
+.bd-auto .grow { min-width: 0; }
+.bd-auto b { font-size: 15px; }
+.bd-auto > svg:last-child { color: var(--muted); flex: none; }
+.bd-clipfill { align-self: flex-start; }
+
+/* steps guide sheet (also opened from Settings) */
+.bd-g { display: flex; flex-direction: column; gap: 16px; }
+.bd-gflow { display: grid; grid-template-columns: minmax(0, 1fr) 16px minmax(0, 1fr) 16px minmax(0, 1fr); align-items: center; gap: 2px; }
+.bd-gflow > svg { justify-self: center; color: var(--muted); }
+.bd-gnode { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; padding: 12px 4px 10px; border-radius: var(--r-md); background: var(--card-2); text-align: center; }
+.bd-gnode b { font-size: 14px; }
+.bd-gnode .micro { line-height: 1.25; }
+.bd-gsteps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.bd-gsteps li { position: relative; display: flex; align-items: flex-start; gap: 12px; }
+.bd-gsteps li:not(:last-child)::before { content: ''; position: absolute; left: 15px; top: 34px; bottom: -16px; width: 2px; border-radius: 1px; background: var(--line-2); }
+.bd-gn { position: relative; display: grid; place-items: center; width: 32px; height: 32px; flex: none; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font: 800 15px/1 var(--font); font-stretch: var(--wdth-num); }
+.bd-gt { flex: 1; min-width: 0; padding-top: 4px; }
+.bd-gt b { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 15px; }
+.bd-gt .pill { font-style: normal; padding: 2px 8px; font-size: 11px; }
+.bd-gt p { margin: 2px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.bd-gurl { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 6px 6px 6px 10px; border-radius: var(--r-sm); background: var(--card-2); }
+.bd-gurl code { flex: 1; min-width: 0; font: 600 12px/1.4 ui-monospace, 'SF Mono', Menlo, monospace; color: var(--ink); word-break: break-all; -webkit-user-select: all; user-select: all; }
+.bd-gurl .btn { flex: none; }
 
 /* entries sheet */
 .bd-ent { display: flex; flex-direction: column; }
@@ -337,6 +373,8 @@
   .bd-glance { padding-left: 4px; padding-right: 4px; }
   .bd-hero { gap: 10px; }
   .bd-since-num { font-size: 36px; }
+  .bd-steps-big { font-size: 46px; }
+  .bd-gnode { padding-left: 2px; padding-right: 2px; }
   .bd-add { padding: 0 10px; font-size: 14px; }
   .bd-add.water { font-size: 13px; padding: 0 6px; }
 }

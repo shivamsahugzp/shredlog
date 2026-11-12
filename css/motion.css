@@ -98,6 +98,13 @@ body:has(#tabbar .mo-rest:not([hidden])) .mo-sticky { bottom: calc(var(--tab-h) 
   .lock-dots i { transition: background .12s ease, transform .15s cubic-bezier(.3, 1.6, .5, 1); }
   .lock-dots i.on { transform: scale(1.15); }
 
+  /* icons: the active tab's solid glyph springs in (the pill slides, the glyph pops); the set tick and the success toast tick grow out of their foot */
+  @keyframes mo-tab-spring { 0% { transform: scale(.5) translateY(3px); } 45% { transform: scale(1.2) translateY(-3px); } 72% { transform: scale(.94) translateY(0); } 100% { transform: scale(1) translateY(-1px); } }
+  #tabbar button.mo-popin .tb-ico .ph-on { animation: mo-tab-spring .46s ease-out; }
+  #tabbar button.mo-popin .tb-ico .ph-off { animation: none; }
+  @keyframes mo-tick { 0% { transform: scale(.2) rotate(-14deg); opacity: 0; } 55% { transform: scale(1.22) rotate(2deg); opacity: 1; } 100% { transform: none; opacity: 1; } }
+  .set-row .done.on svg, .toast .ok svg { animation: mo-tick .34s cubic-bezier(.2, .9, .25, 1.15) backwards; }
+
   /* odometer */
   @keyframes mo-odo-in { from { transform: translateY(70%); opacity: 0; } to { transform: none; opacity: 1; } }
   @keyframes mo-odo-out { from { transform: none; opacity: 1; } to { transform: translateY(-70%); opacity: 0; } }

@@ -1,6 +1,8 @@
 // Progress: four sub-views (Weight, Food, Training, Habits) behind a sticky segmented nav.
+// Verdicts (js/verdict.js) surface here: an Energy card (in vs out) on Weight and Food, session grades and a week summary on Training, steps on Habits.
 // All insight logic still comes from insights.js / calc.js; this file only lays it out.
-import { state, dayIfAny, dayTotals, intakeByDate, weights, lastNDays, shiftDate, parseKey, dateKey, setTargets, exerciseHistory, bestFor, findExercise, habitByDate, habitCount, chaiCount, waterMl } from '../state.js';
+import { state, dayIfAny, dayTotals, intakeByDate, weights, lastNDays, shiftDate, parseKey, dateKey, setTargets, exerciseHistory, bestFor, findExercise, habitByDate, habitCount, chaiCount, waterMl, trackWater, stepsOn } from '../state.js';
+import { dayVerdict, sessionVerdict, weekVerdict, stepsKcal } from '../verdict.js';
 import { adaptiveTdee, trendWeights, tdee, GOALS, bmi, e1rm, workoutVolume, cigStats } from '../calc.js';
 import { weightInsight, nutritionGaps, budgetProtein, volumeByGroup, volumeStatus, recoveryByGroup, deloadAdvice, suggestDay, nextSuggestion } from '../insights.js';
 import { lineChart, barChart, stackedBarChart, legend, sparkline } from '../charts.js';
@@ -56,6 +58,12 @@ function grow(root, intro) {
     if (isNaN(pct)) return;
     if (intro) remember(key, 0);
     fill(el, pct, { key, delay: Math.min(i * 35, 280), ms: 520 });
+  });
+  root.querySelectorAll('[data-growy]').forEach((el, i) => {
+    const key = `pg:${sub}:y${i}`, pct = parseFloat(el.style.height);
+    if (isNaN(pct)) return;
+    if (intro) remember(key, 0);
+    fill(el, pct, { key, axis: 'y', delay: Math.min(i * 30, 240), ms: 480 });
   });
   if (!intro || !on) return;
   root.querySelectorAll('[data-sweep]').forEach((el, i) => {
@@ -122,7 +130,7 @@ function comeBackCard(days) {
 function weightView(c) {
   const ws = weights();
   if (!ws.length) return h('div', { class: 'card' }, emptyState('No weigh-ins yet', 'Weigh in 3 times a week, same scale, same time. The trend line needs it.', h('button', { class: 'btn sm primary', onClick: () => c.ctx.go('today') }, 'Go to Today'), { ico: 'scale' }));
-  return [safe(weightHero, c, ws), rangeBar(c.redraw), safe(trendCard, c, ws), safe(statTiles, c), safe(bmiCard, c, ws), safe(energySection, c)];
+  return [safe(weightHero, c, ws), rangeBar(c.redraw), safe(trendCard, c, ws), safe(statTiles, c), safe(energyCard, c), safe(bmiCard, c, ws), safe(energySection, c)];
 }
 
 function nearestWeight(ws, key, tol, skip) {
@@ -242,6 +250,32 @@ function bmiCard(c, ws) {
     h('p', { class: 'pg-note' }, 'South Asian bodies carry more fat at the same BMI, so the healthy range ends at 23, not 25.'));
 }
 
+// ---------- energy in and out (verdict.js dayVerdict, averaged over the range) ----------
+// "Out" is an estimate: resting burn from the profile formula, walking from steps, training from logged sessions.
+// Today is left out (it is still being eaten), and so are partial days.
+function energyCard(c) {
+  const days = c.keys.map((k) => dayVerdict(k)).filter((d) => d.items && !d.partial && d.key !== c.today);
+  if (!days.length) return null;
+  const n = days.length, mean = (f) => Math.round(days.reduce((a, d) => a + f(d), 0) / n);
+  const inn = mean((d) => d.intake), rest = mean((d) => d.burn.resting), walk = mean((d) => d.burn.steps), train = mean((d) => d.burn.workouts);
+  const out = rest + walk + train, net = inn - out, max = Math.max(inn, out, 1), dir = goalDir(c.p);
+  const good = dir === 0 ? Math.abs(net) <= 200 : dir == null ? null : dir < 0 ? net < 0 : net > 0;
+  const sign = net < 0 ? MINUS : net > 0 ? '+' : '';
+  const netEl = h('span', null, `${sign}${fmt(Math.abs(net))}`);
+  const w = (v) => (v / max * 100) + '%';
+  const seg = (v, color) => (v > 0 ? h('span', { style: { width: w(v), background: color } }) : null);
+  const row = (label, value, ...segs) => h('div', { class: 'pg-en-row' }, h('span', { class: 'pg-en-l' }, label), h('div', { class: 'pg-en-track' }, h('div', { class: 'pg-en-bar', 'data-sweep': '' }, segs)), h('b', null, fmt(value)));
+  jobs.push(() => countUp(netEl, Math.abs(net), { key: 'pg:en:net', fmt: (v) => `${sign}${fmt(Math.round(v))}` }));
+  return h('div', { class: 'card pg-energy' },
+    cap2('Energy', `daily average of ${n} logged day${n === 1 ? '' : 's'}`),
+    h('div', { class: 'pg-en-top' },
+      h('div', { class: 'num-lg' }, netEl, h('small', null, 'kcal net a day')),
+      pill(good == null ? '' : good ? 'good' : 'warn', icon(net < 0 ? 'arrowDown' : 'arrowUp', 12), net === 0 ? 'Even' : net < 0 ? 'Deficit' : 'Surplus')),
+    h('div', { class: 'pg-en-rows' }, row('In', inn, seg(inn, 'var(--c)')), row('Out', out, seg(rest, 'var(--muted)'), seg(walk, 'var(--p)'), seg(train, 'var(--accent)'))),
+    legend([{ label: 'Resting', color: 'var(--muted)', value: fmt(rest) }, walk > 0 ? { label: 'Walking', color: 'var(--p)', value: fmt(walk) } : null, train > 0 ? { label: 'Training', color: 'var(--accent)', value: fmt(train) } : null].filter(Boolean)),
+    note(`Out is an estimate: resting from your profile, walking from your steps${walk > 0 ? '' : ' (none logged, so it is left out)'}, training from your logged sessions. Today and partial days are left out.`));
+}
+
 // ---------- energy balance ----------
 function energySection(c) {
   const ws = weights(), intake = intakeByDate(28, c.today);
@@ -296,9 +330,12 @@ function energyNote(c, ws, intake, res) {
 // =====================================================================================================
 function foodView(c) {
   const tot = Object.fromEntries(c.keys.map((k) => [k, dayTotals(k)]));
-  const logged = c.keys.filter((k) => dayIfAny(k)?.food?.length);
-  if (!logged.length) return h('div', { class: 'card' }, emptyState('No meals logged in this range', 'Log food on Today and the calorie and protein charts fill in.', h('button', { class: 'btn sm primary', onClick: () => c.ctx.go('food') }, 'Open Food'), { ico: 'bowl' }));
-  return [safe(foodHero, c, tot, logged), rangeBar(c.redraw), safe(intakeCards, c, tot, logged), safe(weekBudget, c), safe(splitCard, c, tot, logged), safe(nutrientSection, c)].flat().concat(safe(budgetSection) || []);
+  const all = c.keys.filter((k) => dayIfAny(k)?.food?.length);
+  // Today is still being filled in: until the evening it stays out of the averages and protein-day counts (as the Energy card already does)
+  const settled = all.filter((k) => !(k === c.today && new Date().getHours() < 20));
+  const logged = settled.length ? settled : all;
+  if (!all.length) return h('div', { class: 'card' }, emptyState('No meals logged in this range', 'Log food on Today and the calorie and protein charts fill in.', h('button', { class: 'btn sm primary', onClick: () => c.ctx.go('food') }, 'Open Food'), { ico: 'bowl' }));
+  return [safe(foodHero, c, tot, logged), rangeBar(c.redraw), safe(energyCard, c), safe(intakeCards, c, tot, logged), safe(weekBudget, c), safe(splitCard, c, tot, logged), safe(nutrientSection, c)].flat().concat(safe(budgetSection) || []);
 }
 
 function ringStat(label, value, targetV, unit, color, key) {
@@ -469,7 +506,49 @@ const kFmt = (v) => (v >= 1000 ? `${+(v / 1000).toFixed(1)}k` : String(Math.roun
 function trainView(c) {
   if (!state.workouts.length) return h('div', { class: 'card' }, emptyState('No workouts yet', 'Finish one session on Train and your weekly volume, records and strength trend show up here.', h('button', { class: 'btn sm primary', onClick: () => c.ctx.go('train') }, 'Go to Train'), { ico: 'dumbbell' }));
   const vols = [5, 4, 3, 2, 1, 0].map((i) => ({ label: i ? `W-${i}` : 'This wk', vol: volumeByGroup(lastNDays(7, shiftDate(c.today, -7 * i))) }));
-  return [safe(trainHero, c), safe(volumeCard, vols), safe(groupsCard, c, vols[5].vol), safe(loadCard, c), safe(nextCard, c), safe(prCard), safe(e1rmCards)];
+  return [safe(trainHero, c), safe(weekCard, c), safe(sessionsSection), safe(volumeCard, vols), safe(groupsCard, c, vols[5].vol), safe(loadCard, c), safe(nextCard, c), safe(prCard), safe(e1rmCards)];
+}
+
+// ---------- this week + recent sessions (verdict.js) ----------
+const GRADE = { strong: ['good', 'check', 'Strong'], solid: ['accent', 'star', 'Solid'], light: ['warn', 'minus', 'Light'] };
+
+// Day scores for the last 7 days (protein, calories, training, steps) plus the week's headline numbers.
+function weekCard(c) {
+  const wv = weekVerdict(c.today);
+  const cols = wv.days.map((d, i) => {
+    const has = d.items || d.sessions.length || d.steps, tone = d.score >= 70 ? 'hi' : d.score >= 45 ? 'mid' : 'lo';
+    return h('div', { class: 'pg-wk-col' + (d.key === c.today ? ' now' : ''), role: 'img', 'aria-label': `${fmtDateLabel(d.key, c.today)}: ${has ? `day score ${d.score} of 100` : 'nothing logged'}` },
+      h('span', { class: 'pg-wk-track' }, h('b', { style: { bottom: has ? `calc(${Math.max(4, d.score)}% + 4px)` : '0' } }, has ? String(d.score) : '–'), has ? h('i', { class: tone, 'data-growy': '', style: { height: Math.max(4, d.score) + '%' } }) : null), h('span', { class: 'pg-wk-d' }, fmtDow(d.key)[0]));
+  });
+  const stat = (key, to, unit, label, sub) => { const el = h('span', null, String(to)); jobs.push(() => countUp(el, to, { key: 'pg:wk:' + key, ms: 500 })); return h('div', { class: 'pg-wk-stat' }, h('div', { class: 'num-md' }, el, unit ? h('small', null, unit) : null), h('div', { class: 'strong small' }, label), h('div', { class: 'micro muted' }, sub)); };
+  return h('div', { class: 'card pg-week7card' },
+    cap2('This week', 'day score, last 7 days'),
+    h('div', { class: 'pg-wk', 'data-wk': '' }, cols),
+    h('div', { class: 'pg-wk-stats' },
+      stat('s', wv.sessions, '', 'Sessions', 'in 7 days'),
+      stat('a', wv.avgScore, '/100', 'Day score', 'average of 7 days'),
+      stat('p', wv.proteinDays, wv.loggedDays ? `/${wv.loggedDays}` : '', 'Protein', 'days on target')),
+    note('Day score: protein 35, calories near target 30, training 25, steps 10.'));
+}
+
+function sessionRow(w) {
+  const v = safe(sessionVerdict, w);
+  if (!v) return null;
+  const [tone, ico, word] = GRADE[v.grade] || GRADE.solid, st = v.stats, k = dateKey(new Date(w.start));
+  const r = ring({ size: 48, stroke: 5, pct: v.score, color: tone === 'accent' ? 'var(--accent)' : `var(--${tone})`, children: h('span', { class: 'pg-ses-n' }, String(v.score)) });
+  jobs.push(() => fill(r.fillEl, v.score, { axis: 'ring', key: 'pg:ses:' + w.id, ms: 700 }));
+  const improve = v.improve[0], win = v.wins[0], line = improve || win;
+  return h('div', { class: 'pg-ses' },
+    h('div', { class: 'pg-ses-top' }, r,
+      h('div', { class: 'grow pg-ses-main' }, h('b', { class: 'ellipsis' }, w.name || 'Workout'), h('div', { class: 'micro muted ellipsis' }, `${fmtShortDate(k)} · ${st.sets} sets${st.volume ? ` · ${kFmt(st.volume)} kg` : ''}`)),
+      pill(tone, icon(ico, 12), word)),
+    line ? h('div', { class: 'pg-ses-line ' + (improve ? 'imp' : 'win') }, icon(improve ? 'target' : 'check', 14), h('span', null, line)) : null);
+}
+
+function sessionsSection() {
+  const rows = [...state.workouts].sort((a, b) => b.start - a.start).slice(0, 6).map(sessionRow).filter(Boolean);
+  if (!rows.length) return null;
+  return section('Recent sessions', h('div', { class: 'card pad-s pg-ses-list' }, rows, note('Score out of 100 from completion, volume vs last time, records and rep ranges. Under each: the top thing to fix, or the best win.')));
 }
 
 function trainHero(c) {
@@ -578,18 +657,41 @@ function e1rmCards() {
 // =====================================================================================================
 // HABITS
 // =====================================================================================================
+// Steps: 7-day average, best day in the range, walking burn, and a bar per day against the goal. Logging lives on Body.
+function stepsCard(c) {
+  const goal = state.settings.stepTarget || 8000, win = lastNDays(7, c.today), before = lastNDays(7, shiftDate(c.today, -7));
+  const got = (ks) => ks.filter((k) => stepsOn(k) > 0);
+  const inRange = got(c.keys);
+  if (!inRange.length && !got(win).length) return h('div', { class: 'card' }, emptyState('No steps yet', 'Paste or type them on Body. A Shortcut can copy them from the Health app for you.', h('button', { class: 'btn sm primary', onClick: () => c.ctx.go('body') }, 'Go to Body'), { ico: 'steps' }));
+  const w7 = got(win), avg7 = avg(w7.map(stepsOn)), prev = avg(got(before).map(stepsOn)), arrow = arrowFor(avg7, prev, 'higher');
+  const best = inRange.reduce((b, k) => (!b || stepsOn(k) > stepsOn(b) ? k : b), null);
+  const kcal = w7.length ? Math.round(avg(w7.map((k) => stepsKcal(stepsOn(k), dayIfAny(k)?.weight || c.p.weightKg)))) : null;
+  const k = (v) => (v >= 1000 ? `${+(v / 1000).toFixed(1)}k` : String(Math.round(v)));
+  const stat = (id, label, to, unit, sub, extra) => { const el = h('span', null, to == null ? '–' : fmt(to)); if (to != null) jobs.push(() => countUp(el, to, { key: 'pg:st:' + id, fmt: (v) => fmt(Math.round(v)), ms: 500 })); return h('div', { class: 'pg-sstat' }, h('div', { class: 'micro muted' }, label), h('div', { class: 'num-md' }, el, unit ? h('small', null, unit) : null), h('div', { class: 'micro muted ellipsis' }, sub), extra || null); };
+  const span = Math.min(rangeDays, 30), keys = lastNDays(span, c.today);
+  return h('div', { class: 'card pg-steps' },
+    cap2('Steps', `last ${span} days`),
+    h('div', { class: 'pg-sstats' },
+      stat('avg', '7-day avg', avg7 == null ? null : Math.round(avg7), '', avg7 == null ? 'no steps this week' : `goal ${fmt(goal)}`),
+      stat('best', 'Best day', best ? stepsOn(best) : null, '', best ? fmtShortDate(best) : 'none yet'),
+      stat('kcal', 'Walking', kcal, 'kcal', 'a day')),
+    arrow ? h('div', { class: 'pg-pills' }, h('span', { class: 'pg-arrow ' + arrow[1] }, arrow[0], arrow[3] ? h('small', null, arrow[3]) : null), h('span', { class: 'small muted' }, 'vs the 7 days before')) : null,
+    barChart({ bars: keys.map((d) => ({ label: fmtShortDate(d), value: stepsOn(d), hl: d === c.today, color: stepsOn(d) >= goal ? 'var(--good)' : null, tip: `${fmtShortDate(d)}: ${stepsOn(d) ? fmt(stepsOn(d)) + ' steps' : 'not logged'}` })), target: goal, targetLabel: `Goal ${k(goal)}`, height: 140, color: 'var(--p)', fmtY: k, label: 'Steps per day' }),
+    note('Green bars reached the goal. Walking burn uses your weight and a 0.75 m stride, so treat it as a guide.'));
+}
+
 function habitsView(c) {
   const active = (k) => { const d = dayIfAny(k); return !!d && !!(d.food.length || d.habits.length || d.weight || d.sleep); };
-  const glass = state.settings.glassMl || 250;
+  const water = trackWater(), glass = state.settings.glassMl || 250;
   const win = (end) => lastNDays(7, end), prevEnd = shiftDate(c.today, -7);
   const mean = (end, fn, onlyActive = true) => avg(win(end).filter((k) => !onlyActive || active(k)).map(fn).filter((v) => v != null));
   const defs = [
     c.p.smoker ? { id: 'cig', ico: 'cig', cls: 'cig', color: 'var(--cig)', label: 'Cigarettes / day', fn: (k) => habitCount(k, 'cig'), better: 'lower', unit: '', target: c.t.cigLimit ? `limit ${c.t.cigLimit}` : '', dec: 1 } : null,
     { id: 'chai', ico: 'cup', cls: 'chai', color: 'var(--chai)', label: 'Chai / day', fn: chaiCount, better: null, unit: 'cups', target: c.p.chaiCups ? `usual ${c.p.chaiCups}` : '', dec: 1 },
-    { id: 'water', ico: 'drop', cls: 'water', color: 'var(--water)', label: 'Water / day', fn: (k) => waterMl(k) / glass, better: 'higher', unit: 'glasses', target: c.t.water ? `target ${c.t.water}` : '', dec: 1 },
+    water ? { id: 'water', ico: 'drop', cls: 'water', color: 'var(--water)', label: 'Water / day', fn: (k) => waterMl(k) / glass, better: 'higher', unit: 'glasses', target: c.t.water ? `target ${c.t.water}` : '', dec: 1 } : null,
     { id: 'sleep', ico: 'moon', cls: 'sleep', color: 'var(--sleep)', label: 'Sleep / night', fn: (k) => dayIfAny(k)?.sleep ?? null, better: 'higher', unit: 'h', target: c.p.sleepTarget ? `target ${c.p.sleepTarget} h` : '', dec: 1, any: true },
   ].filter(Boolean);
-  if (!lastNDays(14, c.today).some((k) => habitCount(k, 'cig') || waterMl(k) || chaiCount(k) || dayIfAny(k)?.sleep)) return h('div', { class: 'card' }, emptyState('No habits logged yet', 'Tap chai, water or cigarettes on Today and the trends show up here.', h('button', { class: 'btn sm primary', onClick: () => c.ctx.go('today') }, 'Go to Today'), { ico: 'cup' }));
+  if (!lastNDays(14, c.today).some((k) => habitCount(k, 'cig') || (water && waterMl(k)) || chaiCount(k) || dayIfAny(k)?.sleep || stepsOn(k))) return h('div', { class: 'card' }, emptyState('No habits logged yet', 'Log steps, sleep or chai on Body and the trends show up here.', h('button', { class: 'btn sm primary', onClick: () => c.ctx.go('body') }, 'Go to Body'), { ico: 'cup' }));
   const sparkKeys = lastNDays(Math.min(rangeDays, 30), c.today);
   const tiles = defs.map((d) => {
     const cur = mean(c.today, d.fn, !d.any), prev = mean(prevEnd, d.fn, !d.any), arrow = arrowFor(cur, prev, d.better);
@@ -606,10 +708,13 @@ function habitsView(c) {
       sparkline({ points: pts, color: d.color, width: 120, height: 32, strokeWidth: 1.75, fluid: true }),
       h('div', { class: 'micro muted ellipsis' }, d.target || ' '));
   });
-  const els = [rangeBar(c.redraw), h('div', { class: 'tiles-2 pg-habit-tiles' }, tiles), note('Averages are the last 7 logged days; arrows compare them with the 7 before. Sparklines show the last ' + sparkKeys.length + ' days.')];
+  const els = [rangeBar(c.redraw), safe(stepsCard, c), h('div', { class: 'tiles-2 pg-habit-tiles' }, tiles), note('Averages are the last 7 logged days; arrows compare them with the 7 before. Sparklines show the last ' + sparkKeys.length + ' days.')];
   if (c.p.smoker) {
     const by = habitByDate('cig', Math.min(rangeDays, 30), c.today), lim = c.t.cigLimit || undefined;
-    const st = cigStats(by, c.p.cigBaseline, c.p.cigCost);
+    // "fewer than usual" only counts days the app has a record of, and not today until the evening: an empty day before the first
+    // log, or a morning with one cigarette so far, is not a day of smoking 6 fewer
+    const firstKey = Object.keys(state.log).sort()[0] || null, dayOpen = new Date().getHours() < 20;
+    const st = cigStats(Object.fromEntries(Object.entries(by).filter(([k]) => firstKey && k >= firstKey && !(k === c.today && dayOpen))), c.p.cigBaseline, c.p.cigCost);
     els.push(chartCard(cap2('Cigarettes per day', `last ${Math.min(rangeDays, 30)} days`),
       barChart({ bars: Object.entries(by).map(([k, v]) => ({ label: fmtShortDate(k), value: v, hl: k === c.today, tip: `${fmtShortDate(k)}: ${v} cigarette${v === 1 ? '' : 's'}` })), target: lim, targetLabel: lim ? `Limit ${lim}` : false, height: 140, color: 'var(--cig)', label: 'Cigarettes per day' }),
       st.moneySaved > 0 ? h('div', { class: 'pg-pills' }, pill('good', icon('check', 12), `${fmt(st.avoided)} fewer than usual · ₹${fmt(st.moneySaved)} saved`)) : null));

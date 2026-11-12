@@ -234,3 +234,6 @@ export function segFix(el, options, value) {
   el.style.setProperty('--i', String(Math.max(0, options.findIndex((o) => o.id === value))));
   return el;
 }
+
+// "Chai (milk, 1 tsp sugar) 150 ml cup" already says its serving next to the name: drop the repeat in lists.
+export const tidyName = (n) => String(n || '').replace(/\s+\d+\s*ml\s+cup$/i, '');

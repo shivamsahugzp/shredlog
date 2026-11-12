@@ -428,3 +428,30 @@ details summary::-webkit-details-marker { display: none; }
 .lock-key:active { background: var(--card-2); transform: scale(.94); }
 .lock.shake { animation: shake .4s ease; }
 @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+
+/* ---------- icon system + tactile feel (Phosphor duotone, js/icons.js) ----------
+   Every icon is a filled <svg class="ph i-<name>"> in currentColor; .d2 is the soft duotone layer. Colours always come from the host's
+   `color` (a token); add class "accent" to tint the layer with --accent. The fill weight (.ph-fill) is used by the active tab. */
+svg.ph { flex: none; }
+svg.ph .d2 { fill: currentColor; opacity: .2; }
+svg.ph.accent .d2 { fill: var(--accent); opacity: .34; }
+.well svg { width: 22px; height: 22px; }
+
+/* press feel: every pressable control answers within 120 ms */
+.btn.primary:active { background: color-mix(in srgb, var(--accent) 86%, #000); box-shadow: 0 2px 8px -6px color-mix(in srgb, var(--accent) 70%, transparent); }
+.icon-btn, .chip { transition: transform .12s ease, background-color .12s ease, color .12s ease, border-color .12s ease; }
+.icon-btn:active { transform: scale(.92); background: var(--card-3); }
+.icon-btn.plain:active { background: var(--card-2); }
+.chip:not(.on):active { transform: scale(.95); background: var(--card-2); }
+/* info buttons (a plain icon button holding the info glyph) warm up to the accent while pressed */
+.icon-btn.plain:has(svg.i-info):active { background: var(--accent-soft); color: var(--accent-text); }
+/* set tick: the check grows out from its foot when a set is marked done (animation in motion.css) */
+.set-row .done svg { transform-origin: 28% 72%; }
+
+/* tab bar: duotone glyph at 70 % when idle, solid fill glyph on the haldi pill; both live in one box and cross-fade */
+#tabbar .tb-ico { display: grid; place-items: center; width: 24px; height: 24px; flex: none; }
+#tabbar button[data-id] .tb-ico svg { grid-area: 1 / 1; width: 24px; height: 24px; transform-origin: 50% 70%; }
+#tabbar button[data-id] .tb-ico .ph-off { opacity: .7; transition: opacity .16s ease; }
+#tabbar button[data-id] .tb-ico .ph-on { opacity: 0; transform: scale(.6); transition: opacity .16s ease, transform .16s ease; }
+#tabbar button[data-id].on .tb-ico .ph-off { opacity: 0; transform: none; }
+#tabbar button[data-id].on .tb-ico .ph-on { opacity: 1; transform: translateY(-1px); }

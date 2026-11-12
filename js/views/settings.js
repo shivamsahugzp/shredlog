@@ -1,9 +1,10 @@
 // Settings: profile, plan, targets, habits, appearance, lock, data, install guide, about.
-import { state, setProfile, setTargets, recomputeTargets, setSetting, exportJSON, importJSON, resetAll, allFoods, todayKey, commit, storage } from '../state.js';
+import { state, setProfile, setTargets, recomputeTargets, setSetting, exportJSON, importJSON, resetAll, allFoods, todayKey, commit, storage, trackWater, listBackups, restoreBackup } from '../state.js';
 import { ACTIVITY, GOALS, tdee, defaultTargets } from '../calc.js';
-import { h, icon, sheet, toast, confirmSheet, stepper, segmented, chips, field, toggle, downloadText, pickFile, clear, fmt, relTime, haptic } from '../ui.js';
+import { h, icon, sheet, toast, confirmSheet, stepper, segmented, chips, field, toggle, downloadText, pickFile, clear, fmt, relTime, fmtShortDate, fmtDateLabel, haptic } from '../ui.js';
 import { hashPin, renderLock } from '../lock.js';
 import { aiSettingsSection } from './food-scan.js';
+import { stepsGuideSheet } from './body.js';
 import { countUp, growBars, stagger, quiet, pop, pulse } from '../motion.js';
 
 import { VERSION as BUILD, BUILT } from '../version.js';
@@ -119,7 +120,7 @@ function build(ctx) {
       h('span', null, h('span', { class: 'lbl' }, h('i', { class: 'dot c' }), 'Carbs'), h('span', { class: 'val' }, t.c ?? '–', h('small', null, ' g'))),
       h('span', null, h('span', { class: 'lbl' }, h('i', { class: 'dot f' }), 'Fat'), h('span', { class: 'val' }, t.f ?? '–', h('small', null, ' g')))),
     h('span', { class: 'st-chips st-extra' },
-      h('span', { class: 'pill' }, `Fibre ${t.fiber ?? '–'} g`), h('span', { class: 'pill' }, `Water ${t.water ?? 8} glasses`), p.smoker ? h('span', { class: 'pill' }, `Cigarette limit ${t.cigLimit ?? '–'}`) : null));
+      h('span', { class: 'pill' }, `Fibre ${t.fiber ?? '–'} g`), trackWater() ? h('span', { class: 'pill' }, `Water ${t.water ?? 8} glasses`) : null, p.smoker ? h('span', { class: 'pill' }, `Cigarette limit ${t.cigLimit ?? '–'}`) : null));
 
   // ---- habits & logging ----
   const chaiOpts = allFoods().filter((f) => /^(chai|black_tea|green_tea|masala_chai|kadak|cutting|tea|coffee|filter_coffee|black_coffee)/.test(f.id));
@@ -130,11 +131,20 @@ function build(ctx) {
   const smoker = h('div', { class: 'st-set st-tg' },
     h('div', { class: 'st-set-head' }, wellOf('cig', 'cig'), toggle('I smoke', !!p.smoker, (v) => { lastEdit = performance.now(); setProfile({ smoker: v }); smokerOpen.classList.toggle('hide', !v); }, 'Count, money and streaks')),
     smokerOpen);
+  // Water is opt-in: off by default, and the glass size only matters once it is on.
+  const glassOpen = h('div', { class: 'st-subset' + (trackWater() ? '' : ' hide') },
+    h('div', { class: 'st-lbl' }, `Glass size · ${s.glassMl || 250} ml`),
+    h('div', { class: 'st-set-ctl' }, seg([200, 250, 300].map((v) => ({ id: v, label: v + ' ml' })), s.glassMl || 250, edit((v) => setSetting('glassMl', v)))));
+  const waterRow = h('div', { class: 'st-set st-tg' },
+    h('div', { class: 'st-set-head' }, wellOf('drop', 'water'), toggle('Track water', trackWater(), (v) => { lastEdit = performance.now(); setSetting('trackWater', v); glassOpen.classList.toggle('hide', !v); }, 'Show a water counter')),
+    glassOpen);
   const habits = h('div', { class: 'list st-list' },
     setRow({ ico: 'cup', cls: 'chai', title: 'One-tap chai', control: h('select', { 'aria-label': 'One-tap chai', onChange: edit((ev) => setProfile({ chaiFoodId: ev.target.value })) }, chaiOpts.map((f) => h('option', { value: f.id, selected: f.id === p.chaiFoodId }, f.name))) }),
     smoker,
     setRow({ ico: 'timer', cls: 'train', title: 'Rest timer', value: `${s.restSec || 90} s`, control: seg([60, 90, 120, 150, 180].map((v) => ({ id: v, label: v + 's' })), s.restSec || 90, edit((v) => setSetting('restSec', v))) }),
-    setRow({ ico: 'drop', cls: 'water', title: 'Water glass', value: `${s.glassMl || 250} ml`, control: seg([200, 250, 300].map((v) => ({ id: v, label: v + ' ml' })), s.glassMl || 250, edit((v) => setSetting('glassMl', v))) }),
+    waterRow,
+    setRow({ ico: 'steps', cls: 'train', title: 'Daily step goal', value: `${fmt(s.stepTarget || 8000)} steps`, control: stepper({ value: s.stepTarget || 8000, min: 1000, max: 30000, step: 500, onChange: edit((v) => setSetting('stepTarget', v)) }) }),
+    row({ ico: 'zap', cls: 'food', title: 'Steps from iPhone Shortcut', sub: 'Fill in steps in one tap', onClick: () => stepsGuideSheet(todayKey()) }),
     setRow({ ico: 'moon', cls: 'sleep', title: 'Sleep target', value: `${p.sleepTarget || 7.5} h a night`, control: stepper({ value: p.sleepTarget || 7.5, min: 4, max: 12, step: 0.5, onChange: edit((v) => setProfile({ sleepTarget: v })) }) }));
 
   // ---- appearance: previews drawn from the real tokens ----
@@ -187,6 +197,7 @@ function build(ctx) {
     h('div', { class: 'row' },
       h('button', { class: 'btn primary grow', onClick: () => { downloadText(`shredlog-backup-${todayKey()}.json`, exportJSON()); state.meta.lastBackup = Date.now(); commit(); toast('Backup file ready. Save it to Files or iCloud.'); } }, icon('download'), 'Export backup'),
       h('button', { class: 'btn grow', onClick: async () => { const txt = await pickFile(); if (!txt) return; if (!(await confirmSheet('This replaces everything on this phone with the backup file.', { ok: 'Import', title: 'Import backup?' }))) return; try { await importJSON(txt); toast('Backup restored'); ctx.go('today'); } catch (err) { toast(err.message); } } }, icon('upload'), 'Import')),
+    h('div', { class: 'list st-list' }, row({ ico: 'clock', title: 'Earlier copies', sub: 'Restore an earlier day', onClick: () => backupsSheet(ctx) })),
     h('div', { class: 'callout small' }, icon('warn'), h('div', null, 'iPhone deletes this app’s data if you remove the icon. Export a backup every few weeks and keep it in iCloud Drive.')),
     h('button', { class: 'btn danger block', onClick: async () => { if (await confirmSheet('Deletes every log, workout and setting on this phone. Export a backup first.', { ok: 'Delete everything', danger: true })) { await resetAll(); ctx.go('onboarding'); } } }, icon('trash'), 'Reset all data'));
 
@@ -204,7 +215,8 @@ function build(ctx) {
     h('div', { class: 'st-credits' },
       h('div', { class: 'st-credit' }, h('span', { class: 'muted' }, 'Exercises'), h('span', null, 'free-exercise-db (Unlicense)')),
       h('div', { class: 'st-credit' }, h('span', { class: 'muted' }, 'Indian foods'), h('span', null, 'IFCT 2017 (NIN) and home recipes')),
-      h('div', { class: 'st-credit' }, h('span', { class: 'muted' }, 'Typeface'), h('span', null, 'Bricolage Grotesque (OFL)'))),
+      h('div', { class: 'st-credit' }, h('span', { class: 'muted' }, 'Typeface'), h('span', null, 'Bricolage Grotesque (OFL)')),
+      h('div', { class: 'st-credit' }, h('span', { class: 'muted' }, 'Icons'), h('span', null, 'Phosphor Icons (MIT)'))),
     h('p', { class: 'micro muted' }, 'Food values are good estimates, not lab numbers; oil and portion size are the biggest errors. Nothing here is medical advice. If a symptom worries you, see a doctor.'));
 
   return h('div', { class: 'st-all' },
@@ -247,6 +259,28 @@ function storageLabel() {
   return `${when} · ${stores} of 2 stores`;
 }
 
+// ---------- earlier copies ----------
+// state.js keeps a rolling daily copy plus a copy before every import, reset and restore. Restoring keeps the current data as a copy too.
+const copyTitle = (label) => (/^\d{4}-\d{2}-\d{2}$/.test(label) ? `Daily copy, ${fmtDateLabel(label, todayKey())}` : /^before-import/.test(label) ? 'Before an import' : /^before-reset/.test(label) ? 'Before a reset' : /^before-restore/.test(label) ? 'Before a restore' : 'Saved copy');
+function backupsSheet(ctx) {
+  const box = h('div', { class: 'st-bk' }, h('div', { class: 'st-bk-empty' }, 'Loading…'));
+  const api = sheet({ title: 'Earlier copies', content: box, actions: (a) => [h('button', { class: 'btn primary', onClick: a.close }, 'Done')] });
+  const restore = async (b) => {
+    const what = `${fmt(b.entries)} entries, ${fmt(b.workouts)} workouts and ${fmt(b.days)} days`;
+    if (!(await confirmSheet(`This replaces everything in the app with the copy${b.savedAt ? ` saved ${relTime(b.savedAt)}` : ''} (${what}). Anything logged after that is gone from the app, but your current data is kept as a copy first, so you can come back.`, { ok: 'Restore', title: 'Restore this copy?' }))) return;
+    try { await restoreBackup(b.key); api.close(); haptic('success'); toast('Copy restored'); ctx.go('today'); } catch (err) { toast(err.message || 'Could not restore that copy'); }
+  };
+  listBackups().then((list) => {
+    clear(box);
+    if (!list.length) { box.append(h('div', { class: 'st-bk-empty' }, h('b', null, 'No earlier copies yet'), h('span', null, 'ShredLog keeps a copy of your data once a day, and before every import or reset.'))); return; }
+    for (const b of list) {
+      box.append(h('div', { class: 'st-bk-row' }, wellOf(/^\d{4}/.test(b.label) ? 'cal' : 'reset'),
+        h('div', { class: 'grow st-bk-main' }, h('div', { class: 'title' }, copyTitle(b.label)), h('div', { class: 'small muted' }, b.savedAt ? relTime(b.savedAt) : b.label), h('div', { class: 'micro muted' }, `${fmt(b.entries)} entries · ${fmt(b.workouts)} workouts · ${fmt(b.days)} days`)),
+        h('button', { class: 'btn sm', onClick: () => restore(b) }, 'Restore')));
+    }
+  }, () => { clear(box); box.append(h('div', { class: 'st-bk-empty' }, h('b', null, 'Could not read the copies'), h('span', null, 'Your data is not affected.'))); });
+}
+
 // ---------- sheets ----------
 function profileSheet(ctx, section = 0) {
   const p = { ...state.profile };
@@ -270,7 +304,7 @@ function targetsSheet() {
   const drawRows = () => { clear(rows); rows.append(
     field('Calories per day', stepper({ value: t.kcal, min: 1000, max: 6000, step: 10, onChange: (v) => { t.kcal = v; } })),
     h('div', { class: 'grid-3' }, field('Protein g', stepper({ value: t.p, min: 40, max: 400, step: 5, onChange: (v) => { t.p = v; } })), field('Carbs g', stepper({ value: t.c, min: 30, max: 700, step: 5, onChange: (v) => { t.c = v; } })), field('Fat g', stepper({ value: t.f, min: 20, max: 250, step: 5, onChange: (v) => { t.f = v; } }))),
-    h('div', { class: 'grid-3' }, field('Fibre g', stepper({ value: t.fiber, min: 10, max: 80, onChange: (v) => { t.fiber = v; } })), field('Water glasses', stepper({ value: t.water || 8, min: 2, max: 20, onChange: (v) => { t.water = v; } })), state.profile?.smoker ? field('Cigarette limit', stepper({ value: t.cigLimit ?? 0, min: 0, max: 60, onChange: (v) => { t.cigLimit = v; } })) : null)); };
+    h('div', { class: 'grid-3' }, field('Fibre g', stepper({ value: t.fiber, min: 10, max: 80, onChange: (v) => { t.fiber = v; } })), trackWater() ? field('Water glasses', stepper({ value: t.water || 8, min: 2, max: 20, onChange: (v) => { t.water = v; } })) : null, state.profile?.smoker ? field('Cigarette limit', stepper({ value: t.cigLimit ?? 0, min: 0, max: 60, onChange: (v) => { t.cigLimit = v; } })) : null)); };
   drawRows();
   body.append(field('Macro split presets (from calories)', chips(presets, null, (id) => { const pr = presets.find((x) => x.id === id); t.p = Math.round(t.kcal * pr.p / 4); t.c = Math.round(t.kcal * pr.c / 4); t.f = Math.round(t.kcal * pr.f / 9); drawRows(); })), rows,
     h('button', { class: 'btn sm', onClick: () => { Object.assign(t, defaultTargets(state.profile)); drawRows(); } }, icon('reset'), 'Recalculate from profile'));

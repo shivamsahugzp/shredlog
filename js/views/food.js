@@ -14,7 +14,7 @@ import { scaleFood } from '../calc.js';
 import {
   MEALS, MEAL_LABEL, OIL_CATS, OIL_KCAL, OIL_FAT, RECIPE_CAT, r1, r2, servingsOf, unitsOf, isGrams, convertQty,
   buildEntry, measuresLine, measuresMap, lookup, buildRecipeFood, recipeTotals, splitParts, parsePart, resolveUnit,
-  PRESETS, resolvePreset, STAPLE_IDS, shortCat, SPOTS, segFix,
+  PRESETS, resolvePreset, STAPLE_IDS, shortCat, SPOTS, segFix, tidyName,
 } from './food-extras.js';
 import { openScanner, cameraIcon } from './food-scan.js';
 
@@ -215,12 +215,25 @@ function poolFoods(c) {
   if (c === '@mine') return state.customFoods.slice().sort((a, b) => !!b.recipe - !!a.recipe); // recipes first
   return null;
 }
+// searchFoods ranks by name length, so "egg" put Egg White above Egg (boiled) and "poha" put the raw flakes above a plate of
+// kanda poha. Within a search: names that start with what was typed first, then what the user eats (recent, favourite, staple),
+// and raw / uncooked / powder entries last unless that is what was asked for.
+const RAWISH = /\b(raw|uncooked|dry|powder)\b/i;
+const plainName = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+function rankSearch(list) {
+  const q = plainName(query), first = q.split(' ')[0];
+  if (!first || list.length < 2) return list;
+  const known = new Set([...recentFoods(40).map((f) => f.id), ...state.favFoods, ...STAPLE_IDS]);
+  const wantsRaw = RAWISH.test(query);
+  const key = (f) => (plainName(f.name).startsWith(first) ? 0 : 10) + (known.has(f.id) ? 0 : 2) + (!wantsRaw && RAWISH.test(f.name) ? 4 : 0);
+  return list.map((f, i) => [f, i, key(f)]).sort((a, b) => a[2] - b[2] || a[1] - b[1]).map((x) => x[0]);
+}
 function resultFoods() {
   const pool = poolFoods(cat);
-  if (!pool) return searchFoods(query, cat === 'all' ? '' : cat, 1000);
+  if (!pool) return rankSearch(searchFoods(query, cat === 'all' ? '' : cat, 1000));
   if (!query.trim()) return pool;
   const ids = new Set(pool.map((f) => f.id));
-  return searchFoods(query, '', 1000).filter((f) => ids.has(f.id));
+  return rankSearch(searchFoods(query, '', 1000).filter((f) => ids.has(f.id)));
 }
 
 // Name, then the category pill + serving; kcal and protein as condensed numbers on the right.
@@ -232,7 +245,7 @@ function rowBody(name, catLabel, serving, kcal, protein, extra) {
 }
 function foodRow(f, fav) {
   const sv = servingsOf(f)[0], s = scaleFood(f, sv.g);
-  const main = h('button', { class: 'fd-main fd-body', 'aria-label': `${f.name}, ${sv.label}, ${s.kcal} kcal, ${s.p} g protein`, onClick: () => openFoodSheet(f) }, rowBody(f.name, shortCat(f), sv.label, s.kcal, s.p));
+  const main = h('button', { class: 'fd-main fd-body', 'aria-label': `${f.name}, ${sv.label}, ${s.kcal} kcal, ${s.p} g protein`, onClick: () => openFoodSheet(f) }, rowBody(tidyName(f.name), shortCat(f), sv.label, s.kcal, s.p));
   if (f.recipe) longPress(main, () => openRecipeMenu(f));
   return h('div', { class: 'list-item fd-row', dataset: { fid: f.id } }, main,
     f.recipe ? h('button', { class: 'fd-more', 'aria-label': `More for ${f.name}`, onClick: () => openRecipeMenu(f) }, icon('more')) : null,
@@ -244,7 +257,10 @@ function foodRow(f, fav) {
 
 function noResults() {
   const q = query.trim();
-  if (q) return empty('search', `No match for “${q}”`, 'Save it as your own food and it shows up here next time.', btn('primary', [icon('plus', 16), `Create “${q.length > 22 ? q.slice(0, 22) + '…' : q}”`], () => openCreateSheet(q)));
+  if (q) {
+    const meal = /\d/.test(q) || /\band\b|\+|&/i.test(q) ? btn('', [kbIcon(), 'Log it as a meal'], () => { textQuery = q.replace(/\s+(?=\d)/g, ', '); query = ''; if (restoreCat) { cat = restoreCat; restoreCat = null; setActive(slots.chips, cat); showActiveChip(slots.chips); } setTextMode(true); reparse(); paintResults(true); slots.input.focus(); }) : null;
+    return empty('search', `No match for “${q}”`, 'Save it as your own food and it shows up here next time.', h('div', { class: 'row', style: { justifyContent: 'center', gap: '8px', flexWrap: 'wrap' } }, btn('primary', [icon('plus', 16), `Create “${q.length > 22 ? q.slice(0, 22) + '…' : q}”`], () => openCreateSheet(q)), meal));
+  }
   if (cat === '@recent') return empty('bowl', 'No recent foods yet', 'Foods you log show up here first.', btn('', 'Browse staples', () => pickPool('@staples')));
   if (cat === '@frequent') return empty('bowl', 'Nothing frequent yet', 'Your most-logged foods land here after a few days.', btn('', 'Browse staples', () => pickPool('@staples')));
   if (cat === '@fav') return empty('star', 'No favourites yet', 'Tap the star on a food to keep it one tap away.', btn('', 'Browse staples', () => pickPool('@staples')));
@@ -333,7 +349,7 @@ function deleteSaved(m) {
 // ---- diary ----
 function entryRow(e) {
   return h('button', { class: 'list-item fd-row fd-erow fd-body', dataset: { id: e.id }, 'aria-label': `${e.name}, ${e.kcal} kcal. Tap to edit, swipe to delete.`, onClick: () => openEntry(e) },
-    rowBody(e.name, e.ts ? fmtTime(e.ts) : '', unitText(e.qty ?? 1, e.unit), e.kcal, e.p));
+    rowBody(tidyName(e.name), e.ts ? fmtTime(e.ts) : '', unitText(e.qty ?? 1, e.unit), e.kcal, e.p));
 }
 const actChip = (ico, label, onClick, title) => h('button', { class: 'chip fd-actchip', title, onClick }, icon(ico, 15), label);
 
@@ -697,7 +713,7 @@ function paintText() {
   box.append(
     h('div', { class: 'fd-textmeal' }, seg(MEALS.map(({ id, label }) => ({ id, label })), textMeal || mealByTime(), (id) => { textMeal = id; }, 'fd-meals'), h('div', { class: 'hint small muted' }, 'Drinks go to Drinks unless you pick a meal.')),
     h('div', { class: 'stack' }, textRows.map((row) => { const el = h('div', { class: 'fd-trow' }); drawRow(el, row); return el; })),
-    h('div', { class: 'fd-logbar' }, miss ? h('div', { class: 'small muted' }, `${miss} not found. Tap it to search.`) : null, logBtn));
+    h('div', { class: 'fd-logbar mo-sticky glass' }, miss ? h('div', { class: 'small muted' }, `${miss} not found. Tap it to search.`) : null, logBtn));
 }
 
 function logText() {
@@ -763,6 +779,12 @@ function searchPane() {
     clearTimeout(timer);
     timer = setTimeout(() => {
       if (textMode) { textQuery = input.value; reparse(); return; }
+      // "2 roti, 1 katori dal" typed into the search box is a meal, not a food name: read it as one instead of "No match"
+      if (/[,;]/.test(input.value) && splitParts(input.value).length > 1) {
+        textQuery = input.value; query = '';
+        if (restoreCat) { cat = restoreCat; restoreCat = null; setActive(slots.chips, cat); showActiveChip(slots.chips); }
+        paintResults(); setTextMode(true); reparse(); return;
+      }
       query = input.value;
       const searching = !!query.trim();
       // Recent / Staples / Frequent are shortcuts for an empty box; typing looks through every food.

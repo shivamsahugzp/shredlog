@@ -38,6 +38,10 @@
 .st-tg .st-set-head .toggle .strong, .st-tg .st-set-head .toggle .small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .st-subset { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line-2); }
 
+.st-set + .st-row, .st-row + .st-set { border-top: 1px solid var(--line); }
+.st-subset .st-lbl { margin-bottom: 8px; }
+.st-subset .st-set-ctl { margin-top: 0; }
+
 /* daily targets card */
 .st-targets { display: block; width: 100%; text-align: left; }
 .st-kcal { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -85,6 +89,16 @@
 .st-store.fail i { background: var(--bad); }
 .st-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .st-ellip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* earlier copies sheet */
+.st-bk { display: flex; flex-direction: column; }
+.st-bk-row { display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 8px 0; }
+.st-bk-row + .st-bk-row { border-top: 1px solid var(--line); }
+.st-bk-main { min-width: 0; }
+.st-bk-main .title { font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-bk-row .btn { flex: none; min-height: 44px; }
+.st-bk-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 22px 8px; text-align: center; font-size: 14px; color: var(--muted); }
+.st-bk-empty b { color: var(--ink); font-size: 15px; }
 
 /* install guide: a vertical path of four steps */
 .st-how { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }

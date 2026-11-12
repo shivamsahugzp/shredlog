@@ -36,3 +36,5 @@ Static files, no build step. Serve the folder (`python3 -m http.server`) and ope
 Food values are based on the Indian Food Composition Tables (NIN 2017) and typical home recipes. They are estimates. Nothing here is medical advice.
 
 Exercise illustrations and step-by-step instructions: free-exercise-db (public domain, Unlicense); images load from GitHub when online.
+
+Icons: Phosphor Icons (MIT), vendored in `js/icons.js` (duotone weight, fill weight for the active tab).

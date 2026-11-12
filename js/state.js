@@ -34,6 +34,16 @@ async function kvGet(k) {
   try { return await withTimeout(new Promise((res, rej) => { const t = db.transaction(STORE, 'readonly').objectStore(STORE).get(k); t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error); }), IDB_TIMEOUT, 'IndexedDB read'); }
   finally { try { db.close(); } catch (e) { /* ignore */ } }
 }
+async function kvKeys() {
+  const db = await openDB();
+  try { return await withTimeout(new Promise((res, rej) => { const t = db.transaction(STORE, 'readonly').objectStore(STORE).getAllKeys(); t.onsuccess = () => res(t.result || []); t.onerror = () => rej(t.error); }), IDB_TIMEOUT, 'IndexedDB keys'); }
+  finally { try { db.close(); } catch (e) { /* ignore */ } }
+}
+async function kvDel(k) {
+  const db = await openDB();
+  try { await withTimeout(new Promise((res, rej) => { const tx = db.transaction(STORE, 'readwrite'); tx.objectStore(STORE).delete(k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }), IDB_TIMEOUT, 'IndexedDB delete'); }
+  finally { try { db.close(); } catch (e) { /* ignore */ } }
+}
 async function kvSet(k, v) {
   const db = await openDB();
   try { await withTimeout(new Promise((res, rej) => { const tx = db.transaction(STORE, 'readwrite'); tx.objectStore(STORE).put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error('IndexedDB write aborted')); }), IDB_TIMEOUT, 'IndexedDB write'); }
@@ -44,7 +54,7 @@ const initial = () => ({
   meta: { v: 1, created: Date.now(), lastBackup: null, savedAt: 0 },
   profile: null,
   targets: null,
-  settings: { theme: 'auto', restSec: 90, glassMl: 250, recents: [], onboarded: false, lastWeeklyReview: null },
+  settings: { theme: 'auto', restSec: 90, glassMl: 250, recents: [], onboarded: false, lastWeeklyReview: null, trackWater: false },
   log: {},
   workouts: [],
   active: null,
@@ -62,6 +72,41 @@ export function snapshot() { const o = {}; for (const k of PERSIST) o[k] = state
 export function hydrate(obj) { const base = initial(); for (const k of PERSIST) { if (obj[k] !== undefined && obj[k] !== null) state[k] = k === 'settings' ? { ...base.settings, ...obj[k] } : obj[k]; } }
 
 let saveTimer = null, dirty = false, idbQueue = Promise.resolve();
+let lastBackupDay = null, lastBackupAt = 0, forceBackup = false;
+const BACKUP_PREFIX = 'backup:', KEEP_DAILY = 7, KEEP_MANUAL = 5;
+const isBackupKey = (k) => typeof k === 'string' && k.startsWith(BACKUP_PREFIX);
+const sane = (o) => !!(o && typeof o === 'object' && o.log && typeof o.log === 'object' && Array.isArray(o.workouts));
+async function writeBackup(label, snap) {
+  await kvSet(BACKUP_PREFIX + label, snap);
+  const keys = (await kvKeys()).filter(isBackupKey).sort();
+  const daily = keys.filter((k) => /^backup:\d{4}-\d{2}-\d{2}$/.test(k)), manual = keys.filter((k) => !daily.includes(k));
+  for (const k of daily.slice(0, Math.max(0, daily.length - KEEP_DAILY))) await kvDel(k);
+  for (const k of manual.slice(0, Math.max(0, manual.length - KEEP_MANUAL))) await kvDel(k);
+}
+// A named copy taken right now (before an import, a reset or a restore).
+export function snapshotNow(label) {
+  const snap = JSON.parse(JSON.stringify(snapshot()));
+  idbQueue = idbQueue.then(() => writeBackup(label + '-' + Date.now(), snap)).catch((e) => console.warn('snapshot failed', e));
+  return idbQueue;
+}
+// Earlier copies, newest first: [{ key, label, savedAt, entries, workouts, days }]
+export async function listBackups() {
+  const keys = (await kvKeys()).filter(isBackupKey);
+  const out = [];
+  for (const key of keys) {
+    const o = await kvGet(key); if (!sane(o)) continue;
+    const entries = Object.values(o.log).reduce((a, d) => a + (d.food?.length || 0) + (d.habits?.length || 0), 0);
+    out.push({ key, label: key.slice(BACKUP_PREFIX.length), savedAt: o.meta?.savedAt || 0, entries, workouts: o.workouts.length, days: Object.keys(o.log).length });
+  }
+  return out.sort((a, b) => b.savedAt - a.savedAt);
+}
+// Replace the live data with an earlier copy; the current data is kept as a manual copy first so this is reversible.
+export async function restoreBackup(key) {
+  const o = await kvGet(key);
+  if (!sane(o)) throw new Error('That copy is unreadable.');
+  await snapshotNow('before-restore');
+  hydrate(o); await save(true); emit('change');
+}
 export function save(immediate) {
   clearTimeout(saveTimer); saveTimer = null; dirty = true;
   const run = () => {
@@ -76,13 +121,22 @@ export function save(immediate) {
     idbQueue = idbQueue.then(() => kvSet(KEY, snap)).then(
       () => { storage.idb = 'ok'; storage.lastSaved = Math.max(storage.lastSaved, snap.meta.savedAt); },
       (e) => { storage.idb = 'failed'; storage.lastError = errText(e); console.warn('IndexedDB save failed', e); });
+    // Rolling safety copies: the first save of each day also lands in its own slot, so a bug or a bad import can be undone
+    // from Settings → Earlier copies. Kept separately from the live state and the localStorage mirror.
+    // The day's slot is refreshed on the first save of the day, then at most every 10 minutes, and always when the app goes
+    // to the background (flush), so yesterday's copy is yesterday's final state and today's is never far behind.
+    const today = todayKey(), now = Date.now();
+    if (lastBackupDay !== today || forceBackup || now - lastBackupAt > 10 * 60 * 1000) {
+      lastBackupDay = today; lastBackupAt = now; forceBackup = false;
+      idbQueue = idbQueue.then(() => writeBackup(today, snap)).catch((e) => console.warn('backup failed', e));
+    }
     return idbQueue;
   };
   if (immediate) return run();
   saveTimer = setTimeout(run, 250);
 }
 // Write any debounced change right now (called when the app goes to the background).
-export function flush() { if (dirty) return save(true); }
+export function flush() { forceBackup = true; if (dirty) return save(true); }
 export function commit(evt) { save(); if (evt) emit(evt); emit('change'); }
 
 export async function load() {
@@ -92,9 +146,14 @@ export async function load() {
   try { fromIdb = (await kvGet(KEY)) || null; storage.idb = 'ok'; }
   catch (e) { storage.idb = 'failed'; storage.lastError = errText(e); console.warn('IndexedDB unavailable', e); }
   const at = (o) => (o && o.meta && o.meta.savedAt) || 0;
-  const saved = fromLs && fromIdb ? (at(fromLs) > at(fromIdb) ? fromLs : fromIdb) : (fromIdb || fromLs);
+  if (fromLs && !sane(fromLs)) { console.warn('localStorage copy unreadable, ignoring it'); fromLs = null; }
+  if (fromIdb && !sane(fromIdb)) { console.warn('IndexedDB copy unreadable, ignoring it'); fromIdb = null; }
+  let saved = fromLs && fromIdb ? (at(fromLs) > at(fromIdb) ? fromLs : fromIdb) : (fromIdb || fromLs);
   storage.source = !saved ? 'none' : saved === fromIdb ? 'idb' : 'ls';
-  if (saved) { hydrate(saved); storage.lastSaved = at(saved); }
+  if (!saved && storage.idb === 'ok') { // both live copies gone or unreadable: the newest daily copy is better than a blank app
+    try { const keys = (await kvKeys()).filter(isBackupKey).sort().reverse(); for (const k of keys) { const o = await kvGet(k); if (sane(o) && o.profile) { saved = o; storage.source = 'backup'; console.warn('restored from', k); break; } } } catch (e) { /* ignore */ }
+  }
+  if (saved) { hydrate(saved); storage.lastSaved = at(saved); lastBackupDay = null; }
   // Probe: Safari with "Block All Cookies" or a Private tab throws on write, not on read.
   if (storage.ls === 'ok') { try { localStorage.setItem(LS_KEY + '-probe', '1'); localStorage.removeItem(LS_KEY + '-probe'); } catch (e) { storage.ls = 'failed'; storage.lastError = errText(e); } }
   const [foods, exercises, routines, knowledge] = await Promise.all(['foods', 'exercises', 'routines', 'knowledge'].map((n) => fetch(`./data/${n}.json`).then((r) => r.json()).catch(() => (n === 'knowledge' ? null : []))));
@@ -174,6 +233,10 @@ export const isChai = (e) => /^(chai|tea|black_tea|green_tea|masala_chai|kadak|c
 export const isCoffee = (e) => /coffee/.test(e.foodId || '') || /coffee/i.test(e.name || '');
 export function chaiCount(key) { return (dayIfAny(key)?.food || []).filter(isChai).length; }
 export function coffeeCount(key) { return (dayIfAny(key)?.food || []).filter(isCoffee).length + habitCount(key, 'coffee'); }
+
+export function setSteps(key, n) { day(key).steps = Number.isFinite(+n) && +n >= 0 ? Math.round(+n) : null; commit('habit'); }
+export const stepsOn = (key) => dayIfAny(key)?.steps || 0;
+export const trackWater = () => !!state.settings.trackWater;
 
 // ---- check-ins & symptoms ----
 export function setCheckin(key, patch) { day(key).checkin = { ...(day(key).checkin || {}), ts: Date.now(), ...patch }; commit('checkin'); }
@@ -256,6 +319,8 @@ export function exportJSON() { return JSON.stringify({ app: 'shredlog', version:
 export async function importJSON(text) {
   const o = JSON.parse(text);
   if (o.app !== 'shredlog') throw new Error('This file is not a ShredLog backup.');
+  if (!sane(o)) throw new Error('This backup file is incomplete.');
+  if (state.profile) await snapshotNow('before-import');
   hydrate(o); state.meta.lastBackup = Date.now(); await save(true); emit('change');
 }
-export async function resetAll() { Object.assign(state, initial()); await save(true); emit('change'); }
+export async function resetAll() { if (state.profile) await snapshotNow('before-reset'); Object.assign(state, initial()); await save(true); emit('change'); }

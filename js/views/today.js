@@ -1,16 +1,21 @@
-// Today: hero ring, quick-log tiles, check-in, training, day ledger, week glance. Swipe right/left to change day.
-import { state, day, dayIfAny, dayTotals, dayBurn, habitCount, habitEntries, waterMl, chaiCount, isChai, logHabit, removeHabit, logFood, removeFood, findFood, setWeight, latestWeight, weights, workoutsOn, shiftDate, lastNDays, lastHabitTs, commit, dateKey } from '../state.js';
+// Today: how the day went. Calorie ring, "your day" recap (in / out / net, day score, steps), quick-log tiles, training verdict,
+// check-in, day ledger, week glance. Swipe right/left to change day. Water shows only when Settings turns it on.
+import { state, day, dayIfAny, dayTotals, habitCount, habitEntries, waterMl, chaiCount, isChai, logHabit, removeHabit, logFood, removeFood, findFood, setWeight, latestWeight, weights, workoutsOn, shiftDate, lastNDays, lastHabitTs, commit, dateKey, trackWater, setSteps, stepsOn } from '../state.js';
 import { scaleFood } from '../calc.js';
+import { tidyName } from './food-extras.js';
 import { todayPlan } from '../train-plan.js';
-import { h, icon, sheet, toast, stepper, counterTile, ring, fmt, fmtTime, fmtDateLabel, fmtDur, fmtDow, sinceText, ago, clear, haptic } from '../ui.js';
+import { dayVerdict, weekVerdict, stepsKcal } from '../verdict.js';
+import { h, icon, sheet, toast, stepper, counterTile, ring, fmt, fmtTime, fmtDateLabel, fmtShortDate, fmtDur, fmtDow, sinceText, ago, clear, haptic } from '../ui.js';
 import { barChart, legend } from '../charts.js';
 import { countUp, odometer, fill, pulse, pop, ripple, celebrate, quiet, seen, remember, recall, swipeNav, swipeReveal, prefersReducedMotion, EASE_OUT } from '../motion.js';
 
 const openScan = (ctx) => import('./food-scan.js').then((m) => m.openScanner(ctx, { date: ctx.date })).catch((e) => toast('Could not open the scanner: ' + e.message));
 
+const shortcutSeen = new WeakSet(); // one apply per "#today?steps=" hand-off, however often the screen redraws or the day is swiped
 export function render(container, ctx) {
   const root = h('div', { class: 'td' });
   container.append(root);
+  const hand = takeShortcutSteps(ctx);
   const cache = { led: null }; // the ledger DOM is reused while its rows are unchanged, so swipe-to-reveal state (and its listeners) are not rebuilt on every redraw
   let drawn = false;
   // Build first, swap second: a throwing build can never leave the screen empty. Charts only play their intro on the first draw.
@@ -21,6 +26,7 @@ export function render(container, ctx) {
     drawn = true;
   };
   draw();
+  if (hand) afterShortcutSteps(hand);
   swipeNav(root, { canGo: (dir) => dir < 0 || ctx.date < ctx.today, onSwipe: (dir) => ctx.setDate(shiftDate(ctx.date, dir), { skipOut: true }) });
   return draw;
 }
@@ -100,7 +106,8 @@ function dial(size, stroke, pct, over) {
 // ---------------------------------------------------------------- build
 function build(ctx, jobs, cache) {
   const key = ctx.date, isToday = key === ctx.today, p = state.profile || {}, t = state.targets || { kcal: 2000, p: 120, c: 200, f: 60, fiber: 28, water: 8 };
-  const tot = dayTotals(key), burn = dayBurn(key), left = t.kcal - tot.kcal, over = tot.kcal > t.kcal;
+  const tot = dayTotals(key), left = t.kcal - tot.kcal, over = tot.kcal > t.kcal;
+  let dv = null; try { dv = dayVerdict(key); } catch (e) { console.error(e); } // the recap and the training verdict are extras: a throw here must never blank the screen
   const { n: streak, loggedToday } = streakInfo(ctx.today);
   const first = !seen('td:' + key); remember('td:' + key);
   const page = h('div', { class: 'td-page' });
@@ -192,11 +199,18 @@ function build(ctx, jobs, cache) {
   if (isToday) remember(goalKey, protHit);
   const hero = h('div', { class: 'card fuel td-fuel' + (over ? ' over' : '') },
     h('div', { class: 'td-fuel-main' }, rg, macrosEl),
-    h('div', { class: 'td-facts' }, fact('Eaten', fmt(tot.kcal), burn ? '' : ' kcal'), burn ? fact('Burned', fmt(burn)) : null, fact('Fibre', Math.round(tot.fiber), ` / ${t.fiber} g`), fact('Sugar', Math.round(tot.sugar), ' g')));
+    h('div', { class: 'td-facts' }, fact('Eaten', fmt(tot.kcal), ' kcal'), fact('Fibre', Math.round(tot.fiber), ` / ${t.fiber} g`), fact('Sugar', Math.round(tot.sugar), ' g')));
   page.append(hero); rise.push(hero);
 
+  // ---- your day: in, out, net, the day score, steps ----
+  // It sits below the quick-log tiles: the recap grows from a slim card to a tall one the moment something is logged, and anything above
+  // it would push the tile that was just tapped (and its Undo minus) off the screen.
+  const recap = dv ? recapCard(ctx, key, isToday, dv, jobs, first) : null;
+  if (recap) rise.push(recap);
+
   // ---- quick-log tiles: tap = +1, minus removes the last, hold opens the list ----
-  const glassMl = state.settings.glassMl || 250, water = waterMl(key), glasses = Math.round((water / glassMl) * 10) / 10, goalGlasses = t.water || 8;
+  const waterOn = trackWater(); // water is an opt-in setting: off means no tile, no line, no mention
+  const glassMl = state.settings.glassMl || 250, water = waterOn ? waterMl(key) : 0, glasses = Math.round((water / glassMl) * 10) / 10, goalGlasses = t.water || 8;
   const chaiList = chaiEntries(key), cigList = habitEntries(key, 'cig'), chai = chaiList.length, cigs = cigList.length;
   const wt = dayIfAny(key)?.weight, lw = latestWeight(), sleepH = dayIfAny(key)?.sleep, lim = t.cigLimit;
   const lastOf = (a) => a.reduce((m, e) => (!m || e.ts > m.ts ? e : m), null);
@@ -218,15 +232,32 @@ function build(ctx, jobs, cache) {
     quick.append(tile('cig', { cls: 'cig', ico: 'cig', label: 'Cigarette', count: cigs, bad: over5, sub: lim ? `limit ${lim}` : isToday && lastC ? shortAgo(lastC.ts) : 'Tap to log',
       onAdd: () => tapCig(key), onRemove: () => undoLast(KINDS.cig(key)), onOpen: () => countSheet('cig', key) }));
   } else quick.append(tile('sleep', { cls: 'sleep', ico: 'moon', label: 'Sleep', count: 0, sub: sleepH ? `${n1(sleepH)} h` : 'Log', onAdd: () => sleepSheet(key), onOpen: () => sleepSheet(key) }));
-  const under = h('div', { class: 'under' });
-  jobs.push(() => fill(under, Math.min(100, goalGlasses ? (water / (goalGlasses * glassMl)) * 100 : 0), { axis: 'y', key: `wf:${key}`, ms: 700 }));
-  quick.append(tile('water', { cls: 'water', ico: 'drop', label: 'Water', count: glasses, sub: `of ${goalGlasses}`, under, extra: 'td-water-tile',
-    onAdd: () => tapWater(key, water, glasses, goalGlasses, glassMl, under), onRemove: () => undoLast(KINDS.water(key)), onOpen: () => countSheet('water', key) }));
+  if (waterOn) {
+    const under = h('div', { class: 'under' });
+    jobs.push(() => fill(under, Math.min(100, goalGlasses ? (water / (goalGlasses * glassMl)) * 100 : 0), { axis: 'y', key: `wf:${key}`, ms: 700 }));
+    quick.append(tile('water', { cls: 'water', ico: 'drop', label: 'Water', count: glasses, sub: `of ${goalGlasses}`, under, extra: 'td-water-tile',
+      onAdd: () => tapWater(key, water, glasses, goalGlasses, glassMl, under), onRemove: () => undoLast(KINDS.water(key)), onOpen: () => countSheet('water', key) }));
+  } else {
+    // steps take water's place: the tile fills from the bottom as the day's steps approach the goal
+    const steps = stepsOn(key), stepGoal = state.settings.stepTarget || 8000, under = h('div', { class: 'under' });
+    jobs.push(() => fill(under, Math.min(100, stepGoal ? (steps / stepGoal) * 100 : 0), { axis: 'y', key: `sf:${key}`, ms: 700 }));
+    const st = tile('steps', { cls: 'stp', ico: 'steps', label: 'Steps', count: 0, sub: steps ? fmt(steps) : 'Add steps', under, extra: 'td-steps-tile',
+      onAdd: () => stepsSheet(ctx, key), onOpen: () => stepsSheet(ctx, key) });
+    quick.append(st);
+    st.setAttribute('aria-label', steps ? `Steps today: ${fmt(steps)} of ${fmt(stepGoal)}. Tap to edit.` : 'Steps today: none yet. Tap to add.');
+    jobs.push(() => { const prev = recall(`sv:${key}`); remember(`sv:${key}`, steps); if (prev != null && prev !== steps) pop(st.querySelector('.sub')); });
+  }
   quick.append(tile('weight', { cls: 'weight', ico: 'scale', label: 'Weight', count: 0, sub: wt ? `${n1(wt)} kg` : 'Weigh in', onAdd: () => weightSheet(key, wt || lw?.kg || 70), onOpen: () => weightSheet(key, wt || lw?.kg || 70) }));
   page.append(quick);
   if (p.smoker && cigs && isToday) page.append(h('p', { class: 'td-note' }, `Last cigarette ${Date.now() - (lastHabitTs('cig') || 0) < 60000 ? 'just now' : sinceText(lastHabitTs('cig')) + ' ago'}${lim ? ` · limit ${lim}` : ''}${lim && cigs > lim ? ' · over limit' : ''}`));
   else if ((chai || cigs || water) && !state.settings.todayTileHint) page.append(h('p', { class: 'td-note' }, 'Tap to add one. Tap − to remove the last. Hold a tile to edit.'));
+  if (recap) page.append(recap);
   if (first && canAnim()) jobs.push(() => tiles.forEach((el, i) => enter(el, 190 + i * 45, 12, 300)));
+
+  // ---- training: the verdict on what was done, or the plan for today ----
+  const ws = workoutsOn(key);
+  const trainEl = trainingCard(ctx, key, isToday, ws, dv, jobs);
+  page.append(trainEl);
 
   // ---- check-in ----
   const ck = dayIfAny(key)?.checkin;
@@ -240,10 +271,6 @@ function build(ctx, jobs, cache) {
     ckCells.length ? h('div', { class: 'td-ck' }, ckCells.map(([k, l]) => h('div', { class: 'td-ck-cell' }, h('div', { class: 'td-ck-top' }, h('span', null, l), h('b', null, `${ck[k]}/5`)), h('div', { class: 'td-pips' }, [1, 2, 3, 4, 5].map((n) => h('i', { class: n <= ck[k] ? 'on' : '' }))))))
       : null);
   page.append(checkin);
-
-  // ---- training ----
-  const ws = workoutsOn(key);
-  page.append(trainingCard(ctx, key, isToday, ws));
 
   // ---- day ledger ----
   const items = [];
@@ -275,7 +302,7 @@ function build(ctx, jobs, cache) {
     }
     led.append(cache.led.el);
   }
-  if (water) {
+  if (waterOn && water) {
     const wb = h('i');
     jobs.push(() => fill(wb, Math.min(100, goalGlasses ? (water / (goalGlasses * glassMl)) * 100 : 0), { key: `ww:${key}`, ms: 600 }));
     led.append(h('div', { class: 'td-water' }, h('span', { class: 'well water' }, icon('drop', 18)), h('div', { class: 'grow' }, h('div', { class: 'td-water-line' }, h('b', null, `${fmt(water / 1000, 2)} L`), h('span', { class: 'muted' }, `${n1(glasses)} of ${goalGlasses} glasses`)), h('div', { class: 'td-track water' }, wb))));
@@ -300,16 +327,24 @@ function build(ctx, jobs, cache) {
 
   // ---- add food: pinned above the tab bar while the day is empty ----
   if (!tot.n && !items.length) page.append(h('div', { class: 'td-cta glass mo-sticky' },
-    h('button', { class: 'btn primary lg', onClick: () => ctx.go('food') }, icon('plus'), 'Add food'),
-    h('button', { class: 'btn lg', onClick: () => openScan(ctx) }, icon('camera'), 'Scan plate')));
+    h('button', { class: 'btn primary', onClick: () => ctx.go('food') }, icon('plus'), 'Add food'),
+    h('button', { class: 'btn', onClick: () => openScan(ctx) }, icon('camera'), 'Scan plate')));
 
-  if (first && canAnim()) jobs.push(() => [checkin, page.querySelector('.td-train'), led].forEach((el, i) => enter(el, 360 + i * 50, 12, 320)));
+  if (first && canAnim()) jobs.push(() => [trainEl, checkin, led].forEach((el, i) => enter(el, 360 + i * 50, 12, 320)));
   if (first && canAnim()) jobs.push(() => rise.forEach((el, i) => enter(el, i * 45, 8, 300)));
   return page;
 }
 
+// ---------------------------------------------------------------- shared bits for the verdict pieces
+const TONE = { good: 'var(--good)', accent: 'var(--accent)', warn: 'var(--warn)', bad: 'var(--bad)' };
+const GRADE = { strong: { word: 'Strong', ico: 'zap', tone: 'good' }, solid: { word: 'Solid', ico: 'check', tone: 'accent' }, light: { word: 'Light', ico: 'leaf', tone: 'warn' } };
+const gradePill = (g) => { const m = GRADE[g] || GRADE.solid; return h('span', { class: 'td-grade ' + g }, icon(m.ico, 15), m.word); };
+const signed = (n, unit = '') => `${n > 0 ? '+' : n < 0 ? '−' : ''}${fmt(Math.abs(n))}${unit}`;
+// a leading icon in a coloured disc, then one short sentence
+const noteRow = (ico, tone, text) => h('li', null, h('span', { class: 'ic ' + tone }, icon(ico, 13)), h('span', { class: 'tx' }, text));
+
 // ---------------------------------------------------------------- training card
-function trainingCard(ctx, key, isToday, ws) {
+function trainingCard(ctx, key, isToday, ws, dv, jobs) {
   const card = h('div', { class: 'card td-train' });
   if (state.active && isToday) {
     const a = state.active, r = a.rest, mins = Math.max(0, Math.round((Date.now() - a.start) / 60000));
@@ -320,13 +355,21 @@ function trainingCard(ctx, key, isToday, ws) {
     return card;
   }
   if (ws.length) {
+    const verdicts = new Map((dv?.sessions || []).map((s) => [s.id, s.verdict]));
     ws.forEach((w, i) => {
-      const stat = (v, l) => h('div', { class: 'td-stat' }, h('div', { class: 'num-sm' }, v), h('div', { class: 'micro muted' }, l));
-      card.append(h('div', { class: 'td-done' + (i ? ' next' : '') },
-        h('div', { class: 'td-train-top' }, h('span', { class: 'well good lg' }, icon('check')),
-          h('div', { class: 'grow' }, h('h3', { class: 'ellipsis' }, w.name || 'Workout'), h('div', { class: 'td-done-sub small muted' }, h('span', { class: 'nowrap' }, `Done ${fmtTime(w.end || w.start)}`), w.prs?.length ? h('span', { class: 'pr-tag nowrap' }, icon('trophy', 12), `${w.prs.length} PR${w.prs.length > 1 ? 's' : ''}`) : null)),
-          h('button', { class: 'btn sm nowrap', onClick: () => ctx.go('train') }, 'View')),
-        h('div', { class: 'td-stats' }, stat(fmtDur((w.end - w.start) / 1000), 'time'), stat(fmt(w.volume), 'kg lifted'), stat(fmt(w.kcal), 'kcal burned'))));
+      const v = verdicts.get(w.id) || null;
+      const stat = (val, l) => h('div', { class: 'td-stat' }, h('div', { class: 'num-sm' }, val), h('div', { class: 'micro muted' }, l));
+      const pill = v ? gradePill(v.grade) : null;
+      const top = h('div', { class: 'td-train-top' }, h('span', { class: 'well good lg' }, icon('check')),
+        h('div', { class: 'grow' }, h('h3', { class: 'ellipsis' }, w.name || 'Workout'), h('div', { class: 'td-done-sub small muted' }, h('span', { class: 'nowrap' }, `Done ${fmtTime(w.end || w.start)}`), w.prs?.length ? h('span', { class: 'pr-tag nowrap' }, icon('trophy', 12), `${w.prs.length} PR${w.prs.length > 1 ? 's' : ''}`) : null)),
+        pill);
+      const notes = v ? [v.wins[0] ? noteRow('check', 'good', v.wins[0]) : null, v.improve[0] ? noteRow('arrowUp', 'warn', v.improve[0]) : null].filter(Boolean) : [];
+      card.append(h('div', { class: 'td-done' + (i ? ' next' : '') }, top,
+        h('div', { class: 'td-stats' }, stat(fmtDur((w.end - w.start) / 1000), 'time'), stat(fmt(w.volume), 'kg lifted'), stat(fmt(w.kcal), 'kcal burned')),
+        notes.length ? h('ul', { class: 'td-rl' }, notes) : null,
+        h('div', { class: 'td-train-act' }, h('button', { class: 'btn sm', onClick: () => (v ? verdictSheet(ctx, w, v) : ctx.go('train')) }, v ? 'See details' : 'View in Train', icon('right', 16)))));
+      // the pill pops once, when the workout has just been finished
+      if (pill) { const gk = 'gp:' + w.id; if (!seen(gk)) { remember(gk, true); if (Date.now() - (w.end || w.start) < 10 * 60e3) jobs.push(() => pop(pill)); } }
     });
     return card;
   }
@@ -336,18 +379,20 @@ function trainingCard(ctx, key, isToday, ws) {
     card.append(h('div', { class: 'td-train-top' }, h('span', { class: 'well sleep lg' }, icon('moon')), h('div', { class: 'grow' }, h('h3', null, 'Rest day'), h('div', { class: 'small muted' }, 'Nothing was trained this day.'))));
     return card;
   }
+  // the text takes the full width beside the icon and the action sits on its own row, so "Last trained: Pull · yesterday" never wraps beside a button
+  const act = (btn) => h('div', { class: 'td-train-act' }, btn);
   if (plan && plan.kind === 'train') {
     card.append(h('div', { class: 'td-train-top' }, h('span', { class: 'well train lg' }, icon('dumbbell')),
-      h('div', { class: 'grow' }, h('h3', null, `${plan.dayName}: you usually train`), h('div', { class: 'small muted' }, `${plan.hits} of the last ${plan.weeksObserved} ${plan.dayName}s`)),
-      h('button', { class: 'btn sm primary nowrap', onClick: () => ctx.go('train') }, icon('play', 16), 'Start')),
-      h('div', { class: 'td-groups' }, plan.groups.map(groupChip)));
+      h('div', { class: 'grow' }, h('h3', null, `${plan.dayName}: you usually train`), h('div', { class: 'small muted' }, `${plan.hits} of the last ${plan.weeksObserved} ${plan.dayName}s`))),
+      h('div', { class: 'td-groups' }, plan.groups.map(groupChip)),
+      act(h('button', { class: 'btn primary', onClick: () => ctx.go('train') }, icon('play', 18), 'Start workout')));
     return card;
   }
   if (plan && plan.kind === 'rest') {
     card.classList.add('td-rest');
     card.append(h('div', { class: 'td-train-top' }, h('span', { class: 'well sleep lg' }, icon('moon')),
-      h('div', { class: 'grow' }, h('h3', null, 'Rest day'), h('div', { class: 'small muted' }, 'Your usual rest day. Recovery builds muscle.')),
-      h('button', { class: 'btn sm ghost nowrap', onClick: () => ctx.go('train') }, 'Train anyway')));
+      h('div', { class: 'grow' }, h('h3', null, 'Rest day'), h('div', { class: 'small muted' }, 'Your usual rest day. Recovery builds muscle.'))),
+      act(h('button', { class: 'btn sm', onClick: () => ctx.go('train') }, 'Train anyway')));
     return card;
   }
   // no weekday pattern yet: fall back to the routine and the last session
@@ -360,9 +405,233 @@ function trainingCard(ctx, key, isToday, ws) {
   if (prior) bits.push(`Last trained: ${prior.name || 'Workout'} · ${ago(prior.start)}`);
   if (prior && inWeek) bits.push(`${inWeek} workout${inWeek > 1 ? 's' : ''} in the last 7 days`);
   card.append(h('div', { class: 'td-train-top' }, h('span', { class: 'well train lg' }, icon('dumbbell')),
-    h('div', { class: 'grow' }, h('h3', null, 'No workout yet'), bits.length ? bits.map((b) => h('div', { class: 'small muted' }, b)) : h('div', { class: 'small muted' }, 'Log sets, reps and weight. The app remembers last time.')),
-    h('button', { class: 'btn sm primary nowrap', onClick: () => ctx.go('train') }, icon('play', 16), dayPlan ? 'Start' : 'Train')));
+    h('div', { class: 'grow' }, h('h3', null, 'No workout yet'), bits.length ? bits.map((b) => h('div', { class: 'small muted' }, b)) : h('div', { class: 'small muted' }, 'Log sets, reps and weight. The app remembers last time.'))),
+    act(h('button', { class: 'btn primary', onClick: () => ctx.go('train') }, icon('play', 18), dayPlan ? `Start ${dayPlan.name}` : 'Start workout')));
   return card;
+}
+
+// Everything about one finished session: score, wins, what to improve, the comparison and sets per muscle group.
+function verdictSheet(ctx, w, v) {
+  const m = GRADE[v.grade] || GRADE.solid, s = v.stats, cmp = v.compare;
+  const rg = ring({ size: 84, stroke: 9, pct: v.score, color: TONE[m.tone], cls: 'td-score', children: [h('span', { class: 'td-vs-n' }, String(v.score))] });
+  const when = `${fmtDateLabel(dateKey(new Date(w.start)), ctx.today)}, ${fmtTime(w.start)}`;
+  const stat = (val, l) => h('div', { class: 'td-vs-stat' }, h('b', null, val), h('span', null, l));
+  const section = (title, body) => h('section', { class: 'td-vs-sec' }, h('h3', null, title), body);
+  const body = h('div', { class: 'td-vs' },
+    h('div', { class: 'td-vs-hero' }, rg, h('div', { class: 'grow' }, gradePill(v.grade), h('div', { class: 'td-vs-head' }, v.headline), h('div', { class: 'small muted' }, `${when}${s.mins != null ? ` · ${s.mins} min` : ''}`))),
+    h('div', { class: 'td-vs-stats' }, stat(`${s.sets}${s.planned && s.planned !== s.sets ? `/${s.planned}` : ''}`, 'sets'), stat(fmt(s.volume), 'kg lifted'), stat(s.mins != null ? String(s.mins) : '–', 'minutes'), stat(String(s.prs), s.prs === 1 ? 'PR' : 'PRs')),
+    v.wins.length ? section('What went well', h('ul', { class: 'td-rl' }, v.wins.map((t) => noteRow('check', 'good', t)))) : null,
+    section('To improve', v.improve.length ? h('ul', { class: 'td-rl' }, v.improve.map((t) => noteRow('arrowUp', 'warn', t))) : h('p', { class: 'small muted' }, 'Nothing to fix. Repeat this next time.')));
+  if (cmp) {
+    const mx = Math.max(s.volume, cmp.volume, 1), up = cmp.volumeDelta >= 3, down = cmp.volumeDelta <= -10;
+    const tracks = [[w.name || 'This session', s.volume, 'now'], [`${cmp.name}, ${fmtShortDate(cmp.date)}`, cmp.volume, 'then']];
+    const rows = tracks.map(([l, val, cls]) => { const i = h('i', { class: cls }); setTimeout(() => fill(i, (val / mx) * 100, { key: `vc:${w.id}:${cls}`, ms: 700 }), 200); return h('div', { class: 'td-cmp-row' }, h('span', { class: 'td-cmp-l ellipsis' }, l), h('div', { class: 'td-cmp-t' }, i), h('b', null, fmt(val))); });
+    body.append(section(`vs ${cmp.name}, ${fmtShortDate(cmp.date)}`, h('div', { class: 'stack td-cmp' },
+      h('div', { class: 'td-cmp-chips' }, h('span', { class: 'pill ' + (up ? 'good' : down ? 'bad' : '') }, icon(up ? 'trendUp' : down ? 'trendDown' : 'arrowRight', 14), `volume ${signed(cmp.volumeDelta)} %`), h('span', { class: 'pill' }, cmp.setsDelta ? `${signed(cmp.setsDelta)} set${Math.abs(cmp.setsDelta) === 1 ? '' : 's'}` : 'same sets')),
+      h('div', { class: 'td-cmp-rows' }, rows), h('div', { class: 'micro muted' }, 'Volume in kg, sets times reps times weight.'))));
+  }
+  const groups = Object.entries(s.groups || {}).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+  if (groups.length) {
+    const top = groups[0][1];
+    body.append(section('Sets per muscle group', h('div', { class: 'stack' }, h('div', { class: 'td-gb' }, groups.map(([g, n], i) => { const bar = h('i'); setTimeout(() => fill(bar, (n / top) * 100, { key: `vg:${w.id}:${g}`, delay: i * 40, ms: 600 }), 200); return setVar(h('div', { class: 'td-gb-row' }, h('span', { class: 'td-gb-n' }, h('i', { class: 'dot' }), g), h('div', { class: 'td-cmp-t' }, bar), h('b', null, String(n))), '--g', `var(${GROUP_VAR[g] || '--muted'})`); })), h('div', { class: 'micro muted' }, 'Helper muscles count half, so a group can add up to more than your sets.'))));
+  }
+  const api = sheet({ title: w.name || 'Workout', content: body, actions: (a) => [h('button', { class: 'btn', onClick: a.close }, 'Done'), h('button', { class: 'btn primary', onClick: () => { a.close(); ctx.go('train'); } }, 'Open in Train')] });
+  setTimeout(() => fill(rg.fillEl, v.score, { axis: 'ring', key: `vs:${w.id}`, ms: 850 }), 160);
+  return api;
+}
+
+// ---------------------------------------------------------------- your day: in → out → net, the day score, steps, and (evening) the week
+const scoreWord = (s, done) => (s >= 80 ? 'Strong' : s >= 60 ? 'Solid' : s >= 40 ? (done ? 'Fair' : 'Building') : done ? 'Light' : 'Early');
+const scoreTone = (s) => (s >= 75 ? 'good' : s >= 45 ? 'accent' : 'warn');
+const WORD_ICO = { good: 'zap', accent: 'check', warn: 'leaf' };
+// Is this net what the user is after? Cutting wants a deficit, bulking a surplus, maintaining stays close to even.
+function netTone(net, goal) {
+  const g = String(goal || 'cut');
+  if (g.startsWith('cut')) return net <= 0 ? 'good' : net < 300 ? 'warn' : 'bad';
+  if (g === 'bulk') return net >= 0 ? 'good' : net > -300 ? 'warn' : 'bad';
+  return Math.abs(net) < 250 ? 'good' : 'warn';
+}
+// the verdict's sentences, each with the icon that says what it is about
+function lineKind(s) {
+  if (/^(Strong|Solid|Light) session/.test(s)) return ['dumbbell', 'train'];
+  if (/^No training/.test(s)) return ['moon', 'rest'];
+  if (/^Protein/.test(s)) return /hit/.test(s) ? ['check', 'good'] : ['target', 'warn'];
+  return ['info', 'info'];
+}
+
+function recapCard(ctx, key, isToday, dv, jobs, first) {
+  const hour = new Date().getHours(), eve = !isToday || hour >= 20; // after 8 pm, or looking back at a finished day
+  const bare = !dv.items && !dv.steps && !dv.sessions.length;
+  if (bare && !isToday) return null;
+  const tone = scoreTone(dv.score), word = bare ? (eve ? 'Nothing logged' : 'Not started') : scoreWord(dv.score, eve);
+  const k = (n) => `rc:${n}:${key}`, d0 = first ? 160 : 0;
+  const card = h('div', { class: 'card td-recap' + (eve ? ' eve' : '') + (bare ? ' bare' : '') });
+
+  // head: title and the one-word verdict on the left, the 0-100 ring on the right
+  const scoreEl = h('span', { class: 'td-score-n' }, bare ? '–' : String(dv.score));
+  const rg = ring({ size: bare ? 46 : eve ? 74 : 62, stroke: bare ? 5 : eve ? 8 : 7, pct: bare ? 0 : dv.score, color: TONE[tone], cls: 'td-score', children: [scoreEl] });
+  rg.setAttribute('role', 'img'); rg.setAttribute('aria-label', bare ? 'Day score: nothing logged yet' : `Day score ${dv.score} out of 100, ${word}`);
+  card.append(h('div', { class: 'td-rc-head' },
+    h('div', { class: 'grow' }, h('h3', null, eve ? 'Evening recap' : 'Your day so far'),
+      h('div', { class: 'td-rc-sub' }, h('span', { class: 'td-word ' + (bare ? '' : tone) }, bare ? null : icon(WORD_ICO[tone], 14), word), dv.partial ? h('span', { class: 'pill warn' }, 'Partly logged') : h('span', { class: 'small muted' }, bare ? '' : 'day score'))),
+    rg));
+  jobs.push(() => {
+    const prev = recall(`dsn:${key}`);
+    if (!bare) { fill(rg.fillEl, dv.score, { axis: 'ring', key: `ds:${key}`, ms: 900, delay: d0 }); countUp(scoreEl, dv.score, { key: `dsn:${key}`, ms: 900 }); if (prev != null && prev !== dv.score) pulse(rg, { scale: 1.08, ms: 380 }); }
+    else { remember(`ds:${key}`, 0); remember(`dsn:${key}`, 0); }
+  });
+
+  // energy flow: In → Out → Net, then two thin bars (In above, Out split into resting / walking / training)
+  if (!bare) {
+    const noFood = !dv.items, net = dv.net, nt = noFood ? '' : netTone(net, state.profile?.goal);
+    const sgn = (v) => { const r = Math.round(v); return (r < 0 ? '−' : r > 0 ? '+' : '') + fmt(Math.abs(r)); };
+    const inEl = h('b', { class: 'td-fl-n' }, fmt(dv.intake)), outEl = h('b', { class: 'td-fl-n' }, fmt(dv.burn.total)), netEl = h('b', { class: 'td-fl-n' }, noFood ? '–' : sgn(net));
+    const col = (cls, label, valEl, sub) => h('div', { class: 'td-fl ' + cls }, h('span', { class: 'td-fl-l' }, label), valEl, sub);
+    const arrow = () => h('span', { class: 'td-fa', 'aria-hidden': 'true' }, icon('arrowRight', 14));
+    const netSub = h('span', { class: 'td-fl-s' }, noFood ? 'log food' : Math.abs(net) < 25 ? 'even' : [icon(net < 0 ? 'arrowDown' : 'arrowUp', 12), net < 0 ? 'deficit' : 'surplus']);
+    card.append(h('div', { class: 'td-flow', role: 'group', 'aria-label': noFood ? `Out about ${fmt(dv.burn.total)} kcal` : `${fmt(dv.intake)} kcal in, ${fmt(dv.burn.total)} out, net ${sgn(net)}` },
+      col('in', 'In', inEl, h('span', { class: 'td-fl-s' }, 'kcal eaten')), arrow(), col('out', 'Out', outEl, h('span', { class: 'td-fl-s' }, 'kcal burned')), arrow(), col('net ' + nt, 'Net', netEl, netSub)));
+    const mx = Math.max(dv.intake, dv.burn.total, 1), seg = (cls) => h('i', { class: cls });
+    const bIn = seg('in'), bR = seg('r'), bW = seg('w'), bT = seg('t');
+    card.append(h('div', { class: 'td-bars', 'aria-hidden': 'true' },
+      h('div', { class: 'td-bar' }, h('span', { class: 'td-bar-l' }, 'In'), h('div', { class: 'td-bar-t' }, bIn)),
+      h('div', { class: 'td-bar' }, h('span', { class: 'td-bar-l' }, 'Out'), h('div', { class: 'td-bar-t' }, bR, bW, bT))));
+    const lg = (cls, label, v) => h('div', { class: 'td-lg' }, h('span', { class: 'td-lg-l' }, h('i', { class: cls }), label), h('b', null, fmt(v)));
+    card.append(h('div', { class: 'td-legend' }, lg('r', 'Resting', dv.burn.resting), lg('w', 'Walking', dv.burn.steps), lg('t', 'Training', dv.burn.workouts)));
+    if (isToday && dv.burn.restingFull) card.append(h('p', { class: 'td-rc-note micro muted' }, `Resting burn so far: ${fmt(dv.burn.resting)} of ${fmt(dv.burn.restingFull)} kcal for the full day.`));
+    jobs.push(() => {
+      countUp(inEl, dv.intake, { key: k('in'), ms: 750, fmt }); countUp(outEl, dv.burn.total, { key: k('out'), ms: 750, fmt });
+      if (!noFood) countUp(netEl, net, { key: k('net'), ms: 750, fmt: sgn }); else remember(k('net'), 0);
+      const pc = (v) => (v / mx) * 100, o = { ms: 650, delay: d0 };
+      fill(bIn, pc(dv.intake), { ...o, key: k('bi') }); fill(bR, pc(dv.burn.resting), { ...o, key: k('br') }); fill(bW, pc(dv.burn.steps), { ...o, key: k('bw'), delay: d0 + 90 }); fill(bT, pc(dv.burn.workouts), { ...o, key: k('bt'), delay: d0 + 180 });
+    });
+  }
+
+  // steps: tap to add or change them (the same sheet the Steps tile opens)
+  const sp = dv.stepGoal ? Math.min(100, (dv.steps / dv.stepGoal) * 100) : 0, sBar = h('i');
+  card.append(h('button', { class: 'td-r-steps', 'aria-label': dv.steps ? `${fmt(dv.steps)} of ${fmt(dv.stepGoal)} steps. Tap to edit.` : 'Add your steps for the day', onClick: () => stepsSheet(ctx, key) },
+    h('span', { class: 'well stp' }, icon('steps')),
+    h('div', { class: 'grow' }, dv.steps
+      ? [h('div', { class: 'td-r-st-top' }, h('b', null, `${fmt(dv.steps)} steps`), h('span', { class: 'small muted nowrap' }, `${Math.round((dv.steps / dv.stepGoal) * 100)}% of ${fmt(dv.stepGoal)}`)), h('div', { class: 'td-track stp' }, sBar)]
+      : [h('div', { class: 'td-r-st-top' }, h('b', { class: 'txt' }, 'Add your steps')), h('div', { class: 'micro muted' }, 'Walking burn counts once you do')]),
+    h('span', { class: 'td-r-go', 'aria-hidden': 'true' }, icon('right', 16))));
+  jobs.push(() => fill(sBar, sp, { key: k('st'), ms: 650, delay: d0 }));
+
+  // the sentences
+  // the energy sentence repeats the three numbers above; the session sentence repeats the training card below; an empty day has nothing to say
+  const lines = bare ? [] : (dv.lines || []).filter((l) => !/kcal in, about/.test(l) && !(dv.sessions.length && /^(Strong|Solid|Light) session/.test(l)));
+  if (lines.length) card.append(h('ul', { class: 'td-rl' }, lines.map((l) => { const [ico, cls] = lineKind(l); return noteRow(ico, cls, l); })));
+
+  if (eve) { const wk = weekStrip(key, jobs); if (wk) card.append(wk); }
+  return card;
+}
+
+// Last 7 days of day scores as small bars ending on the day being viewed.
+function weekStrip(key, jobs) {
+  let wk; try { wk = weekVerdict(key); } catch (e) { console.error(e); return null; }
+  const has = (d) => !!(d.items || d.sessions.length || d.steps), have = wk.days.filter(has);
+  if (!have.length) return null;
+  const avg = Math.round(have.reduce((a, d) => a + d.score, 0) / have.length);
+  const cols = wk.days.map((d, i) => {
+    const on = has(d), bar = h('i', { class: on ? scoreTone(d.score) : '' });
+    jobs.push(() => fill(bar, on ? Math.max(8, d.score) : 0, { axis: 'y', key: `wk:${i}:${key}`, ms: 620, delay: i * 40 }));
+    return h('div', { class: 'td-wk-col' + (d.key === key ? ' on' : '') + (on ? '' : ' none'), 'aria-label': `${fmtDateLabel(d.key, dateKey())}: ${on ? 'score ' + d.score : 'nothing logged'}` },
+      h('span', { class: 'td-wk-n' }, on ? String(d.score) : '–'), h('div', { class: 'td-wk-t' }, bar), h('span', { class: 'td-wk-d' }, fmtDow(d.key)[0]));
+  });
+  return h('div', { class: 'td-wk' },
+    h('div', { class: 'td-wk-h' }, h('h3', null, 'Last 7 days'), h('span', { class: 'small muted nowrap' }, `average ${avg}`)),
+    h('div', { class: 'td-wk-bars' }, cols),
+    h('div', { class: 'td-pills' }, h('span', { class: 'pill' }, `${wk.sessions} session${wk.sessions === 1 ? '' : 's'}`), h('span', { class: 'pill p' }, `Protein hit on ${wk.proteinDays} of ${wk.loggedDays} logged days`)));
+}
+
+// ---------------------------------------------------------------- steps
+// First number in a piece of text: "6,500", "6 500", "6532.0" or "Steps: 6532 today". Null when there is none, or it cannot be a step count.
+function parseSteps(text) {
+  const m = String(text ?? '').match(/\d{1,3}(?:[ ,  ]\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?/);
+  if (!m) return null;
+  const n = Math.round(parseFloat(m[0].replace(/[ ,  ]/g, '')));
+  return Number.isFinite(n) && n >= 0 && n <= 100000 ? n : null;
+}
+const SHORTCUT_URL = 'https://shivamsahugzp.github.io/shredlog/#today?steps=';
+
+// "#today?steps=6500" from an iPhone Shortcut: save it for today, once per hand-off.
+function takeShortcutSteps(ctx) {
+  const p = ctx.params;
+  if (!p || p.steps == null || shortcutSeen.has(p)) return null;
+  shortcutSeen.add(p);
+  const n = parseSteps(p.steps);
+  if (n == null) { toast('Steps from Shortcut were not a number.', { ms: 3600 }); return null; }
+  const key = ctx.today, prev = stepsOn(key), goal = state.settings.stepTarget || 8000;
+  setSteps(key, n);
+  return { n, prev, key, goal };
+}
+function afterShortcutSteps({ n, prev, key, goal }) {
+  haptic('success');
+  toast(`Steps from Shortcut: ${fmt(n)}`, { undo: () => setSteps(key, prev || 0), kind: 'success' });
+  if (n >= goal && prev < goal) setTimeout(() => { celebrate(document.querySelector('.td-steps-tile, .td-r-steps'), { kind: 'goal' }); haptic('success'); }, 450);
+}
+
+function stepsSheet(ctx, key) {
+  const isToday = key === ctx.today, goal = state.settings.stepTarget || 8000, prev = stepsOn(key);
+  const kg = dayIfAny(key)?.weight || state.profile?.weightKg || 70;
+  const everLogged = lastNDays(30, ctx.today).some((d) => stepsOn(d) > 0);
+  const input = h('input', { class: 'td-steps-in', type: 'number', inputmode: 'numeric', enterkeyhint: 'done', min: '0', max: '100000', step: '1', placeholder: '0', 'aria-label': 'Steps', value: prev ? String(prev) : '' });
+  const read = () => { const n = parseInt(input.value, 10); return Number.isFinite(n) && n > 0 ? Math.min(n, 100000) : 0; };
+  const kcalEl = h('b', null), pctEl = h('span', { class: 'small muted' }), bar = h('i'), prevBox = h('div', { class: 'td-ss-prev' }, h('div', { class: 'td-ss-prev-top' }, kcalEl, pctEl), h('div', { class: 'td-track stp' }, bar));
+  const paint = () => {
+    const n = read(), pc = Math.min(100, (n / goal) * 100);
+    kcalEl.textContent = n ? `about ${fmt(stepsKcal(n, kg))} kcal walked` : 'Enter your steps for the day';
+    pctEl.textContent = n ? `${Math.round((n / goal) * 100)}% of ${fmt(goal)}` : `Goal ${fmt(goal)}`;
+    fill(bar, pc, { key: `ss:${key}`, ms: 380 });
+  };
+  input.addEventListener('input', paint); input.addEventListener('focus', () => input.select());
+  const setTo = (n) => { input.value = n ? String(Math.min(100000, n)) : ''; paint(); pulse(input, { scale: 1.04, ms: 260 }); };
+  // the clipboard is read inside the tap itself, which is the only place iOS allows it
+  const paste = () => {
+    haptic();
+    let p;
+    try { p = navigator.clipboard && navigator.clipboard.readText ? navigator.clipboard.readText() : Promise.reject(new Error('no clipboard')); } catch (e) { p = Promise.reject(e); }
+    p.then((t) => {
+      const n = parseSteps(t);
+      if (n == null || !n) { toast('No step count on the clipboard.', { ms: 3200 }); input.focus(); return; }
+      setTo(n); haptic('success'); toast(`Pasted ${fmt(n)} steps. Tap Save steps.`);
+    }).catch(() => { toast('Clipboard blocked. Hold the field to paste.', { ms: 3600 }); input.focus(); });
+  };
+  const chip = (label, aria, fn) => h('button', { type: 'button', class: 'chip', 'aria-label': aria, onClick: () => { haptic(); fn(); } }, label);
+  const quick = h('div', { class: 'td-sq' }, chip('+1k', 'Add 1,000 steps', () => setTo(read() + 1000)), chip('+2k', 'Add 2,000 steps', () => setTo(read() + 2000)),
+    chip('5k', 'Set 5,000 steps', () => setTo(5000)), chip('8k', 'Set 8,000 steps', () => setTo(8000)), chip('10k', 'Set 10,000 steps', () => setTo(10000)));
+
+  // the automatic route: an iPhone Shortcut reads Health once a day and hands the number over
+  const node = (ico, label) => h('div', { class: 'td-fn' }, h('span', { class: 'well' }, icon(ico, 20)), h('span', { class: 'td-fn-l' }, label));
+  const fa = () => h('span', { class: 'td-fa', 'aria-hidden': 'true' }, icon('arrowRight', 14));
+  const copyLink = () => { try { navigator.clipboard.writeText(SHORTCUT_URL).then(() => toast('Link copied. Paste it into Open URL.'), () => toast('Could not copy. Select it by hand.')); } catch (e) { toast('Could not copy. Select it by hand.'); } };
+  const setup = h('div', { class: 'td-setup' + (everLogged ? '' : ' open') });
+  const head = h('button', { type: 'button', class: 'td-setup-h', 'aria-expanded': everLogged ? 'false' : 'true', onClick: () => { const o = setup.classList.toggle('open'); head.setAttribute('aria-expanded', o ? 'true' : 'false'); } },
+    h('span', { class: 'well good' }, icon('footprints')), h('div', { class: 'grow' }, h('b', null, 'Set up automatic steps'), h('div', { class: 'micro muted' }, 'Once, about two minutes')), h('span', { class: 'chev', 'aria-hidden': 'true' }, icon('down', 18)));
+  setup.append(head, h('div', { class: 'td-setup-b' },
+    h('div', { class: 'td-fg', 'aria-hidden': 'true' }, node('clock', '9:30 pm'), fa(), node('heartbeat', 'Steps sum'), fa(), node('copy', 'Clipboard'), fa(), node('steps', 'ShredLog')),
+    h('ol', { class: 'td-su' },
+      h('li', null, 'Open the Shortcuts app, tap Automation, then the plus button.'),
+      h('li', null, 'Choose Time of Day, for example 9:30 pm, repeat Daily, and Run Immediately.'),
+      h('li', null, 'Add Find Health Samples: Type Steps, Start Date is Today. Then total them with Sum.'),
+      h('li', null, 'Add Copy to Clipboard with that total.'),
+      h('li', { class: 'opt' }, h('span', null, h('b', null, 'Optional: '), 'add Open URL with the link below and put the total right after the equals sign. ShredLog then opens with your steps already saved.')),
+      h('li', null, 'No link? Open ShredLog, tap Steps, then Paste. One tap fills it in.')),
+    h('div', { class: 'td-url' }, h('code', null, 'https://shivamsahugzp.github.io/', h('wbr'), 'shredlog/', h('wbr'), '#today?steps='), h('button', { type: 'button', class: 'icon-btn plain', 'aria-label': 'Copy the link', onClick: copyLink }, icon('copy'))),
+    h('div', { class: 'callout info small' }, icon('info'), h('div', null, 'A web app cannot read Apple Health by itself. A Shortcut can, so this is the closest to automatic: it hands the number over, ShredLog never sees the rest of Health.'))));
+
+  const body = h('div', { class: 'td-ss' },
+    h('div', { class: 'td-ss-field' }, input, h('button', { type: 'button', class: 'btn td-ss-paste', onClick: paste }, icon('clipboard', 20), 'Paste')),
+    prevBox, quick, setup);
+  paint();
+  const api = sheet({ title: isToday ? 'Steps today' : `Steps, ${fmtDateLabel(key, ctx.today)}`, content: body,
+    actions: (a) => [prev ? h('button', { class: 'btn', onClick: () => { a.close(); haptic('warn'); setSteps(key, 0); toast('Steps cleared', { undo: () => setSteps(key, prev) }); } }, 'Clear') : h('button', { class: 'btn', onClick: a.close }, 'Cancel'),
+      h('button', { class: 'btn primary', onClick: () => {
+        const n = read(); a.close(); haptic('success'); setSteps(key, n);
+        toast(n ? `Steps saved: ${fmt(n)}` : 'Steps cleared', { undo: () => setSteps(key, prev) });
+        if (n >= goal && prev < goal) setTimeout(() => { celebrate(document.querySelector('.td-steps-tile, .td-r-steps'), { kind: 'goal' }); haptic('success'); }, 420);
+      } }, 'Save steps')] });
+  return api;
 }
 
 // ---------------------------------------------------------------- ledger
@@ -370,7 +639,7 @@ function ledgerRow(it, key, ctx, gap) {
   const { type, e } = it;
   let name, meta, kcal, sub, tl, onDelete = null;
   if (type === 'food' || type === 'chai') {
-    name = e.name; meta = `${servingText(e)}${e.oilTsp ? ` · +${e.oilTsp} tsp oil` : ''} · P ${Math.round(e.p)} g`; kcal = fmt(e.kcal); sub = 'kcal'; tl = cap(e.meal);
+    name = tidyName(e.name); meta = `${servingText(e)}${e.oilTsp ? ` · +${e.oilTsp} tsp oil` : ''} · P ${Math.round(e.p)} g`; kcal = fmt(e.kcal); sub = 'kcal'; tl = cap(e.meal);
     onDelete = () => { const copy = { ...e }; haptic('warn'); removeFood(key, e.id); toast(`Removed ${name.length > 26 ? name.slice(0, 25) + '…' : name}`, { undo: () => logFood(key, copy) }); };
   } else if (type === 'cig') {
     name = 'Cigarette'; meta = e.note || (gap ? `${gapText(gap)} after the last` : 'First of the day'); kcal = ''; sub = '';
@@ -401,10 +670,12 @@ function itemSheet(it, key, ctx) {
       if (type === 'cig') { removeHabit(key, e.id); toast('Removed', { undo: () => logHabit(key, 'cig', copy) }); }
       else { removeFood(key, e.id); toast('Removed', { undo: () => logFood(key, copy) }); }
     } }, icon('trash'), 'Delete'), type !== 'cig' ? h('button', { class: 'btn', onClick: () => { api.close(); ctx.go('food', { edit: e.id, date: key }); } }, icon('edit'), 'Edit in Food') : null] });
-  if (type !== 'cig') s.el.querySelector('.sheet-body').append(h('p', { class: 'small muted', style: { marginTop: '10px' } }, `${servingText(e)} (${Math.round(e.g)} g) · ${e.meal} · ${fmtTime(e.ts)}${e.fiber || e.sugar ? ` · fibre ${Math.round(e.fiber || 0)} g · sugar ${Math.round(e.sugar || 0)} g` : ''}`));
+  if (type !== 'cig') s.el.querySelector('.sheet-body').append(h('p', { class: 'small muted', style: { marginTop: '10px' } }, `${servingText(e)}${e.g > 0 ? ` (${Math.round(e.g)} g)` : ''} · ${e.meal} · ${fmtTime(e.ts)}${e.fiber || e.sugar ? ` · fibre ${Math.round(e.fiber || 0)} g · sugar ${Math.round(e.sugar || 0)} g` : ''}`));
 }
 
 // ---------------------------------------------------------------- quick logging
+// A tap on a past day belongs to that day: stamp it at noon, never with the moment of the tap (which would also reset "since last cigarette").
+const past = (key) => (key === dateKey() ? {} : { ts: new Date(key + 'T12:00:00').getTime() });
 const chaiEntries = (key) => (dayIfAny(key)?.food || []).filter(isChai).sort((a, b) => a.ts - b.ts);
 
 function chaiFields() {
@@ -419,11 +690,11 @@ function chaiFields() {
 // What each counter tile edits: its entries, how one is added, removed and put back. `val` is what one entry counts for; `unit` is one tap.
 const KINDS = {
   chai: (key) => ({ key, noun: 'chai', title: 'Chai', ico: 'cup', cls: 'chai', unit: 1, val: () => 1, list: () => chaiEntries(key),
-    label: (e) => e.name, sub: (e) => `${Math.round(e.kcal)} kcal`, del: (e) => removeFood(key, e.id), put: (c) => logFood(key, c), add: () => { const f = chaiFields(); return f ? logFood(key, f) : null; }, count: () => chaiEntries(key).length }),
+    label: (e) => e.name, sub: (e) => `${Math.round(e.kcal)} kcal`, del: (e) => removeFood(key, e.id), put: (c) => logFood(key, c), add: () => { const f = chaiFields(); return f ? logFood(key, { ...f, ...past(key) }) : null; }, count: () => chaiEntries(key).length }),
   cig: (key) => ({ key, noun: 'cigarette', title: 'Cigarettes', ico: 'cig', cls: 'cig', unit: 1, val: () => 1, list: () => habitEntries(key, 'cig').sort((a, b) => a.ts - b.ts),
-    label: () => 'Cigarette', sub: (e) => e.note || '', del: (e) => removeHabit(key, e.id), put: (c) => logHabit(key, 'cig', c), add: () => logHabit(key, 'cig'), count: () => habitCount(key, 'cig') }),
+    label: () => 'Cigarette', sub: (e) => e.note || '', del: (e) => removeHabit(key, e.id), put: (c) => logHabit(key, 'cig', c), add: () => logHabit(key, 'cig', past(key)), count: () => habitCount(key, 'cig') }),
   water: (key) => { const g = state.settings.glassMl || 250; return { key, noun: 'water', title: 'Water', ico: 'drop', cls: 'water', unit: g, val: (e) => e.ml || g, list: () => habitEntries(key, 'water').sort((a, b) => a.ts - b.ts),
-    label: (e) => `${e.ml || g} ml`, sub: () => '', del: (e) => removeHabit(key, e.id), put: (c) => logHabit(key, 'water', c), add: (need) => logHabit(key, 'water', { ml: Math.round(need || g) }), count: () => Math.round(waterMl(key) / g) }; },
+    label: (e) => `${e.ml || g} ml`, sub: () => '', del: (e) => removeHabit(key, e.id), put: (c) => logHabit(key, 'water', c), add: (need) => logHabit(key, 'water', { ml: Math.round(need || g), ...past(key) }), count: () => Math.round(waterMl(key) / g) }; },
 };
 
 // The "−" on a tile: remove the most recent entry of that kind, with Undo.
@@ -437,16 +708,16 @@ function undoLast(cfg) {
 
 function tapChai(key) {
   const f = chaiFields(); if (!f) return toast('No chai in the food list yet');
-  const e = logFood(key, f); haptic();
+  const e = logFood(key, { ...f, ...past(key) }); haptic();
   toast(`Chai ${chaiCount(key)} today · ${Math.round(e.kcal)} kcal`, { undo: () => removeFood(key, e.id) });
 }
 function tapCig(key) {
-  const e = logHabit(key, 'cig'); haptic();
+  const e = logHabit(key, 'cig', past(key)); haptic();
   const n = habitCount(key, 'cig'), lim = state.targets?.cigLimit;
   toast(`Cigarette ${n} today${lim ? ` · limit ${lim}` : ''}`, { undo: () => removeHabit(key, e.id) });
 }
 function tapWater(key, water, glasses, goalGlasses, glassMl, under) {
-  const e = logHabit(key, 'water', { ml: glassMl }); haptic();
+  const e = logHabit(key, 'water', { ml: glassMl, ...past(key) }); haptic();
   const g = Math.round(((water + glassMl) / glassMl) * 10) / 10;
   if (g >= goalGlasses && glasses < goalGlasses) { celebrate(under.parentNode, { kind: 'goal' }); haptic('success'); }
   toast(`Water: ${n1(g)} of ${goalGlasses} glasses · ${fmt((water + glassMl) / 1000, 2)} L`, { undo: () => removeHabit(key, e.id) });

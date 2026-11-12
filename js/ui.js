@@ -23,68 +23,45 @@ export function append(el, ...children) {
 export function clear(el) { while (el.firstChild) el.removeChild(el.firstChild); return el; }
 export function frag(...children) { const f = document.createDocumentFragment(); append(f, children); return f; }
 
-// ---- icons (24 viewBox, stroke currentColor) ----
-const P = {
-  home: 'M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
-  bowl: 'M4 11h16a8 8 0 0 1-16 0zM8 3c0 2-2 2-2 4M13 3c0 2-2 2-2 4M18 3c0 2-2 2-2 4',
-  dumbbell: 'M3 10v4M6 8v8M18 8v8M21 10v4M6 12h12',
-  flame: 'M12 3s5 4.5 5 9.5a5 5 0 0 1-10 0c0-2.5 1-4 2-5 0 2 1 3 2 3 0-3 1-5.5 1-7.5z',
-  chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
-  gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z',
-  plus: 'M12 5v14M5 12h14', minus: 'M5 12h14', check: 'M5 12l5 5L20 7', x: 'M6 6l12 12M18 6L6 18',
-  left: 'M15 6l-6 6 6 6', right: 'M9 6l6 6-6 6', down: 'M6 9l6 6 6-6',
-  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5',
-  trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
-  clock: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 6v6l4 2',
-  cup: 'M4 8h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM16 10h2a2 2 0 0 1 0 4h-2M7 4c0 1-1 1-1 2M11 4c0 1-1 1-1 2',
-  cig: 'M3 15h14v4H3zM19 15h2v4h-2zM18 5c-2 1-2 3 0 4M21 4c-2 1-2 3 0 4',
-  camera: 'M4 8h3l2-3h6l2 3h3v11H4zM12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
-  drop: 'M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z',
-  scale: 'M12 3v4M6 7h12l2 10a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3zM9 13h6',
-  moon: 'M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z',
-  steps: 'M9 3c2 0 3 2 3 5s-1 5-3 5-3-2-3-5 1-5 3-5zM7 15h4v3a2 2 0 0 1-4 0zM16 9c2 0 3 2 3 5s-1 5-3 5-3-2-3-5 1-5 3-5z',
-  edit: 'M4 20h4l10-10-4-4L4 16zM13 7l4 4',
-  star: 'M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z',
-  copy: 'M9 9h10v10H9zM5 15V5h10',
-  play: 'M7 5v14l12-7z', pause: 'M8 5v14M16 5v14',
-  info: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 16v-5M12 8h.01',
-  download: 'M12 3v12M7 10l5 5 5-5M4 21h16', upload: 'M12 21V9M7 14l5-5 5 5M4 3h16',
-  trophy: 'M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 21h8M10 17h4v4h-4z',
-  timer: 'M10 2h4M12 8v5l3 2M12 22a8 8 0 1 0 0-16 8 8 0 0 0 0 16z',
-  more: 'M5 12h.01M12 12h.01M19 12h.01',
-  cal: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4',
-  share: 'M12 3v12M8 7l4-4 4 4M5 12v8h14v-8',
-  swap: 'M7 7h12l-3-3M17 17H5l3 3',
-  target: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
-  bell: 'M6 16V11a6 6 0 1 1 12 0v5l2 2H4zM10 21h4',
-  list: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
-  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
-  heart: 'M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z',
-  note: 'M5 3h10l4 4v14H5zM15 3v4h4M8 12h8M8 16h5',
-  oil: 'M9 2h6v3l2 3v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V8l2-3zM7 14h10',
-  reset: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5',
-  warn: 'M12 3l10 18H2zM12 10v4M12 18h.01',
-  sparkle: 'M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2zM19 15l1 2 2 1-2 1-1 2-1-2-2-1 2-1z',
-  arrowUp: 'M12 19V5M5 12l7-7 7 7', arrowDown: 'M12 5v14M5 12l7 7 7-7',
-  body: 'M12 7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM8 9h8l-1 6h-1l-1 7h-2l-1-7h-1z',
-  plate: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
-  leaf: 'M5 20c0-8 4-14 14-15-1 10-6 15-14 15zM5 20c3-5 6-8 10-10',
-  lock: 'M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5zM12 15v3',
-  sun: 'M12 17a5 5 0 1 0 0-10 5 5 0 0 0 0 10zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
-  palette: 'M12 3a9 9 0 0 0 0 18c1 0 1.5-.6 1.5-1.4 0-.5-.3-.8-.6-1.1-.3-.3-.5-.6-.5-1 0-.8.6-1.5 1.5-1.5H16a5 5 0 0 0 5-5c0-4.4-4-8-9-8zM7.5 12a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM10 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM14 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2zM16.5 12a1 1 0 1 1 0-2 1 1 0 0 1 0 2z',
-  rest: 'M3 12h18M7 8v8M17 8v8M4 10v4M20 10v4',
-  zap: 'M13 2L4 14h6l-1 8 9-12h-6z',
-};
-export function icon(name, size = 20, cls = '') {
-  const d = P[name] || P.info;
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('width', size); svg.setAttribute('height', size);
-  svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round'); svg.setAttribute('aria-hidden', 'true');
-  if (cls) svg.setAttribute('class', cls);
-  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', d); svg.appendChild(p);
+// ---- icons: Phosphor Icons (MIT), duotone weight, data in js/icons.js (viewBox 0 0 256 256, filled, currentColor) ----
+// The import sits here on purpose: this block is the only icon surface in this file. Unknown names fall back to `info`.
+import { ICONS, FILLS, VIEWBOX } from './icons.js';
+const SVGNS = 'http://www.w3.org/2000/svg';
+const has = (name) => Object.prototype.hasOwnProperty.call(ICONS, name);
+const TPL = new Map(); // "w:name" -> parsed <svg> template; icon() only clones it
+function mkPath(d, cls, opacity) {
+  const p = document.createElementNS(SVGNS, 'path');
+  if (cls) p.setAttribute('class', cls);
+  if (opacity) p.setAttribute('opacity', opacity);
+  p.setAttribute('d', d);
+  return p;
+}
+function template(key, build) {
+  let t = TPL.get(key);
+  if (!t) {
+    t = document.createElementNS(SVGNS, 'svg');
+    t.setAttribute('viewBox', VIEWBOX); t.setAttribute('fill', 'currentColor'); t.setAttribute('aria-hidden', 'true'); t.setAttribute('focusable', 'false');
+    build(t); TPL.set(key, t);
+  }
+  return t;
+}
+function stamp(t, size, cls) {
+  const svg = t.cloneNode(true);
+  svg.setAttribute('width', size); svg.setAttribute('height', size);
+  svg.setAttribute('class', cls);
   return svg;
 }
+// Duotone: the soft layer (.d2, 20 % of currentColor, or of --accent when the svg has class "accent") under the solid glyph.
+export function icon(name, size = 20, cls = '') {
+  const key = has(name) ? name : 'info', g = ICONS[key];
+  return stamp(template('d:' + key, (t) => { if (g.d2) t.append(mkPath(g.d2, 'd2', '.2')); t.append(mkPath(g.d)); }), size, 'ph i-' + key + (cls ? ' ' + cls : ''));
+}
+// Fill weight (solid): used by the active tab. Names without a vendored fill glyph fall back to the duotone main path.
+export function iconFill(name, size = 20, cls = '') {
+  const key = has(name) ? name : 'info';
+  return stamp(template('f:' + key, (t) => t.append(mkPath(FILLS[key] || ICONS[key].d))), size, 'ph ph-fill i-' + key + (cls ? ' ' + cls : ''));
+}
+icon.fill = iconFill; // so a caller that already imports icon() (app.js tab bar) can ask for the solid weight without a new import
 
 // ---- sheets ----
 const sheetsRoot = () => document.getElementById('sheets');

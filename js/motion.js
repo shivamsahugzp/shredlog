@@ -180,22 +180,22 @@ export function swipeReveal(row, { label = 'Delete', onAction, width = 96 } = {}
   const act = document.createElement('button'); act.className = 'mo-swipe-act'; act.type = 'button'; act.textContent = label;
   const body = document.createElement('div'); body.className = 'mo-swipe-body';
   row.parentNode.insertBefore(wrap, row); body.append(row); wrap.append(act, body);
-  let id = null, x0 = 0, y0 = 0, dx = 0, open = false, locked = false, dead = false, raf = 0;
+  let id = null, x0 = 0, y0 = 0, dx = 0, raw = 0, open = false, locked = false, dead = false, raf = 0;
   const paint = () => { raf = 0; body.style.transform = `translate3d(${dx}px,0,0)`; };
   const settle = (to) => { dx = to; open = to < 0; wrap.classList.toggle('open', open); if (canAnimate()) body.style.transition = 'transform .24s cubic-bezier(.22,1,.36,1)'; body.style.transform = `translate3d(${to}px,0,0)`; setTimeout(() => { body.style.transition = ''; if (!open) wrap.classList.remove('dragging'); }, 260); };
-  const down = (e) => { if (e.pointerType === 'mouse' && e.button !== 0) return; id = e.pointerId; x0 = e.clientX; y0 = e.clientY; locked = false; dead = false; body.style.transition = ''; };
+  const down = (e) => { if (e.pointerType === 'mouse' && e.button !== 0) return; id = e.pointerId; x0 = e.clientX; y0 = e.clientY; raw = 0; locked = false; dead = false; body.style.transition = ''; };
   const move = (e) => {
     if (e.pointerId !== id || dead) return;
     const mx = e.clientX - x0 + (open ? -width : 0), my = e.clientY - y0;
     if (!locked) { if (Math.abs(my) > 8 && Math.abs(my) > Math.abs(mx - (open ? -width : 0))) { dead = true; return; } if (Math.abs(mx - (open ? -width : 0)) < 8) return; locked = true; wrap.classList.add('dragging'); }
-    dx = Math.min(0, Math.max(-wrap.clientWidth, mx)); if (dx < -width) dx = -width - (-dx - width) * 0.25;
+    dx = Math.min(0, Math.max(-wrap.clientWidth, mx)); raw = dx; if (dx < -width) dx = -width - (-dx - width) * 0.25;
     if (!raf) raf = requestAnimationFrame(paint);
     e.preventDefault();
   };
   const up = (e) => {
     if (e.pointerId !== id) return; id = null; if (!locked) return;
     if (raf) { cancelAnimationFrame(raf); raf = 0; }
-    if (dx < -wrap.clientWidth * 0.6) { settle(-wrap.clientWidth); setTimeout(() => onAction && onAction(), 120); }
+    if (raw < -wrap.clientWidth * 0.6) { settle(-wrap.clientWidth); setTimeout(() => onAction && onAction(), 120); }
     else if (dx < -width * 0.5) settle(-width); else settle(0);
     body.addEventListener('click', (ev) => { ev.stopPropagation(); ev.preventDefault(); }, { capture: true, once: true });
   };

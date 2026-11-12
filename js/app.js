@@ -29,6 +29,13 @@ let renderToken = 0;
 // Position in the left-to-right slide order. Settings is "one past" Progress so it pushes in from the right and Back slides out to the left.
 const ORDER = ['today', 'food', 'train', 'body', 'progress', 'settings'];
 const $ = (id) => document.getElementById(id);
+// "#today?steps=6500" → { tab: 'today', params: { steps: '6500' } } (an iPhone Shortcut can hand the app a number this way)
+function parseHash() {
+  const raw = location.hash.replace(/^#/, ''), q = raw.indexOf('?');
+  const tab = q >= 0 ? raw.slice(0, q) : raw, params = {};
+  if (q >= 0) for (const [k, v] of new URLSearchParams(raw.slice(q + 1))) params[k] = v;
+  return { tab, params };
+}
 
 export function ctx() {
   return {
@@ -40,8 +47,10 @@ export function ctx() {
   };
 }
 
+const LAST_TAB = 'shredlog-last-tab';
 export async function go(tab, params = {}) {
   if (!VIEWS[tab]) tab = 'today';
+  if (tab !== 'onboarding') { try { localStorage.setItem(LAST_TAB, JSON.stringify({ tab, at: Date.now() })); } catch (e) { /* ignore */ } }
   const prev = current.tab;
   current = { tab, params };
   if (tab !== 'onboarding') { try { history.replaceState(null, '', '#' + tab); } catch (e) { /* ignore */ } }
@@ -103,7 +112,7 @@ function renderTabbar() {
   if (!bar.querySelector('.mo-ind')) {
     clear(bar);
     bar.append(h('span', { class: 'mo-ind', 'aria-hidden': 'true' }, h('i')));
-    for (const t of TABS) bar.append(h('button', { dataset: { id: t.id }, onClick: () => tabPress(t.id) }, icon(t.icon, 24), t.label));
+    for (const t of TABS) bar.append(h('button', { dataset: { id: t.id }, onClick: () => tabPress(t.id) }, h('span', { class: 'tb-ico' }, icon(t.icon, 24, 'ph-off'), icon.fill(t.icon, 24, 'ph-on')), t.label)); // duotone when idle, Phosphor fill on the active pill
     bar.append(h('button', { class: 'mo-rest', hidden: true, 'aria-label': 'Rest timer running. Open Train', onClick: () => go('train') }, icon('timer', 18), h('span', { class: 't' }), h('span', { class: 'n' })));
   }
   const ind = bar.querySelector('.mo-ind'), idx = TABS.findIndex((t) => t.id === current.tab);
@@ -197,18 +206,31 @@ async function boot() {
   watchPRs();
   document.addEventListener('touchstart', () => {}, { passive: true }); // iOS only applies :active press feedback when a touch listener exists
   window.addEventListener('pagehide', () => { flush(); });
+  // Coming back from the lock screen or another app must not throw the user to the top of the page: the view is
+  // refreshed in place and the scroll position restored. Only a date change (past midnight) rebuilds the screen.
+  let scrollAtHide = 0;
   document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); flush(); return; }
-    const t = todayKey(); if (date < t) date = t;
-    if (state.settings.pinHash && hiddenAt && Date.now() - hiddenAt > 60 * 1000) { await lockIfNeeded(); }
-    rerender(true);
+    if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); scrollAtHide = window.scrollY; flush(); return; }
+    const t = todayKey(), dayChanged = date < t; if (dayChanged) date = t;
+    const locked = state.settings.pinHash && hiddenAt && Date.now() - hiddenAt > 60 * 1000;
+    if (locked) { await lockIfNeeded(); }
+    if (dayChanged) { await rerender(true); return; }
+    if (locked || typeof updater !== 'function') await rerender(true); else rerender(false);
+    const y = scrollAtHide; requestAnimationFrame(() => { window.scrollTo(0, y); requestAnimationFrame(() => window.scrollTo(0, y)); });
   });
-  window.addEventListener('hashchange', () => { const tab = location.hash.replace('#', ''); if (tab && tab !== current.tab && VIEWS[tab] && tab !== 'onboarding') go(tab); });
+  window.addEventListener('hashchange', () => { const { tab, params } = parseHash(); if (tab && (tab !== current.tab || Object.keys(params).length) && VIEWS[tab] && tab !== 'onboarding') go(tab, params); });
   if (storage.blocked) {
     document.body.insertBefore(h('div', { class: 'storage-warn', role: 'alert' }, icon('warn', 18), h('div', null, h('b', null, 'This phone is not saving your data. '), 'Everything you log will vanish when the app closes. In iPhone Settings → Safari turn off “Block All Cookies”, and open the app from the Home Screen icon, not a Private tab.')), document.getElementById('app'));
   }
   if (!state.settings.onboarded || !state.profile) { await go('onboarding'); }
-  else { const tab = location.hash.replace('#', ''); await go(VIEWS[tab] && tab !== 'onboarding' ? tab : 'today'); }
+  else {
+    // A killed home-screen app relaunches without a hash: go back to where the user was (within 3 hours), and always to Train
+    // while a workout is in progress.
+    let { tab, params } = parseHash();
+    if (!tab) { try { const last = JSON.parse(localStorage.getItem(LAST_TAB) || 'null'); if (last && Date.now() - last.at < 3 * 3600e3 && VIEWS[last.tab]) tab = last.tab; } catch (e) { /* ignore */ } }
+    if (state.active && !tab) tab = 'train';
+    await go(VIEWS[tab] && tab !== 'onboarding' ? tab : 'today', params);
+  }
   registerSW();
 }
 boot().catch((e) => { console.error(e); document.getElementById('app').innerHTML = `<div class="empty"><b>Could not start</b>${e.message}</div>`; });

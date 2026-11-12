@@ -184,6 +184,8 @@
 .fd-unit { flex: 1 1 150px; min-width: 150px; height: 44px; border-radius: 12px; padding: 0 10px; font-size: 14px; }
 .fd-oilrow { justify-content: space-between; }
 .fd-logbar { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.fd-logbar.glass { padding: 8px; border-radius: 26px; background: color-mix(in srgb, var(--card) 93%, transparent); } /* pinned above the tab bar so Log is one tap away however many rows were read */
+.fd-logbar .btn.primary { width: 100%; }
 
 /* ---------- recipes ---------- */
 .fd-ing { background: var(--card-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 8px 8px 10px 12px; display: flex; flex-direction: column; gap: 4px; }

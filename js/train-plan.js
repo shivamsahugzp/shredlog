@@ -138,3 +138,24 @@ export function weekStreak(now = new Date()) {
   for (let i = 0; i < 260 && has(start); i++) { weeks++; start = shiftDate(start, -7); }
   return { weeks, thisWeek };
 }
+
+/**
+ * What you did the last time it was this weekday: the most recent real training session on `weekday` (0 = Sunday, default today)
+ * within the last `weeks` weeks. Today itself is never returned (it is the day being planned), and it does not need a learned
+ * pattern: one session is enough. Used for "Start like last Thursday" and to pre-tick the picker.
+ * Returns { workout, date, weekday, dayName, daysAgo, exercises: [{ exId, name, type, sets }], nSets } or null.
+ */
+export function sameWeekdaySession(weekday = new Date().getDay(), now = new Date(), weeks = 4) {
+  const today = dateKey(now), byDate = new Map();
+  for (const w of state.workouts) { const s = sessionOf(w); if (!s) continue; if (!byDate.has(s.date)) byDate.set(s.date, []); byDate.get(s.date).push(w); }
+  const doneSets = (w) => (w.exercises || []).reduce((n, e) => n + (e.sets || []).filter(isWork).length, 0);
+  for (let k = 1; k <= weeks * 7; k++) {
+    const key = shiftDate(today, -k);
+    if (parseKey(key).getDay() !== weekday || !byDate.has(key)) continue;
+    const w = byDate.get(key).slice().sort((a, b) => doneSets(b) - doneSets(a) || b.start - a.start)[0];
+    const exercises = (w.exercises || []).map((e) => ({ exId: e.exId, name: e.name, type: e.type, sets: (e.sets || []).filter((s) => s.done).length })).filter((e) => e.sets > 0);
+    if (!exercises.length) continue;
+    return { workout: w, date: key, weekday, dayName: DAY_NAMES[weekday], daysAgo: k, exercises, nSets: doneSets(w) };
+  }
+  return null;
+}
