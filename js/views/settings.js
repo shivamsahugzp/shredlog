@@ -9,7 +9,8 @@ import { countUp, growBars, stagger, quiet, pop, pulse } from '../motion.js';
 
 import { VERSION as BUILD, BUILT } from '../version.js';
 const APP_VERSION = '2.0';
-const ACCENTS = [{ id: 'haldi', label: 'Haldi' }, { id: 'neel', label: 'Neel' }, { id: 'pudina', label: 'Pudina' }, { id: 'sindoor', label: 'Sindoor' }];
+const ACCENTS = [{ id: 'neel', label: 'Cobalt' }, { id: 'jamun', label: 'Jamun' }, { id: 'pudina', label: 'Mint' }, { id: 'sindoor', label: 'Coral' }, { id: 'haldi', label: 'Haldi' }];
+const MOTIONS = [{ id: 'full', label: 'Full' }, { id: 'auto', label: 'Follow phone' }, { id: 'reduced', label: 'Off' }];
 const THEMES = [{ id: 'auto', label: 'Auto' }, { id: 'light', label: 'Light' }, { id: 'dark', label: 'Dark' }];
 
 // Inline controls (steppers, segmented, selects) write state on every tick. The screen must not rebuild under a finger that is still
@@ -80,7 +81,7 @@ function probe(theme, accent) {
   const el = document.documentElement, ta = el.getAttribute('data-theme'), aa = el.getAttribute('data-accent');
   const set = (a, v) => (v == null ? el.removeAttribute(a) : el.setAttribute(a, v));
   try {
-    set('data-theme', theme); set('data-accent', !accent || accent === 'haldi' ? null : accent);
+    set('data-theme', theme); set('data-accent', !accent || accent === 'neel' ? null : accent);
     const cs = getComputedStyle(el), g = (k) => cs.getPropertyValue(k).trim();
     return { bg: g('--bg'), card: g('--card'), ink: g('--ink'), accent: g('--accent'), onAccent: g('--accent-ink') };
   } finally { set('data-theme', ta); set('data-accent', aa); }
@@ -94,7 +95,7 @@ function build(ctx) {
   const entries = Object.values(state.log).reduce((a, d) => a + (d.food?.length || 0) + (d.habits?.length || 0), 0) + state.workouts.length;
   const name = (p.name || '').trim();
   const daysLogged = Object.values(state.log).filter((d) => d.food?.length || d.habits?.length || d.weight || d.sleep).length;
-  const theme = s.theme || 'auto', accent = s.accent || 'haldi';
+  const theme = s.theme || 'auto', accent = s.accent || 'neel';
   const light = probe('light', accent), dark = probe('dark', accent);
 
   // ---- hero: who you are ----
@@ -169,7 +170,9 @@ function build(ctx) {
   }
   const appearance = h('div', { class: 'card st-appear' },
     h('div', { class: 'st-lbl' }, 'Theme'), themeRow,
-    h('div', { class: 'st-lbl' }, 'Accent colour'), accRow);
+    h('div', { class: 'st-lbl' }, 'Accent colour'), accRow,
+    h('div', { class: 'st-lbl' }, 'Animations'), segmented(MOTIONS, s.motion || 'full', (v) => { lastEdit = performance.now(); setSetting('motion', v); haptic('tap'); }),
+    h('div', { class: 'small muted', style: { marginTop: '8px' } }, 'Full plays every animation even when the phone has Reduce Motion on. Follow phone respects that setting.'));
 
   // ---- app lock ----
   const lockCard = h('div', { class: 'list st-list' },

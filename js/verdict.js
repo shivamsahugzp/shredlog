@@ -151,7 +151,12 @@ export function dayVerdict(key, now = new Date()) {
   const steps = stepsOn(key), stepsBurn = stepsKcal(steps, d.weight || p.weightKg);
   const ws = workoutsOn(key);
   const workoutBurn = ws.reduce((a, w) => a + (w.kcal || 0), 0);
-  const total = resting + stepsBurn + workoutBurn;
+  // Everyday movement (standing, chores, commuting) is real burn that neither steps nor workouts capture. When no steps are
+  // logged, estimate it from the profile's activity level: roughly 60 % of the activity uplift over resting, prorated by the hour.
+  const mult = ({ sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, athlete: 1.9 })[p.activity] || 1.375;
+  const everydayEstimated = !steps;
+  const everyday = everydayEstimated ? Math.round(restingFull * (mult - 1) * 0.6 * dayFrac) : 0;
+  const total = resting + stepsBurn + workoutBurn + everyday;
   const net = tot.kcal - total;                          // negative = deficit
   const goalKcal = t.kcal || 0, goalNet = goalKcal ? goalKcal - (restingFull + Math.round(restingFull * 0.25)) : null; // rough: target vs a light-activity day
   const sessions = ws.map((w) => ({ id: w.id, name: w.name || 'Workout', verdict: sessionVerdict(w) }));
@@ -166,16 +171,17 @@ export function dayVerdict(key, now = new Date()) {
   if (proteinPct != null && tot.n) lines.push(proteinPct >= 95 ? 'Protein target hit.' : `Protein ${Math.max(0, Math.round(t.p - tot.p))} g short.`);
 
   // 0..100 day score: protein 35, calories within window 30, training 25, steps 10
-  let score = 0;
-  if (proteinPct != null) score += Math.min(35, Math.round(proteinPct * 0.35));
-  if (goalKcal && tot.n) { const off = Math.abs(tot.kcal - goalKcal) / goalKcal; score += off <= 0.1 ? 30 : off <= 0.2 ? 20 : off <= 0.35 ? 10 : 0; }
-  if (bestSession) score += Math.round(bestSession.score * 0.25); else { try { const plan = dayPlan(parseKey(key).getDay(), parseKey(key)); if (plan && plan.kind === 'rest') score += 20; } catch (e) { /* ignore */ } }
-  const stepGoal = state.settings.stepTarget || 8000; if (steps) score += Math.min(10, Math.round((steps / stepGoal) * 10));
-  score = Math.min(100, score);
+  const parts = { protein: 0, calories: 0, training: 0, steps: 0 };
+  if (proteinPct != null) parts.protein = Math.min(35, Math.round(proteinPct * 0.35));
+  if (goalKcal && tot.n) { const off = Math.abs(tot.kcal - goalKcal) / goalKcal; parts.calories = off <= 0.1 ? 30 : off <= 0.2 ? 20 : off <= 0.35 ? 10 : 0; }
+  if (bestSession) parts.training = Math.round(bestSession.score * 0.25); else { try { const plan = dayPlan(parseKey(key).getDay(), parseKey(key)); if (plan && plan.kind === 'rest') parts.training = 20; } catch (e) { /* ignore */ } }
+  const stepGoal = state.settings.stepTarget || 8000; if (steps) parts.steps = Math.min(10, Math.round((steps / stepGoal) * 10));
+  let score = Math.min(100, parts.protein + parts.calories + parts.training + parts.steps);
+  const scoreMax = { protein: 35, calories: 30, training: 25, steps: 10 };
 
   return { key, intake: tot.kcal, items: tot.n, protein: { eaten: Math.round(tot.p), target: t.p || 0, pct: proteinPct },
-    burn: { resting, restingFull, dayFrac, steps: stepsBurn, workouts: workoutBurn, total }, net, goalKcal, goalNet, steps, stepGoal,
-    sessions, training: bestSession, score, lines, partial: !!d.partial };
+    burn: { resting, restingFull, dayFrac, steps: stepsBurn, workouts: workoutBurn, everyday, everydayEstimated, total }, net, goalKcal, goalNet, steps, stepGoal,
+    sessions, training: bestSession, score, scoreParts: parts, scoreMax, lines, partial: !!d.partial };
 }
 
 // Last 7 days at a glance, for a weekly recap card.

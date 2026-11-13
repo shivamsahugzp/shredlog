@@ -2,7 +2,7 @@
 import { state, load, on, todayKey, flush, storage } from './state.js';
 import { h, icon, toast, clear, fmtClock, haptic } from './ui.js';
 import { renderLock } from './lock.js';
-import { prefersReducedMotion, celebrate, EASE_OUT } from './motion.js';
+import { prefersReducedMotion, celebrate, ripple, EASE_OUT } from './motion.js';
 
 const VIEWS = {
   today: () => import('./views/today.js'),
@@ -60,6 +60,14 @@ export async function go(tab, params = {}) {
   window.scrollTo({ top: 0 });
 }
 
+// The first container with several children is the screen's section list: its children rise in one after another (CSS .mo-in).
+function staggerSections(stage) {
+  if (prefersReducedMotion()) return;
+  let node = stage; let guard = 0;
+  while (node && node.children.length === 1 && guard++ < 6) node = node.firstElementChild;
+  if (!node || node.children.length < 2) return;
+  [...node.children].forEach((c, i) => { c.style.setProperty('--mo-i', String(i)); c.classList.add('mo-in'); });
+}
 const hasFixed = (el) => !!(el && el.querySelector('.rest-banner:not(.hide), [data-mo-fixed]')); // a transformed ancestor would re-anchor position:fixed children
 function errorCard(e) {
   return h('div', { class: 'card' }, h('div', { class: 'empty' }, h('b', null, 'This screen hit a problem'), 'Your data is safe. ', h('div', { class: 'row', style: { justifyContent: 'center', marginTop: '12px' } },
@@ -70,6 +78,7 @@ const sleepMs = (ms) => new Promise((r) => setTimeout(r, ms));
 async function rerender(full, opts = {}) {
   const app = $('app');
   if (!full && typeof updater === 'function') {
+    const st = app.querySelector(':scope > .mo-view'); if (st) st.classList.add('mo-quiet');
     try { updater(); } catch (e) { console.error(e); const st = app.querySelector('.mo-view'); if (st && !st.firstElementChild?.childElementCount) { clear(st); st.append(errorCard(e)); } }
     return;
   }
@@ -80,7 +89,7 @@ async function rerender(full, opts = {}) {
   const modP = VIEWS[current.tab]();
   let outAnim = null;
   if (slide && !opts.skipOut) {
-    outAnim = old.animate(hasFixed(old) ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 1, transform: 'translateX(0)' }, { opacity: 0, transform: `translateX(${-dir * 12}px)` }], { duration: 90, easing: 'ease-in', fill: 'forwards' });
+    outAnim = old.animate(hasFixed(old) ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 1, transform: 'translateX(0) scale(1)' }, { opacity: 0, transform: `translateX(${-dir * 36}px) scale(.98)` }], { duration: 120, easing: 'ease-in', fill: 'forwards' });
   }
   let mod;
   try { mod = await modP; } catch (e) { console.error(e); if (outAnim) outAnim.cancel(); toast('Could not open that screen. Check your connection.'); return; }
@@ -92,9 +101,10 @@ async function rerender(full, opts = {}) {
   if (opts.top) window.scrollTo(0, 0);
   try { updater = mod.render(stage, ctx()) || null; }
   catch (e) { console.error(e); updater = null; clear(stage); stage.append(errorCard(e)); }
+  staggerSections(stage);
   if (!stage.firstElementChild) stage.append(errorCard(new Error('empty view')));
   if (slide && stage.animate) {
-    stage.animate(hasFixed(stage) ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: `translateX(${dir * 12}px)` }, { opacity: 1, transform: 'translateX(0)' }], { duration: 190, easing: EASE_OUT });
+    stage.animate(hasFixed(stage) ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 0, transform: `translateX(${dir * 36}px) scale(.98)` }, { opacity: 1, transform: 'translateX(0) scale(1)' }], { duration: 300, easing: EASE_OUT });
   }
 }
 
@@ -162,9 +172,10 @@ function watchPRs() {
 }
 
 export function applyTheme() {
-  const t = state.settings.theme || 'auto', a = state.settings.accent || 'haldi';
+  const t = state.settings.theme || 'auto', a = state.settings.accent || 'neel';
   if (t === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', t);
-  if (a === 'haldi') document.documentElement.removeAttribute('data-accent'); else document.documentElement.setAttribute('data-accent', a);
+  if (a === 'neel') document.documentElement.removeAttribute('data-accent'); else document.documentElement.setAttribute('data-accent', a);
+  document.documentElement.setAttribute('data-motion', state.settings.motion || 'full');
 }
 
 function registerSW() {
@@ -205,6 +216,8 @@ async function boot() {
   on('settings', applyTheme);
   watchPRs();
   document.addEventListener('touchstart', () => {}, { passive: true }); // iOS only applies :active press feedback when a touch listener exists
+  // every primary button, chip and tab gets a ripple from the touch point
+  document.addEventListener('pointerdown', (e) => { const host = e.target.closest && e.target.closest('.btn.primary, .chip, #tabbar button[data-id], .qt, .menu-item'); if (host) ripple(host, e); }, { passive: true });
   window.addEventListener('pagehide', () => { flush(); });
   // Coming back from the lock screen or another app must not throw the user to the top of the page: the view is
   // refreshed in place and the scroll position restored. Only a date change (past midnight) rebuilds the screen.

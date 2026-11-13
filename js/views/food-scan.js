@@ -1,11 +1,12 @@
 // AI plate scanner UI: capture -> analyse -> review (edit, answer questions) -> log. Plus the Settings section (key, memory).
 // Engine, prompt and memory live in ../scan.js. Called from the Food tab (and a Today tile): openScanner(ctx, { date, meal }).
-import { state, todayKey, parseKey, recentFoods, addCustomFood, logFoods, removeFoods } from '../state.js';
+import { state, commit, todayKey, parseKey, recentFoods, findFood, addCustomFood, logFoods, removeFoods } from '../state.js';
 import { h, icon, sheet, toast, confirmSheet, promptSheet, stepper, segmented, toggle, field, clear, ring, fmt, haptic } from '../ui.js';
 import { fill, stagger } from '../motion.js';
 import { scaleFood } from '../calc.js';
-import { MEALS, MEAL_LABEL, scaleMicro, lookup, r1, r2, SPOTS, segFix } from './food-extras.js';
+import { MEALS, MEAL_LABEL, scaleMicro, lookup, buildEntry, r1, r2, SPOTS, segFix } from './food-extras.js';
 import * as AI from '../scan.js';
+import * as PK from '../packet.js';
 
 const seg = (options, value, onChange, cls) => segFix(segmented(options, value, onChange, cls), options, value);
 
@@ -84,7 +85,8 @@ export function openScanner(ctx, opts = {}) {
       h('p', { class: 'sc-lede' }, 'Snap a photo and AI estimates the carbs, protein and portion size. If it cannot tell something, it asks you once and remembers your answer.'),
       h('div', { class: 'callout sc-privacy' }, icon('info'), h('div', null, 'Photos go from your phone straight to the AI provider you choose. ShredLog has no server. The key stays on this phone and is never in backups.')),
       h('button', { class: 'btn primary block lg sc-goset', onClick: goSettings }, 'Set up in Settings'),
-      h('div', { class: 'small muted sc-free' }, 'Gemini has a free tier, no card needed.')));
+      h('div', { class: 'small muted sc-free' }, 'Gemini has a free tier, no card needed.'),
+      h('button', { class: 'btn block sc-to-packet', onClick: () => { api.close(); openPacketScanner(ctx, { date, meal: st.meal }); } }, 'Scan a packet instead, no key needed')));
   }
 
   // ---- step: capture ----
@@ -108,6 +110,7 @@ export function openScanner(ctx, opts = {}) {
         pickBtn('sc-btn-gallery', imageIcon(26), 'Gallery', 'Use a saved photo', gal)),
       h('div', { class: 'sc-meal' }, h('div', { class: 'sc-meal-l' }, 'Log it to'), seg(mealOptions(st.meal), st.meal, (id) => { st.meal = id; }, 'sc-meals')),
       h('div', { class: 'small muted sc-using' }, P ? `Using ${P.label}, ${cfg.model}. ` : 'Test mode. ', h('button', { class: 'sc-link', onClick: goSettings }, 'AI settings')),
+      h('div', { class: 'small muted sc-using' }, 'Scanning a packaged food? ', h('button', { class: 'sc-link sc-to-packet', onClick: () => { api.close(); openPacketScanner(ctx, { date, meal: st.meal }); } }, 'Scan a packet')),
       cam, gal));
   }
 
@@ -486,3 +489,400 @@ function memoryBlock() {
     h('button', { class: 'btn danger sm sc-forget', onClick: async () => { if (await confirmSheet('Forgets every remembered answer and portion. The scanner will ask again.', { ok: 'Forget all', danger: true, title: 'Forget everything?' })) { AI.forgetAll(); toast('Forgotten'); } } }, 'Forget all'));
 }
 
+
+// ================= Scan a packet =================
+// capture (photo, or type the barcode / a name) -> read the barcode -> Open Food Facts -> product card -> log or save.
+// Lookup, search and the barcode reader live in ../packet.js; the AI label reader is AI.readPacket in ../scan.js.
+const PACKET_SPOT = '<svg viewBox="0 0 120 96" aria-hidden="true" focusable="false"><path class="s" d="M10 30V16a6 6 0 0 1 6-6h14M90 10h14a6 6 0 0 1 6 6v14M110 66v14a6 6 0 0 1-6 6H90M30 86H16a6 6 0 0 1-6-6V66"/>'
+  + '<rect class="t2" x="26" y="22" width="68" height="52" rx="8"/><rect class="t3" x="26" y="22" width="68" height="13" rx="6"/>'
+  + '<g class="t1"><rect x="34" y="42" width="3" height="22"/><rect x="40" y="42" width="2" height="22"/><rect x="45" y="42" width="4" height="22"/><rect x="52" y="42" width="2" height="22"/><rect x="57" y="42" width="3" height="22"/><rect x="63" y="42" width="5" height="22"/><rect x="71" y="42" width="2" height="22"/><rect x="76" y="42" width="3" height="22"/><rect x="82" y="42" width="2" height="22"/><rect x="87" y="42" width="2" height="22"/></g>'
+  + '<path class="s" d="M16 53h88"/></svg>';
+const SRC_PILL = { off: ['Open Food Facts', 'good'], saved: ['Saved in My foods', 'accent'], label: ['Read from the label', 'warn'], manual: ['Typed by you', ''] };
+// A product picture: the scan icon shows until the image arrives (Open Food Facts images can take a second), then it fades in.
+function thumb(url, cls, size = 26) {
+  const wrap = h('span', { class: cls + ' sc-pk-noimg sc-pk-thumb' }, icon('scan', size));
+  if (url) { const im = h('img', { src: url, alt: '', onLoad: () => im.classList.add('on'), onError: () => im.remove() }); wrap.append(im); }
+  return wrap;
+}
+const num1 = (x) => (x == null || x === '' ? null : Number.isFinite(+x) ? +x : null);
+
+export function openPacketScanner(ctx, opts = {}) {
+  const date = opts.date || ctx?.date || todayKey();
+  const st = { step: 'capture', meal: MEALS.some((m) => m.id === opts.meal) ? opts.meal : mealByTime(), img: null, product: null, via: '', notes: [], mode: 'serving', qty: 1, saved: null, ctl: null, run: 0, read: null, labelEl: null };
+  const root = h('div', { class: 'sc-pk-root' });
+  const foot = h('div', { class: 'sc-foot' });
+  let closed = false;
+  const api = sheet({ title: 'Scan a packet', full: true, dismissable: false, content: root, actions: foot, onClose: () => { closed = true; st.run++; if (st.ctl) st.ctl.abort(); } });
+  api.el.classList.add('sc-sheet', 'sc-packet');
+  const actionsEl = foot.parentElement;
+  const alive = () => !closed;
+  const setFoot = (...kids) => { clear(foot); kids.flat().forEach((k) => k && foot.append(k)); actionsEl.classList.toggle('hide', !foot.childNodes.length); api.el.classList.toggle('sc-nofoot', !foot.childNodes.length); };
+  const goSettings = () => { api.close(); if (ctx && ctx.go) ctx.go('settings', { open: 'ai' }); };
+  const newRun = () => { const run = ++st.run; if (st.ctl) st.ctl.abort(); st.ctl = new AbortController(); return { run, signal: st.ctl.signal, stale: () => run !== st.run || closed }; };
+  const backTo = () => (st.product ? drawCard() : drawCapture());
+
+  // ---- step: capture ----
+  function fileInput(cls, camera) {
+    const input = h('input', { type: 'file', accept: 'image/*', class: cls, style: { display: 'none' }, ...(camera ? { capture: 'environment' } : {}) });
+    input.addEventListener('change', () => { const f = input.files && input.files[0]; input.value = ''; if (f) useImage(f); });
+    return input;
+  }
+  const pick = (cls, ico, label, sub, input) => h('button', { class: 'sc-pickbtn ' + cls, onClick: () => { if (window.__shredlogMockImage) useImage(window.__shredlogMockImage); else input.click(); } },
+    h('span', { class: 'sc-pickico' }, ico), h('b', null, label), h('span', { class: 'small' }, sub));
+
+  function drawCapture() {
+    st.step = 'capture'; st.run++; if (st.ctl) st.ctl.abort(); clear(root); setFoot();
+    const cam = fileInput('sc-input-cam', true), gal = fileInput('sc-input-gal', false);
+    const cfg = AI.getAI(), P = cfg && AI.PROVIDERS[cfg.provider], ready = AI.isReady();
+    // type the digits
+    const codeIn = h('input', { type: 'text', inputmode: 'numeric', pattern: '[0-9 ]*', maxlength: '20', placeholder: 'Barcode digits', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'go', 'aria-label': 'Barcode digits' });
+    const codeHint = h('div', { class: 'sc-pk-hint', 'aria-live': 'polite' });
+    const goCode = h('button', { class: 'btn soft sc-pk-go', disabled: true, onClick: () => submitCode() }, 'Look up');
+    const codeOf = () => PK.cleanCode(codeIn.value);
+    const submitCode = () => { const c = codeOf(); if (c) byCode(c); };
+    codeIn.addEventListener('input', () => {
+      const d = codeIn.value.replace(/\D+/g, ''), c = codeOf();
+      goCode.disabled = !c;
+      codeHint.className = 'sc-pk-hint';
+      if (!d) codeHint.textContent = '';
+      else if (!c) codeHint.textContent = `${d.length} digit${d.length === 1 ? '' : 's'} so far. Barcodes have 8, 12 or 13.`;
+      else if (PK.isValidGTIN(c)) { codeHint.textContent = `${c.length} digits, looks right.`; codeHint.classList.add('ok'); }
+      else { codeHint.textContent = 'The last digit does not match. Check the numbers, or look it up anyway.'; codeHint.classList.add('warn'); }
+    });
+    codeIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitCode(); } });
+    // type a name
+    const nameIn = h('input', { type: 'search', placeholder: 'Or search by name', autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'search', 'aria-label': 'Search by product name' });
+    const goName = () => { const q = nameIn.value.trim(); if (q) drawSearch(q, { auto: true }); };
+    nameIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); goName(); } });
+    root.append(h('div', { class: 'sc-pk-capture' },
+      h('div', { class: 'sc-finder' }, h('span', { class: 'sc-spot sc-pk-spot', html: PACKET_SPOT }), h('div', { class: 'sc-tip' }, 'Fill the frame with the barcode, or the nutrition label. Good light, hold steady.')),
+      h('div', { class: 'sc-pickrow' },
+        pick('sc-btn-camera sc-packet-camera primary', cameraIcon(26), 'Take photo', 'Barcode or label', cam),
+        pick('sc-btn-gallery sc-packet-gallery', imageIcon(26), 'Gallery', 'Use a saved photo', gal)),
+      h('div', { class: 'sc-pk-or' }, 'or type it'),
+      h('div', { class: 'sc-pk-type' },
+        h('div', { class: 'sc-packet-code' }, h('div', { class: 'sc-pk-row' }, codeIn, goCode), codeHint),
+        h('div', { class: 'sc-pk-find' }, h('div', { class: 'sc-pk-row' }, h('div', { class: 'search' }, icon('search'), nameIn), h('button', { class: 'btn sc-pk-search', onClick: goName }, 'Search')))),
+      h('div', { class: 'small muted sc-using' },
+        ready ? `Barcodes are read on this phone. ${P ? P.label : 'The AI'} reads the printed digits and the label when needed. ` : 'No AI key needed: barcodes are read on this phone, or type the digits or a name. ',
+        h('button', { class: 'sc-link', onClick: goSettings }, ready ? 'AI settings' : 'Add a key to also read labels')),
+      h('div', { class: 'small muted sc-using' }, 'Scanning a meal instead? ', h('button', { class: 'sc-link sc-to-plate', onClick: () => { api.close(); openScanner(ctx, { date, meal: st.meal }); } }, 'Scan plate')),
+      cam, gal));
+  }
+
+  // ---- step: reading ----
+  const setLabel = (t) => { if (st.labelEl) st.labelEl.textContent = t; };
+  function drawReading(label) {
+    st.step = 'reading'; clear(root); setFoot();
+    st.labelEl = h('span', null, label);
+    const skel = (cls) => h('span', { class: 'skeleton ' + cls });
+    root.append(h('div', { class: 'sc-pk-reading' },
+      st.img
+        ? h('div', { class: 'sc-prev sc-scanning sc-pk-prev', style: { aspectRatio: String(Math.min(1.5, Math.max(0.8, st.img.width / st.img.height))) } }, h('img', { src: st.img.dataUrl, alt: 'Your photo' }), h('div', { class: 'sc-prev-label' }, h('span', { class: 'sc-spin' }), st.labelEl))
+        : h('div', { class: 'sc-pk-busy' }, h('span', { class: 'sc-spin' }), st.labelEl),
+      h('div', { class: 'sc-pk-sk', 'aria-hidden': 'true' },
+        h('div', { class: 'sc-pk-sk-head' }, skel('sc-pk-sk-img'), h('div', { class: 'sc-pk-sk-lines' }, skel('sc-sk-l1'), skel('sc-sk-l2'))),
+        h('div', { class: 'sc-pk-sk-head' }, skel('sc-sk-ring'), h('div', { class: 'sc-pk-sk-lines' }, skel('sc-sk-l5'), skel('sc-sk-l2')))),
+      h('button', { class: 'btn ghost sc-cancel', onClick: () => { drawCapture(); } }, 'Cancel')));
+  }
+
+  // ---- the pipeline: photo -> barcode -> Open Food Facts -> (AI read) -> product ----
+  const readArgs = (r) => (r ? { name: r.product_name, brand: r.brand, servingText: r.serving_text, label: r.nutrition_label } : {});
+  async function useImage(src) {
+    const { run, signal, stale } = newRun();
+    st.img = null; st.product = null; st.saved = null; drawReading('Preparing photo…');
+    try { st.img = await AI.imageToJpeg(src, 1280, 0.82); }
+    catch (e) { if (!stale()) drawNotFound({ title: "Couldn't read that photo", detail: e.message || 'Try another photo.' }); return; }
+    if (stale()) return;
+    drawReading('Looking for the barcode…');
+    const det = await PK.detectBarcode(src).catch(() => null);
+    if (stale()) return;
+    identify({ code: det ? det.code : '', run, signal, stale });
+  }
+  async function identify({ code, signal, stale }) {
+    let read = null, aiErr = null, aiTried = false;
+    const readAI = async () => {
+      if (aiTried || !st.img || !AI.isReady()) return read; // one AI call per photo, even when it failed
+      aiTried = true; setLabel('Reading the pack…');
+      try { return await AI.readPacket(st.img, { signal }); } catch (e) { if (e.kind === 'aborted') throw e; aiErr = e; return null; }
+    };
+    try {
+      if (!code) { read = await readAI(); if (stale()) return; if (read && read.barcode_digits) code = read.barcode_digits; }
+      st.read = read;
+      const known = code && AI.packetFood(code);
+      if (known) { showKnown(known); return; }
+      let res = null;
+      if (code || read) { setLabel(code ? 'Finding it on Open Food Facts…' : 'Searching Open Food Facts…'); res = await PK.resolvePacket({ code, ...readArgs(read), signal }); if (stale()) return; }
+      if ((!res || !res.product) && !read) { // a barcode we could not place: the photo may still show the name or the label
+        read = await readAI(); if (stale()) return;
+        st.read = read;
+        if (read) {
+          if (!code && read.barcode_digits) { code = read.barcode_digits; const k2 = AI.packetFood(code); if (k2) { showKnown(k2); return; } }
+          setLabel('Finding it on Open Food Facts…');
+          res = await PK.resolvePacket({ code, ...readArgs(read), signal }); if (stale()) return;
+        }
+      }
+      if (res && res.product) { showCard(res.product, res.via, { trail: res.trail }); return; }
+      drawNotFound({ code, res, aiErr, noCode: !code && !read });
+    } catch (e) { if (!stale() && e.kind !== 'aborted') drawNotFound({ error: e, code }); }
+  }
+  async function byCode(code) {
+    const { signal, stale } = newRun();
+    st.img = null; st.product = null; st.saved = null; st.read = null;
+    drawReading(`Looking up ${code}…`);
+    const known = AI.packetFood(code);
+    if (known) { showKnown(known); return; }
+    try {
+      const res = await PK.resolvePacket({ code, signal });
+      if (stale()) return;
+      if (res.product) showCard(res.product, res.via, { trail: res.trail }); else drawNotFound({ code, res });
+    } catch (e) { if (!stale() && e.kind !== 'aborted') drawNotFound({ error: e, code }); }
+  }
+  function showKnown(food) {
+    const p = PK.foodToProduct(food);
+    if (!p) { drawNotFound({ code: food && food.barcode }); return; }
+    showCard(p, 'saved', { trail: ['You saved this one before, so no lookup was needed.'] });
+  }
+
+  // ---- step: not found / error ----
+  function drawNotFound({ code = '', res = null, aiErr = null, noCode = false, error: err = null, title = '', detail = '' } = {}) {
+    st.step = 'notfound'; clear(root); setFoot();
+    const error = err || (res && res.error) || null; // offline, busy or timeout: not "no such product"
+    const searchNote = !error && res && res.searchError ? res.searchError.message : '';
+    const cands = (res && res.candidates || []).slice(0, 4);
+    const head = title || (error ? (error.kind === 'offline' ? 'No internet connection' : "Couldn't reach Open Food Facts") : noCode ? 'No barcode found in that photo' : 'Not on Open Food Facts yet');
+    const why = detail || (error ? error.message : noCode
+      ? 'Get closer, keep the barcode flat and well lit, and fill the frame. You can also type the digits or search by name.'
+      : `${code ? `Barcode ${code}. ` : ''}Anyone can add it at openfoodfacts.org. For now, search by name or type the numbers from the pack.`);
+    const rd = st.read || {};
+    root.append(h('div', { class: 'sc-pk-nf' },
+      st.img ? h('div', { class: 'sc-prev sc-pk-prev', style: { aspectRatio: String(Math.min(1.5, Math.max(0.8, st.img.width / st.img.height))) } }, h('img', { src: st.img.dataUrl, alt: 'Your photo' })) : null,
+      h('div', { class: 'callout ' + (error || title ? 'danger' : 'info') }, icon('warn'), h('div', null, h('b', null, head), h('div', { class: 'small muted sc-detail' }, why),
+        searchNote ? h('div', { class: 'small muted sc-detail' }, 'Name search: ' + searchNote) : null,
+        aiErr ? h('div', { class: 'small muted sc-detail' }, 'AI: ' + (aiErr.message || 'could not read the photo')) : null,
+        !AI.isReady() && !error && !title ? h('div', { class: 'small muted sc-detail' }, 'With an AI key in Settings I can also read the printed digits and the nutrition label from a photo.') : null)),
+      cands.length ? h('div', { class: 'sc-pk-cands' }, h('h3', null, 'Closest matches'), h('div', { class: 'list' }, cands.map((p) => resultRow(p)))) : null,
+      h('div', { class: 'sc-pk-nfbtns' },
+        h('button', { class: 'btn primary block sc-pk-tosearch', onClick: () => drawSearch([rd.brand, rd.product_name].filter(Boolean).join(' ')) }, icon('search', 18), 'Search by name'),
+        h('button', { class: 'btn block sc-pk-tomanual', onClick: () => drawManual({ name: rd.product_name || '', brand: rd.brand || '', code: PK.cleanCode(code) }) }, icon('edit', 18), 'Type the numbers from the pack'),
+        h('button', { class: 'btn ghost block', onClick: drawCapture }, 'Try another photo'))));
+  }
+
+  // ---- step: search ----
+  function resultRow(p) {
+    return h('button', { class: 'list-item sc-pk-res', dataset: { code: p.code }, onClick: () => choose(p) },
+      thumb(p.image, 'sc-pk-rimg', 18),
+      h('div', { class: 'grow sc-pk-rtext' }, h('div', { class: 'title sc-pk-rt' }, PK.productTitle(p)),
+        h('div', { class: 'sub' }, p.per100 ? `${fmt(p.per100.kcal)} kcal · P ${fmt(p.per100.p, 1)} g per 100 ${p.unit}` : 'No nutrition listed')),
+      icon('right', 16));
+  }
+  async function choose(p) {
+    const { signal, stale } = newRun();
+    let prod = p;
+    if (!p.complete && p.code) { // search hits are trimmed; the full record sometimes has the numbers
+      drawReading('Getting the full record…');
+      try { const full = await PK.lookupBarcode(p.code, { signal }); if (full && (full.per100 || !p.per100)) prod = full; } catch (e) { if (e.kind === 'aborted') return; }
+      if (stale()) return;
+    }
+    const known = prod.code && AI.packetFood(prod.code);
+    if (known) { showKnown(known); return; }
+    showCard(prod, 'search', { trail: [] });
+  }
+  function drawSearch(q = '', { auto = false } = {}) {
+    st.step = 'search'; st.run++; if (st.ctl) st.ctl.abort(); clear(root); setFoot();
+    const input = h('input', { type: 'search', placeholder: 'e.g. superyou protein bar', value: q, autocomplete: 'off', autocapitalize: 'off', spellcheck: 'false', enterkeyhint: 'search', 'aria-label': 'Search products' });
+    const list = h('div', { class: 'sc-pk-results' });
+    async function run() {
+      const query = input.value.trim(); if (!query) return;
+      const { signal, stale } = newRun();
+      clear(list); list.append(h('div', { class: 'sc-pk-sk' }, [0, 1, 2, 3].map(() => h('div', { class: 'sc-pk-sk-head' }, h('span', { class: 'skeleton sc-pk-sk-img' }), h('div', { class: 'sc-pk-sk-lines' }, h('span', { class: 'skeleton sc-sk-l1' }), h('span', { class: 'skeleton sc-sk-l2' }))))));
+      try {
+        const found = await PK.searchProducts(query, { signal });
+        if (stale()) return;
+        clear(list);
+        if (!found.length) { list.append(h('div', { class: 'empty sc-empty' }, h('b', null, 'No match'), 'Try fewer words, like the brand and one more word.')); return; }
+        list.append(h('div', { class: 'list' }, found.map(resultRow)), h('div', { class: 'small muted sc-pk-credit' }, 'Product data from Open Food Facts. Tap one to see its numbers.'));
+      } catch (e) {
+        if (stale() || e.kind === 'aborted') return;
+        clear(list); list.append(h('div', { class: 'callout danger' }, icon('warn'), h('div', null, h('b', null, e.kind === 'offline' ? 'No internet connection' : 'Search did not work'), h('div', { class: 'small muted sc-detail' }, e.message))));
+      }
+    }
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); input.blur(); run(); } });
+    root.append(h('div', { class: 'sc-pk-search-step' },
+      h('button', { class: 'sc-link sc-pk-back', onClick: backTo }, icon('left', 14), st.product ? 'Back to the product' : 'Back'),
+      h('div', { class: 'sc-pk-row' }, h('div', { class: 'search' }, icon('search'), input), h('button', { class: 'btn soft sc-pk-search', onClick: () => { input.blur(); run(); } }, 'Search')),
+      list,
+      h('button', { class: 'btn block sc-pk-tomanual', onClick: () => drawManual({ name: input.value.trim(), code: st.product ? st.product.code : '' }) }, icon('edit', 18), 'Not here? Type the numbers from the pack')));
+    if (auto && q.trim()) run(); else setTimeout(() => input.focus(), 60);
+  }
+
+  // ---- step: type the numbers from the pack ----
+  function drawManual(pre = {}) {
+    st.step = 'manual'; st.run++; if (st.ctl) st.ctl.abort(); clear(root);
+    const per = pre.per100 || null, sv = pre.serving && pre.serving.from !== 'default' ? pre.serving.g : null;
+    const ins = {};
+    const numIn = (key, label, val, optional) => { ins[key] = h('input', { type: 'number', inputmode: 'decimal', step: 'any', min: '0', placeholder: optional ? 'optional' : '0', value: val == null ? '' : String(val), 'aria-label': label }); return field(label, ins[key]); };
+    const nameIn = h('input', { type: 'text', value: pre.name || '', placeholder: 'e.g. Protein bar, chocolate', autocomplete: 'off', 'aria-label': 'Product name' });
+    const brandIn = h('input', { type: 'text', value: pre.brand || '', placeholder: 'optional', autocomplete: 'off', 'aria-label': 'Brand' });
+    let basis = '100';
+    const servField = numIn('serving', 'Serving size (g)', sv, true);
+    const err = h('div', { class: 'callout danger hide sc-pk-err' }, icon('warn'), h('div'));
+    const basisSeg = seg([{ id: '100', label: 'Per 100 g' }, { id: 'serving', label: 'Per serving' }], basis, (id) => { basis = id; servField.querySelector('label').textContent = id === 'serving' ? 'Serving size (g), needed' : 'Serving size (g), optional'; }, 'sc-pk-basis');
+    servField.querySelector('label').textContent = 'Serving size (g), optional';
+    const showErr = (msg) => { err.classList.toggle('hide', !msg); err.lastChild.textContent = msg || ''; };
+    const use = h('button', { class: 'btn primary block sc-pk-use', onClick: () => {
+      const val = (k) => num1(ins[k].value), name = nameIn.value.trim();
+      if (!name) { showErr('Add a name so you can find it later.'); nameIn.focus(); return; }
+      if (val('kcal') == null && val('p') == null && val('c') == null && val('f') == null) { showErr('Add the calories, or at least protein, carbs and fat.'); return; }
+      if (basis === 'serving' && !(val('serving') > 0)) { showErr('Add the serving size in grams, so I can scale it.'); ins.serving.focus(); return; }
+      const prod = PK.manualProduct({ name, brand: brandIn.value.trim(), per: basis, servingG: val('serving'), kcal: val('kcal'), p: val('p'), c: val('c'), f: val('f'), fiber: val('fiber'), sugar: val('sugar'), code: pre.code || '' });
+      if (!prod || !prod.per100) { showErr('Those numbers could not be used. Check them against the pack.'); return; }
+      if (pre.serving && val('serving') > 0 && Math.abs(pre.serving.g - val('serving')) < 0.01) { prod.serving = pre.serving; if (pre.pack) prod.pack = pre.pack; }
+      if (pre.cat) prod.cat = pre.cat;
+      if (pre.image) prod.image = pre.image;
+      prod.edited = true;
+      st.saved = pre.foodId ? findFood(pre.foodId) || null : null;
+      showCard(prod, 'manual', { trail: [] });
+    } }, 'Use these numbers');
+    setFoot(use);
+    root.append(h('div', { class: 'sc-pk-manual' },
+      h('button', { class: 'sc-link sc-pk-back', onClick: backTo }, icon('left', 14), st.product ? 'Back to the product' : 'Back'),
+      h('div', { class: 'small muted' }, 'Copy them from the nutrition table on the pack.', pre.code ? ` Barcode ${pre.code}: save it to My foods and it is found instantly next time.` : ''),
+      field('Name', nameIn), field('Brand', brandIn),
+      field('The pack lists numbers', basisSeg),
+      servField,
+      h('div', { class: 'sc-pk-grid' }, numIn('kcal', 'Calories (kcal)', per ? per.kcal : null), numIn('p', 'Protein (g)', per ? per.p : null), numIn('c', 'Carbs (g)', per ? per.c : null), numIn('f', 'Fat (g)', per ? per.f : null), numIn('fiber', 'Fibre (g)', per ? per.fiber : null, true), numIn('sugar', 'Sugar (g)', per ? per.sugar : null, true)),
+      err));
+    setTimeout(() => { if (!nameIn.value) nameIn.focus(); }, 60);
+  }
+
+  // ---- step: the product card ----
+  function showCard(product, via, { trail = [] } = {}) {
+    if (!product.per100) { // Open Food Facts knows the product but lists no numbers
+      drawManual({ ...product }); const top = root.querySelector('.sc-pk-manual'); if (top) top.prepend(h('div', { class: 'callout' }, icon('info'), h('div', null, h('b', null, `${PK.productTitle(product)} has no nutrition on Open Food Facts`), h('div', { class: 'small muted sc-detail' }, 'Type the numbers from the pack and I will use them.'))));
+      return;
+    }
+    st.product = product; st.via = via; st.mode = 'serving'; st.qty = 1;
+    if (!(via === 'manual' && st.saved)) st.saved = product.foodId ? findFood(product.foodId) || null : (product.code ? AI.packetFood(product.code) : null);
+    if (product.serving.from === 'default' && !product.noGrams) { st.mode = 'grams'; st.qty = 100; }
+    drawCard(trail);
+  }
+
+  function drawCard(trail = []) {
+    st.step = 'card'; clear(root);
+    const P = st.product, via = st.via, liquid = P.unit === 'ml', gl = liquid ? 'ml' : 'g';
+    const unitG = (m) => (m === 'pack' && P.pack ? P.pack.g : m === 'grams' ? 1 : P.serving.g);
+    const gramsNow = () => st.qty * unitG(st.mode);
+    const per = P.per100;
+
+    // identity
+    const [srcLabel, srcTone] = SRC_PILL[P.source] || SRC_PILL.off;
+    const img = st.img && P.source === 'label' ? h('img', { class: 'sc-pk-img sc-pk-photo', src: st.img.dataUrl, alt: 'Your photo' }) : thumb(P.image, 'sc-pk-img', 26);
+    const showBrand = P.brand && !AI.normName(P.name).includes(AI.normName(P.brand));
+    const idBlock = h('div', { class: 'sc-pk-id' },
+      showBrand ? h('div', { class: 'sc-pk-brand' }, P.brand) : null,
+      h('h3', { class: 'sc-pk-name' }, P.name || P.brand || 'Packaged food'),
+      h('div', { class: 'sc-pk-pills' }, h('span', { class: 'pill ' + srcTone }, srcTone === 'good' ? icon('check', 12) : null, srcLabel), P.code ? h('span', { class: 'micro muted sc-pk-code' }, P.code) : null));
+    const editBtn = h('button', { class: 'icon-btn plain sc-pk-edit', 'aria-label': 'Edit numbers', title: 'Edit numbers', onClick: () => drawManual({ ...P, foodId: st.saved ? st.saved.id : P.foodId }) }, icon('edit', 18));
+
+    // numbers for the chosen amount
+    const kc = h('span', { class: 'num sc-kcal' });
+    const ringEl = ring({ size: 82, stroke: 8, pct: 0, cls: 'sc-ring', children: [kc, h('small', null, 'kcal')] });
+    const mv = { p: h('b', { class: 'num' }), c: h('b', { class: 'num' }), f: h('b', { class: 'num' }), fiber: h('b', { class: 'num' }) };
+    const mac = (k, label, el) => h('div', { class: 'sc-tm' }, h('div', { class: 'lbl' }, h('i', { class: 'dot ' + k }), label), h('div', { class: 'val' }, el, h('small', null, ' g')));
+    const per100 = P.noGrams ? null : h('div', { class: 'sc-pk-100' },
+      h('div', null, h('b', null, `Per 100 ${gl}`), `  ${fmt(per.kcal)} kcal · P ${fmt(per.p, 1)} · C ${fmt(per.c, 1)} · F ${fmt(per.f, 1)} g`),
+      per.sugar || per.sodium != null || per.fiber ? h('div', null, [per.fiber ? `Fibre ${fmt(per.fiber, 1)} g` : '', per.sugar ? `Sugar ${fmt(per.sugar, 1)} g` : '', per.sodium != null ? `Sodium ${fmt(per.sodium)} mg` : ''].filter(Boolean).join(' · ')) : null);
+
+    // quantity
+    const qtyBox = h('div', { class: 'sc-pk-qtybox' });
+    const gramsEl = h('span', { class: 'sc-grams' }), unitEl = h('span', { class: 'sc-unit' }), noteEl = h('div', { class: 'small muted sc-pk-unitnote' });
+    const modes = [{ id: 'serving', label: 'Serving' }, ...(P.pack ? [{ id: 'pack', label: 'Pack' }] : []), ...(P.noGrams ? [] : [{ id: 'grams', label: liquid ? 'ml' : 'Grams' }])];
+    let logBtn, saveBtn;
+    const upd = () => {
+      const g = gramsNow(), v = PK.portion(P, g), T = state.targets && state.targets.kcal;
+      kc.textContent = fmt(v.kcal); mv.p.textContent = fmt(v.p, 1); mv.c.textContent = fmt(v.c, 1); mv.f.textContent = fmt(v.f, 1); mv.fiber.textContent = fmt(v.fiber, 1);
+      fill(ringEl.fillEl, T > 0 ? Math.min(100, (v.kcal / T) * 100) : 0, { axis: 'ring', key: 'sc:pk-ring', ms: 420 });
+      ringEl.title = T > 0 ? `${Math.round((v.kcal / T) * 100)}% of today's calories` : '';
+      gramsEl.textContent = st.mode === 'grams' ? '' : `≈ ${fmt(g)} ${gl}`;
+      unitEl.textContent = st.mode === 'grams' ? gl : st.mode === 'pack' ? (st.qty === 1 ? 'pack' : 'packs') : (st.qty === 1 ? 'serving' : 'servings');
+      noteEl.textContent = st.mode === 'serving' ? '1 serving = ' + (/^1 serving/i.test(P.serving.label) ? `${fmt(P.serving.g)} ${gl}` : P.serving.label) : st.mode === 'pack' ? `1 pack = ${fmt(P.pack.g)} ${gl}` : '';
+      if (logBtn) logBtn.textContent = `Log to ${MEAL_LABEL[st.meal]} · ${fmt(v.kcal)} kcal`;
+    };
+    const paintQty = () => {
+      clear(qtyBox);
+      const g = st.mode === 'grams';
+      if (modes.length > 1) qtyBox.append(seg(modes, st.mode, (id) => setMode(id), 'sc-pk-modes'));
+      qtyBox.append(h('div', { class: 'sc-qty sc-pk-qty' }, stepper({ value: st.qty, min: g ? 5 : 0.5, max: g ? 5000 : 30, step: g ? 5 : 0.5, onChange: (v) => { st.qty = v; upd(); } }), unitEl, gramsEl), noteEl);
+    };
+    const setMode = (m) => {
+      if (m === st.mode) return;
+      const grams = gramsNow(); st.mode = m;
+      st.qty = m === 'grams' ? Math.max(5, Math.round(grams / 5) * 5) : m === 'pack' ? 1 : Math.max(0.5, Math.round((grams / unitG(m)) * 2) / 2); // choosing Pack means "I had the pack
+      paintQty(); upd();
+    };
+
+    // honest notes about where the numbers came from
+    const notes = [];
+    if (via === 'label' || P.source === 'label') notes.push(['warn', 'Read from your photo of the label', 'This is not from a database. Check the numbers against the pack, and edit them if one is off.']);
+    else if (via === 'name') notes.push(['info', 'Matched by name', 'No barcode, so I picked the closest product. Wrong flavour or size? Tap Wrong product.']);
+    else if (via === 'search') notes.push(['info', 'Picked from the search list', 'Open Food Facts is edited by volunteers. Compare with the pack.']);
+    if (P.suspect) notes.push(['warn', 'These numbers look off', 'Calories and macros do not add up. Check the pack, and tap the pencil to fix them.']);
+    else if (!P.complete && P.source === 'off') notes.push(['warn', `Missing on Open Food Facts: ${P.missing.join(', ')}`, 'They show as 0. Tap the pencil to add them from the pack.']);
+    else if (P.estimated) notes.push(['info', 'Calories worked out from the macros', 'The listing has no calorie value.']);
+    const noteEls = notes.slice(0, 2).map(([tone, head, body]) => h('div', { class: 'callout sc-pk-note' + (tone === 'info' ? ' info' : '') }, icon(tone === 'warn' ? 'warn' : 'info'), h('div', null, h('b', null, head), h('div', { class: 'small muted sc-detail' }, body))));
+
+    root.append(h('div', { class: 'sc-pk-cardstep' },
+      h('div', { class: 'card sc-packet-card', dataset: { code: P.code || '', source: P.source } },
+        h('div', { class: 'sc-pk-head' }, img, idBlock, editBtn),
+        h('div', { class: 'sc-pk-nums' }, ringEl, h('div', { class: 'sc-tgrid sc-pk-grid4' }, mac('p', 'Protein', mv.p), mac('c', 'Carbs', mv.c), mac('f', 'Fat', mv.f), mac('fiber', 'Fibre', mv.fiber))),
+        per100),
+      ...noteEls,
+      h('div', { class: 'card pad-s sc-pk-qtycard' }, qtyBox),
+      field('Log it to', seg(mealOptions(st.meal), st.meal, (id) => { st.meal = id; upd(); }, 'sc-meals')),
+      h('div', { class: 'small muted sc-disclaimer' }, P.source === 'off' ? 'Nutrition data: Open Food Facts (ODbL). Anyone can edit it, so check it against the pack.' : 'Check these numbers against the pack.')));
+
+    // footer: log, save, wrong product
+    logBtn = h('button', { class: 'btn primary block sc-packet-log', onClick: doLog });
+    saveBtn = h('button', { class: 'btn sc-packet-save', onClick: () => { const f = saveProduct(); if (f) { paintSave(); toast(st.saveKind === 'exists' ? 'Already in My foods' : st.saveKind === 'updated' ? 'My food updated' : 'Saved to My foods', { kind: 'success' }); } } });
+    const paintSave = () => { clear(saveBtn); saveBtn.disabled = !!st.saved && !P.edited; saveBtn.append(...(st.saved && !P.edited ? [icon('check', 18), 'Saved'] : [icon('star', 18), st.saved ? 'Update My food' : 'Save to My foods'])); };
+    paintSave();
+    setFoot(logBtn, h('div', { class: 'sc-pk-foot2' }, saveBtn, h('button', { class: 'btn sc-pk-wrong', onClick: () => drawSearch(PK.productTitle(P), { auto: true }) }, 'Wrong product?')));
+    paintQty(); upd();
+  }
+
+  // ---- save and log ----
+  // Creates the custom food (once per barcode), remembers barcode -> food id, and returns it. An edited product updates the saved food.
+  function saveProduct() {
+    const P = st.product; st.saveKind = 'created';
+    const title = PK.productTitle(P);
+    const dup = st.saved || (P.code ? state.customFoods.find((f) => f.barcode === P.code) : state.customFoods.find((f) => AI.normName(f.name) === AI.normName(title) && f.source === P.source));
+    let food;
+    if (dup) {
+      food = dup; st.saveKind = P.edited ? 'updated' : 'exists';
+      if (P.edited) { const nf = PK.productToFood(P); Object.assign(food, { name: nf.name, per100: nf.per100, servings: nf.servings, brand: nf.brand, source: nf.source }); }
+    } else food = addCustomFood(PK.productToFood(P)); // commits
+    if (P.code) AI.rememberPacket(P.code, food.id);
+    commit();
+    st.saved = food; P.edited = false;
+    return food;
+  }
+  function entryFor() {
+    const P = st.product, grams = st.qty * (st.mode === 'pack' && P.pack ? P.pack.g : st.mode === 'grams' ? 1 : P.serving.g), meal = st.meal;
+    const unit = st.mode === 'grams' ? { label: 'grams', g: 1 } : st.mode === 'pack' && P.pack ? { label: P.pack.label, g: P.pack.g } : { label: P.serving.label, g: P.serving.g };
+    const extra = { src: 'packet', ...tsFor(date, meal) };
+    if (st.saved && !P.edited) return { ...buildEntry(st.saved, { qty: st.qty, unit, meal, oilTsp: 0 }), ...extra };
+    const v = PK.portion(P, grams);
+    return { foodId: null, name: PK.productTitle(P), cat: P.cat || 'Packaged', qty: st.qty, unit, g: r1(grams), kcal: v.kcal, p: v.p, c: v.c, f: v.f, fiber: v.fiber, sugar: v.sugar, micro: null, triggers: [], meal, oilTsp: 0, ...extra };
+  }
+  function doLog() {
+    if (!st.product) return;
+    const made = logFoods(date, [entryFor()]);
+    const kcal = Math.round(sumBy(made, 'kcal'));
+    haptic('success'); api.close();
+    toast(`Logged ${PK.productTitle(st.product)} · ${fmt(kcal)} kcal`, { ms: 5000, kind: 'success', undo: () => removeFoods(date, made.map((e) => e.id)) });
+  }
+
+  drawCapture();
+  return api;
+}

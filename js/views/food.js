@@ -14,9 +14,9 @@ import { scaleFood } from '../calc.js';
 import {
   MEALS, MEAL_LABEL, OIL_CATS, OIL_KCAL, OIL_FAT, RECIPE_CAT, r1, r2, servingsOf, unitsOf, isGrams, convertQty,
   buildEntry, measuresLine, measuresMap, lookup, buildRecipeFood, recipeTotals, splitParts, parsePart, resolveUnit,
-  PRESETS, resolvePreset, STAPLE_IDS, shortCat, SPOTS, segFix, tidyName,
+  PRESETS, resolvePreset, STAPLE_IDS, shortCat, SPOTS, segFix, tidyName, coachCard, targetsSheet, gradientRing,
 } from './food-extras.js';
-import { openScanner, cameraIcon } from './food-scan.js';
+import { openScanner, openPacketScanner, cameraIcon } from './food-scan.js';
 
 const seg = (options, value, onChange, cls) => segFix(segmented(options, value, onChange, cls), options, value);
 
@@ -28,17 +28,6 @@ const POOLS = [
 ];
 const BROWSE = new Set(['@recent', '@staples', '@frequent']); // typing a search leaves these and looks through every food
 const SEARCH_PH = 'Search dal, paneer, biryani…', TEXT_PH = 'e.g. 2 roti, 1 katori dal, chai';
-
-// Protein per unit (g) for the nudge line, and what each diet suggests (first match wins).
-const SOURCES = {
-  egg: { p: 6, cap: 4, text: (n) => `${n} egg${n > 1 ? 's' : ''}` },
-  dal: { p: 7, cap: 2, text: (n) => `${n} katori dal` },
-  paneer: { p: 18, cap: 2, text: (n) => `${n * 100} g paneer` },
-  whey: { p: 24, cap: 1, text: (n) => `${n} scoop whey` },
-  chicken: { p: 30, cap: 3, text: (n) => `${n * 100} g chicken` },
-  soya: { p: 16, cap: 2, text: (n) => `${n * 100} g soya chunks (cooked)` },
-};
-const DIET_SOURCES = { veg: ['paneer', 'dal', 'soya'], jain: ['paneer', 'dal', 'soya'], egg: ['egg', 'paneer'], nonveg: ['chicken', 'egg'], vegan: ['soya', 'dal'] };
 
 // ---- module state (survives re-renders) ----
 let query = '';
@@ -89,20 +78,6 @@ function unitText(qty, unit) {
   if (!unit) return fmt(qty, 1);
   if (isGrams(unit)) return `${fmt(qty, 1)} g`;
   return qty === 1 ? unit.label : `${fmt(qty, 1)} × ${unit.label.replace(/^1\s+(?!\d)/, '')}`;
-}
-
-function proteinIdea(left, diet, max = 2) {
-  let rem = left;
-  const parts = [];
-  for (const key of DIET_SOURCES[diet] || DIET_SOURCES.veg) {
-    const s = SOURCES[key];
-    const n = Math.min(s.cap, Math.floor(rem / s.p + 0.4));
-    if (n < 1) continue;
-    parts.push(s.text(n)); rem -= n * s.p;
-    if (parts.length === 2) break;
-  }
-  if (diet !== 'vegan' && rem >= 20 && parts.length < max) parts.push(SOURCES.whey.text(1));
-  return parts.join(' + ');
 }
 
 // Scroll a chip strip so its active chip is fully in view (with a peek of the chip before it).
@@ -160,36 +135,47 @@ function deleteEntry(date, entry) {
 }
 const syncStar = (id, on) => { if (slots) slots.results.querySelectorAll(`.fd-row[data-fid="${id}"] .fd-star`).forEach((b) => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }); };
 
-// ---- summary strip: small ring, kcal left, four macros. Stays on screen while the list scrolls. ----
+// ---- summary strip: "1,311 of 2,150 kcal · 839 left", then each macro as "x / y g" with what is still to go. Stays on screen while the list scrolls. ----
 function paintSummary() {
   const t = dayTotals(C.date), T = state.targets || {};
-  const has = T.kcal > 0, left = (T.kcal || 0) - t.kcal, over = has && left < 0;
+  const has = T.kcal > 0, left = (T.kcal || 0) - t.kcal, over = has && left < -0.5;
   const pct = has ? Math.min(100, (t.kcal / T.kcal) * 100) : 0;
-  const rg = ring({ size: 50, stroke: 6, pct, color: over ? 'var(--bad)' : 'var(--accent)', cls: 'fd-ring', children: h('span', { class: 'fd-pct' }, has ? Math.round((t.kcal / T.kcal) * 100) : t.n) });
+  const rg = ring({ size: 48, stroke: 6, pct, color: over ? 'var(--bad)' : 'var(--accent)', cls: 'fd-ring', children: h('span', { class: 'fd-pct' }, has ? Math.round((t.kcal / T.kcal) * 100) + '%' : String(t.n)) });
+  if (!over) gradientRing(rg, 'fd-grad');
+  rg.setAttribute('role', 'img'); rg.setAttribute('aria-label', has ? `${fmt(t.kcal)} of ${fmt(T.kcal)} kcal eaten, ${fmt(Math.abs(left))} ${over ? 'over' : 'left'}` : `${fmt(t.kcal)} kcal eaten`);
   fill(rg.fillEl, pct, { axis: 'ring', key: 'fd:ring', ms: seen('fd:ring') ? 500 : 900 });
   const n = h('b', { class: 'num fd-ln' });
-  countUp(n, has ? Math.abs(left) : t.kcal, { key: 'fd:left', ms: 600, fmt: (v) => fmt(Math.round(v)) });
+  countUp(n, t.kcal, { key: 'fd:eaten', ms: 600, fmt: (v) => fmt(Math.round(v)) });
+  const lft = h('b', { class: 'num' });
+  countUp(lft, Math.abs(left), { key: 'fd:left', ms: 600, fmt: (v) => fmt(Math.round(v)) });
   const macs = [['p', 'Protein', t.p, T.p], ['c', 'Carbs', t.c, T.c], ['f', 'Fat', t.f, T.f], ['fiber', 'Fibre', t.fiber, T.fiber]].map(([k, label, eaten, target], i) => {
     const bar = h('i', { style: { background: `var(--${k})` } });
     fill(bar, target > 0 ? Math.min(100, (eaten / target) * 100) : 0, { key: 'fd:m:' + k, delay: i * 50, ms: 500 });
-    return h('div', { class: 'fd-mac', title: target ? `${label} ${fmt(eaten, 0)} of ${fmt(target, 0)} g` : `${label} ${fmt(eaten, 0)} g` },
-      h('div', { class: 'fd-mv' }, h('b', { class: 'num' }, fmt(eaten, 0)), target ? h('small', null, '/' + fmt(target, 0)) : null),
-      h('div', { class: 'fd-mbar' }, bar), h('div', { class: 'fd-ml' }, label));
+    const to = target > 0 ? Math.round(target - eaten) : null, done = to != null && to <= 0;
+    const goTxt = to == null ? '' : !done ? `${fmt(to)} g to go` : k === 'p' || k === 'fiber' ? 'Done' : `${fmt(-to)} g over`;
+    return h('div', { class: 'fd-mac', 'aria-label': target ? `${label} ${fmt(eaten, 0)} of ${fmt(target, 0)} grams${to != null ? (done ? ', reached' : `, ${fmt(to)} to go`) : ''}` : `${label} ${fmt(eaten, 0)} grams` },
+      h('div', { class: 'fd-ml' }, h('i', { class: 'dot ' + k }), label),
+      h('div', { class: 'fd-mv' }, h('b', { class: 'num' }, fmt(eaten, 0)), h('small', null, target ? ` / ${fmt(target, 0)} g` : ' g')),
+      h('div', { class: 'fd-mbar' }, bar),
+      h('div', { class: 'fd-mg' + (done ? (k === 'p' || k === 'fiber' ? ' hit' : ' over') : '') }, done && (k === 'p' || k === 'fiber') ? icon('check', 11) : null, goTxt));
   });
   clear(slots.sum);
-  slots.sum.append(rg, h('div', { class: 'fd-left' + (over ? ' over' : '') }, n, h('span', { class: 'fd-ll' }, has ? (over ? 'kcal over' : 'kcal left') : 'kcal eaten')), h('div', { class: 'fd-macs' }, macs));
-  paintNudge(t, T);
+  slots.sum.append(
+    h('div', { class: 'fd-sum-top' }, rg,
+      h('div', { class: 'fd-kc2' }, h('div', { class: 'fd-eat' }, n, h('span', { class: 'fd-of' }, has ? ` of ${fmt(T.kcal)} kcal` : ' kcal eaten')), has ? h('div', { class: 'fd-left' + (over ? ' over' : '') }, lft, over ? ' kcal over' : ' kcal left') : null),
+      h('button', { class: 'chip fd-tchip', 'aria-label': 'How your targets are set', onClick: () => targetsSheet(C) }, icon('target', 15), 'Targets')),
+    h('div', { class: 'fd-macs' }, macs));
+  paintCoach();
 }
-// One pill instead of a card: tap it to see the high-protein foods.
-function paintNudge(t, T) {
-  const pLeft = (T.p || 0) - t.p, box = slots.nudge;
+// The coach, compact: one headline and a row of meals that fit what is left. Only for today; tapping a card opens it, + logs it.
+function paintCoach() {
+  const box = slots.nudge, keep = box.querySelector('.fd-co-cards')?.scrollLeft || 0;
   clear(box);
-  const show = C.date === C.today && pLeft > 20;
-  box.classList.toggle('hide', !show);
-  if (!show) return;
-  const idea = proteinIdea(pLeft, state.profile?.diet);
-  box.append(h('button', { class: 'fd-nudge', onClick: () => pickPool('@protein') }, icon('zap', 16),
-    h('span', { class: 'fd-nudge-t' }, h('b', { class: 'num' }, Math.round(pLeft)), ' g protein left'), idea ? h('span', { class: 'fd-nudge-s' }, idea) : null));
+  const card = C.date === C.today ? coachCard(C, C.date, { compact: true }) : null;
+  box.classList.toggle('hide', !card);
+  if (!card) return;
+  box.append(card);
+  const sc = card.querySelector('.fd-co-cards'); if (sc && keep) sc.scrollLeft = keep;
 }
 
 // ---- search & results ----
@@ -800,6 +786,7 @@ function searchPane() {
   requestAnimationFrame(() => showActiveChip(slots.chips));
   const acts = h('div', { class: 'chips wrap fd-acts' },
     h('button', { class: 'chip accent on fd-scan', onClick: () => openScanner(C, { date: C.date, meal: mealByTime() }) }, cameraIcon(16), 'Scan'),
+    h('button', { class: 'chip fd-scan-packet', onClick: () => openPacketScanner(C, { date: C.date, meal: mealByTime() }) }, icon('scan', 16), 'Scan a packet'),
     h('button', { class: 'chip', onClick: () => openQuickSheet() }, 'Quick add'),
     h('button', { class: 'chip', onClick: () => openCreateSheet(query.trim()) }, 'Create'),
     h('button', { class: 'chip', onClick: () => openRecipeSheet() }, 'Recipe'));
@@ -842,7 +829,8 @@ export function render(container, ctx) {
   slots.seg = seg([{ id: 'add', label: 'Add food' }, { id: 'diary', label: 'Diary' }], view, setView, 'fd-view');
   slots.addPane = h('div', { class: 'fd-pane' });
   slots.addPane.append(searchPane());
-  container.append(h('div', { class: 'fd' }, header(), slots.sum, slots.seg, slots.addPane, slots.diary));
+  // the switch sits in a wrapper: app.js writes --i (the section's stagger index) on each child of this list, and on the switch itself that moves its thumb
+  container.append(h('div', { class: 'fd' }, header(), slots.sum, h('div', { class: 'fd-viewbox' }, slots.seg), slots.addPane, slots.diary));
   paint(); paintText();
   if (fresh && ctx.params.quick) openQuickSheet();
   consumePending();

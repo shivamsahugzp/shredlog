@@ -7,23 +7,39 @@
 .chart .grid line:last-of-type { stroke-dasharray: none; }
 .chart .area { stroke: none; }
 .chart .dot { stroke: var(--card); stroke-width: 1.5; }
+.chart .series-glow { pointer-events: none; }
 .chart .end-dot { stroke: var(--card); stroke-width: 2; }
-.chart .end-halo { opacity: .2; }
+.chart .end-halo { opacity: .26; }
+.chart .end-pulse { opacity: 0; pointer-events: none; transform-box: fill-box; transform-origin: center; animation: ch-pulse 2.8s ease-out 1.6s infinite; }
+@keyframes ch-pulse { 0% { opacity: .38; transform: scale(.7); } 70%, 100% { opacity: 0; transform: scale(2.6); } }
+.chart .end-tag rect { fill: var(--card); stroke-width: 1.25; filter: drop-shadow(0 3px 6px color-mix(in srgb, var(--ink) 18%, transparent)); }
+.chart .end-tag-t { fill: var(--ink); font-size: 11px; font-weight: 750; font-variant-numeric: tabular-nums; }
 .chart .focus-dot { stroke: var(--card); stroke-width: 2.5; }
+.chart .hover-line { stroke-dasharray: 3 3; }
 .chart .bar { transition: opacity .15s ease; }
+.chart .bar-glow { pointer-events: none; }
 .chart.has-hover .bar:not(.on) { opacity: .42; }
+.chart.has-hover .bar-glow { opacity: .2; }
 .chart .tgt-lbl { fill: var(--ink-2); font-size: 10.5px; font-weight: 700; paint-order: stroke; stroke: var(--card); stroke-width: 3px; stroke-linejoin: round; }
-.chart .tip-bg { filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--ink) 28%, transparent)); }
+.chart .tip-bg { filter: drop-shadow(0 6px 12px color-mix(in srgb, var(--ink) 30%, transparent)); }
+.chart .tip-dot { stroke: var(--bg); stroke-width: 1.5; }
 .spark { display: block; flex: none; overflow: visible; }
 .spark.fluid { width: 100%; height: auto; }
 .spark .series-line { stroke-linejoin: round; stroke-linecap: round; fill: none; }
+.spark .series-glow { pointer-events: none; }
 .spark .area { stroke: none; }
 .spark .end-dot { stroke: var(--card); stroke-width: 1.5; }
+.spark .end-halo { opacity: .28; }
 .spark-flat { stroke: var(--line-2); stroke-width: 2; stroke-dasharray: 2 5; stroke-linecap: round; }
 .chart-legend i.lg-dot { width: 8px; height: 8px; border-radius: 50%; }
 .chart-legend i.lg-line { width: 14px; height: 3px; border-radius: 2px; }
 .chart-legend i.lg-dash { width: 14px; height: 0; border-radius: 0; border-top: 2px dashed; background: none; }
 .chart-legend b { color: var(--ink); font-weight: 700; }
+
+/* gradient rings (charts.js gradRing): the glow and the head cap ride the arc; the rest ring counts down with a linear 1 s CSS transition */
+.ring .glow { pointer-events: none; }
+.ring .cap { pointer-events: none; }
+.ring .fill.lap { transition: none; }
 
 /* ---------- layout ---------- */
 .pg-nav { position: sticky; top: calc(var(--sat) + 8px); z-index: 20; margin: 0 0 14px; padding: 4px; border-radius: 20px; }
@@ -271,3 +287,133 @@
 .pg-sstat .num-md small { font-size: 11px; }
 .pg-steps .pg-pills { align-items: center; }
 .pg-steps .chart { margin-top: 10px; }
+
+/* =====================================================================================================
+   v4: richer Progress. Gradient icon wells, hero glow, gradient bars with glowing ends, tighter rhythm.
+   ===================================================================================================== */
+
+/* ---------- tighter rhythm ---------- */
+.pg-body { gap: 10px; }
+.pg-body > .section { margin-top: 8px; }
+.pg-body > .section:first-child { margin-top: 0; }
+.pg .section-head { margin-bottom: 8px; }
+.pg .card { padding: 14px; }
+.pg .card.pad-s { padding: 12px; }
+.pg .section > .card + .card, .pg .section > .stack > .card + .card { margin-top: 8px; }
+.pg-note { margin-top: 6px; font-size: 12px; line-height: 1.4; }
+.pg-line { margin-top: 10px; }
+.pg-pills { margin-top: 8px; }
+.pg-nav { margin-bottom: 10px; }
+
+/* ---------- icon wells (section heads and card captions) ---------- */
+.pg-ico { display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 9px; color: var(--tone, var(--accent));
+  background: linear-gradient(145deg, color-mix(in srgb, var(--tone, var(--accent)) 28%, transparent), color-mix(in srgb, var(--tone, var(--accent)) 8%, transparent));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tone, var(--accent)) 26%, transparent), 0 5px 12px -7px color-mix(in srgb, var(--tone, var(--accent)) 75%, transparent); }
+.pg-ico svg { width: 16px; height: 16px; }
+.pg-sh { align-items: center; justify-content: flex-start; gap: 10px; }
+.pg-sh .pg-ico { width: 32px; height: 32px; border-radius: 11px; }
+.pg-sh .pg-ico svg { width: 18px; height: 18px; }
+.pg-sh h2 { font-size: 18px; }
+.pg-cap { align-items: center; margin-bottom: 10px; }
+.pg-cap-l { display: inline-flex; align-items: center; gap: 9px; min-width: 0; }
+.pg-cap-l .pg-ico { font-size: 0; }
+.pg-bmi .pg-ico { width: 34px; height: 34px; border-radius: 11px; }
+.pg-bmi .pg-ico svg { width: 18px; height: 18px; }
+.pg-stat .lbl svg { color: var(--accent-text); flex: none; }
+
+/* ---------- nav: a glow under the gradient thumb, press feel ---------- */
+.pg-nav { box-shadow: inset 0 1px 0 var(--hl), 0 12px 26px -18px color-mix(in srgb, var(--accent) 55%, transparent); }
+.pg-nav .seg button { transition: color .18s ease, transform .12s ease; }
+.pg-nav .seg button:active { transform: scale(.94); }
+
+/* ---------- heroes ---------- */
+.pg-hero.hero { padding: 16px; overflow: hidden; }
+.pg-hero-weight .pg-big { margin: 6px 0 10px; }
+.pg-hero-weight .pg-big > span:first-child { background: linear-gradient(115deg, var(--ink) 38%, var(--accent-text)); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+.pg-hero-side, .pg-ringstat { --rg: var(--accent); }
+.pg-hero-side { position: relative; }
+.ring::before { content: ''; position: absolute; inset: -14%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--rg, transparent) 24%, transparent), transparent 74%); pointer-events: none; }
+.pg-hero .pg-hero-chip .pill, .pg-hero .pg-ringpill .pill, .pg-hitrow .pill { box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent); }
+.pg-rings-row { margin-top: 12px; }
+.pg-ringstat .ring { margin-bottom: 6px; }
+.pg-hitrow { margin-top: 10px; padding-top: 10px; }
+
+/* ---------- bars: gradient fills with a glowing tip ---------- */
+.pg .mini-bar, .pg-track { overflow: visible; }
+.pg .mini-bar i, .pg-track > i { background: linear-gradient(90deg, color-mix(in srgb, var(--bc, var(--accent)) 62%, transparent), var(--bc, var(--accent))); box-shadow: 0 5px 10px -6px var(--bc, var(--accent)); }
+.pg-bp .pg-bar { background: var(--grad-accent); box-shadow: 0 0 8px -3px var(--accent); }
+.pg-cmp-track { overflow: visible; }
+.pg-cmp-track i { background: linear-gradient(90deg, color-mix(in srgb, var(--bc) 62%, transparent), var(--bc)); box-shadow: 0 6px 12px -8px var(--bc); }
+.pg-cmp.on .pg-cmp-track i { box-shadow: 0 0 0 0 transparent, 6px 0 12px -4px color-mix(in srgb, var(--bc) 80%, transparent); }
+.pg-en-track { overflow: visible; }
+.pg-en-bar span { background: linear-gradient(90deg, color-mix(in srgb, var(--bc) 66%, transparent), var(--bc)); }
+.pg-en-bar span:last-child { box-shadow: 5px 0 12px -4px color-mix(in srgb, var(--bc) 85%, transparent); }
+.pg-strip i { background: linear-gradient(180deg, var(--bc), color-mix(in srgb, var(--bc) 62%, transparent)); }
+.pg-split .bar { overflow: visible; }
+.pg-split .bar span { box-shadow: inset 0 1px 0 color-mix(in srgb, white 30%, transparent); }
+.pg-split .bar .seg-p { background: linear-gradient(90deg, color-mix(in srgb, var(--p) 58%, transparent), var(--p)); }
+.pg-split .bar .seg-c { background: linear-gradient(90deg, color-mix(in srgb, var(--c) 58%, transparent), var(--c)); }
+.pg-split .bar .seg-f { background: linear-gradient(90deg, color-mix(in srgb, var(--f) 58%, transparent), var(--f)); }
+.pg-split .bar span:first-child { border-radius: 8px 3px 3px 8px; }
+.pg-split .bar span:last-child { border-radius: 3px 8px 8px 3px; }
+.pg-en-top .pill, .pg-etop .pill { box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent); }
+.pg-hero2 { background: linear-gradient(115deg, var(--ink) 45%, var(--accent-text)); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+.pg-hero2 small { -webkit-text-fill-color: var(--muted); }
+
+/* weekly budget cells */
+.pg-week .heat i.good { background: linear-gradient(160deg, color-mix(in srgb, var(--good) 34%, var(--card)), color-mix(in srgb, var(--good) 12%, var(--card))); box-shadow: 0 6px 12px -8px var(--good); }
+.pg-week .heat i.warn { background: linear-gradient(160deg, color-mix(in srgb, var(--warn) 30%, var(--card)), color-mix(in srgb, var(--warn) 10%, var(--card))); }
+.pg-week .heat i.bad { background: linear-gradient(160deg, color-mix(in srgb, var(--bad) 30%, var(--card)), color-mix(in srgb, var(--bad) 10%, var(--card))); }
+
+/* ---------- BMI meter ---------- */
+.pg-scale { height: 12px; margin: 18px 0 6px; }
+.pg-scale i { opacity: 1; background: linear-gradient(90deg, color-mix(in srgb, var(--bc) 50%, var(--card-2)), var(--bc)); box-shadow: 0 8px 14px -8px var(--bc); }
+.pg-mark { background: var(--ink); border: 4px solid var(--card); box-shadow: 0 0 0 1.5px var(--ink), 0 0 18px 2px color-mix(in srgb, var(--ink) 38%, transparent); }
+.pg-mark::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--ink) 45%, transparent); opacity: 0; animation: pg-ping 2.6s ease-out 1.4s infinite; }
+@keyframes pg-ping { 0% { opacity: .7; transform: scale(.7); } 70%, 100% { opacity: 0; transform: scale(2); } }
+
+/* ---------- training week ---------- */
+.pg-day i { transition: transform .12s ease; }
+.pg-day.done i { background: var(--grad-accent); box-shadow: 0 6px 14px -7px var(--accent); }
+.pg-day.done.now i { box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px var(--accent), 0 6px 14px -7px var(--accent); }
+.pg-week7 { margin-top: 14px; }
+.pg-wk-col.now { background: linear-gradient(180deg, var(--accent-soft), transparent); box-shadow: inset 0 1px 0 color-mix(in srgb, var(--accent) 35%, transparent); }
+.pg-wk-track i { --bc: var(--muted); background: linear-gradient(180deg, var(--bc), color-mix(in srgb, var(--bc) 45%, transparent)); }
+.pg-wk-track i.hi { --bc: var(--good); }
+.pg-wk-track i.mid { --bc: var(--accent); }
+.pg-wk-track i.hi, .pg-wk-col.now .pg-wk-track i { box-shadow: 0 0 14px -2px color-mix(in srgb, var(--bc) 75%, transparent); }
+.pg-wk-stat, .pg-sstat { background: linear-gradient(160deg, var(--card-2), color-mix(in srgb, var(--card-2) 55%, var(--card))); }
+.pg-ses { padding: 10px 0; }
+.pg-ses-line { margin-top: 6px; }
+
+/* ---------- habit tiles, stat tiles ---------- */
+.pg-tile .well { box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent), 0 5px 12px -8px currentColor; }
+.pg .tile { background: linear-gradient(165deg, color-mix(in srgb, var(--accent) 5%, var(--card)), var(--card) 62%); }
+
+/* ---------- folded explanations ---------- */
+.pg-why { margin-top: 8px; border-top: 1px solid var(--line); }
+.pg-why > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 13px; font-weight: 650; color: var(--ink-2); cursor: pointer; list-style: none; transition: transform .12s ease, color .12s ease; }
+.pg-why > summary::-webkit-details-marker { display: none; }
+.pg-why > summary > svg:first-child { flex: none; color: var(--accent-text); }
+.pg-why > summary:active { transform: scale(.985); color: var(--ink); }
+.pg-why[open] .pg-chev { transform: rotate(180deg); }
+.pg-why p { margin: 0; padding: 0 0 10px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+
+/* ---------- press feedback ---------- */
+.pg-micro > summary, .pg-e1 > summary { transition: transform .12s ease, opacity .12s ease; }
+.pg-micro > summary:active, .pg-e1 > summary:active { transform: scale(.985); opacity: .75; }
+.pg-bp tr[role=button] { transition: background-color .12s ease; }
+.pg-more-btn, .pg-suggest .btn, .pg-wait + .btn { transition: transform .12s ease, filter .15s ease; }
+
+/* ---------- 360 px ---------- */
+@media (max-width: 374px) {
+  .pg .card { padding: 12px; }
+  .pg-hero.hero { padding: 14px; }
+  .pg-sh .pg-ico { width: 30px; height: 30px; }
+  .pg-cap-l { gap: 8px; }
+}
+
+/* long suggestion text stays to two lines so the lists do not read as a wall */
+.pg-sug .small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pg-sug { padding: 9px 0; }
+.pg-suggest { margin-top: 10px; padding-top: 10px; }

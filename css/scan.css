@@ -184,4 +184,78 @@
   .sc-scanning::after { animation: none; transform: none; opacity: 0; }
   .sc-spin, .sc-busy .sc-item::after { animation: none; }
   .sc-pickbtn { transition: none; }
+  .sc-pk-thumb img { transition: none; }
 }
+
+/* ---------- Scan a packet (sc-pk-) ---------- */
+.sc-pk-capture { display: flex; flex-direction: column; gap: 14px; }
+.sc-pk-spot { width: 132px; height: 106px; }
+.sc-pk-or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 13px; font-weight: 650; }
+.sc-pk-or::before, .sc-pk-or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+.sc-pk-type { display: flex; flex-direction: column; gap: 12px; }
+.sc-pk-row { display: flex; gap: 8px; align-items: stretch; }
+.sc-pk-row > input, .sc-pk-row > .search { flex: 1; min-width: 0; }
+.sc-pk-row > input { height: 50px; border-radius: 16px; background: var(--card); box-shadow: inset 0 1px 0 var(--hl); font-variant-numeric: tabular-nums; }
+.sc-pk-row > .btn { flex: none; min-height: 50px; padding: 0 16px; border-radius: 16px; }
+.sc-pk-hint { min-height: 18px; margin-top: 6px; padding: 0 2px; font-size: 12.5px; color: var(--muted); }
+.sc-pk-hint.ok { color: var(--good); }
+.sc-pk-hint.warn { color: var(--warn); }
+.sc-packet .sc-using { text-align: center; }
+
+/* reading: photo with the sweep, then a skeleton of the product card */
+.sc-pk-reading, .sc-pk-nf, .sc-pk-search-step, .sc-pk-manual, .sc-pk-cardstep { display: flex; flex-direction: column; gap: 12px; }
+.sc-pk-reading { align-items: center; }
+.sc-pk-prev { max-height: 30vh; }
+.sc-pk-busy { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 999px; background: var(--accent-soft); font-weight: 650; }
+.sc-pk-sk { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+.sc-pk-sk-head { display: flex; align-items: center; gap: 12px; }
+.sc-pk-sk-img { width: 64px; height: 64px; border-radius: 14px; flex: none; }
+.sc-pk-sk-lines { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+/* the product card */
+.sc-pk-cardstep { padding-bottom: 8px; }
+.sc-packet-card { display: flex; flex-direction: column; gap: 14px; padding: 14px; }
+.sc-pk-head { display: flex; align-items: center; gap: 12px; }
+.sc-pk-img { width: 68px; height: 68px; flex: none; border-radius: 16px; object-fit: contain; background: var(--card-2); border: 1px solid var(--line); padding: 4px; display: block; }
+.sc-pk-photo { object-fit: cover; padding: 0; }
+.sc-pk-noimg { display: grid; place-items: center; color: var(--accent-text); background: var(--accent-soft); border-color: transparent; }
+.sc-pk-id { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.sc-pk-brand { font-size: 12.5px; font-weight: 650; color: var(--muted); }
+.sc-pk-name { font-size: 18px; line-height: 1.2; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.sc-pk-pills { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin-top: 3px; }
+.sc-pk-code { font-variant-numeric: tabular-nums; }
+.sc-pk-nums { display: flex; align-items: center; gap: 14px; }
+.sc-pk-grid4 { flex: 1; min-width: 0; }
+.sc-pk-nums .sc-tm .val b { font-size: 19px; }
+.sc-pk-100 { display: flex; flex-direction: column; gap: 3px; padding-top: 12px; border-top: 1px dashed var(--line-2); font-size: 13px; color: var(--muted); }
+.sc-pk-100 > div { overflow-wrap: anywhere; }
+.sc-pk-100 b { color: var(--ink-2); }
+.sc-pk-thumb { position: relative; overflow: hidden; }
+.sc-pk-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 4px; background: var(--card-2); opacity: 0; transition: opacity .2s ease; }
+.sc-pk-thumb img.on { opacity: 1; }
+.sc-pk-head .sc-pk-edit { flex: none; align-self: flex-start; margin-left: auto; width: 44px; height: 44px; margin-top: -6px; margin-right: -8px; color: var(--muted); }
+.sc-pk-back { align-self: flex-start; display: inline-flex; align-items: center; gap: 5px; }
+.sc-pk-note > div { min-width: 0; overflow-wrap: anywhere; }
+.sc-pk-qtycard { display: flex; flex-direction: column; gap: 12px; padding: 12px; }
+.sc-pk-qtybox { display: flex; flex-direction: column; gap: 12px; }
+.sc-pk-qty { padding-right: 0; }
+.sc-pk-unitnote { padding: 0 2px; }
+.sc-pk-unitnote:empty { display: none; }
+.seg.sc-pk-modes button { min-height: 44px; font-size: 14px; min-width: 0; }
+.sc-pk-foot2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 8px; }
+.sc-pk-foot2 .btn { min-height: 46px; font-size: 14px; border-radius: 16px; padding: 0 10px; gap: 6px; min-width: 0; }
+.sc-pk-foot2 .btn svg { flex: none; }
+
+/* not found, search results, manual entry */
+.sc-pk-nfbtns { display: flex; flex-direction: column; gap: 8px; }
+.sc-pk-cands h3 { font-size: 17px; margin-bottom: 8px; }
+.sc-pk-res { min-height: 64px; }
+.sc-pk-rimg { width: 44px; height: 44px; border-radius: 12px; object-fit: contain; background: var(--card-2); flex: none; display: grid; place-items: center; }
+.sc-pk-rimg.sc-pk-noimg { color: var(--accent-text); background: var(--accent-soft); }
+.sc-pk-rtext { min-width: 0; }
+.sc-pk-rt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sc-pk-results { display: flex; flex-direction: column; gap: 10px; }
+.sc-pk-credit { text-align: center; }
+.sc-pk-manual input { height: 50px; }
+.sc-pk-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sc-pk-err > div { min-width: 0; }

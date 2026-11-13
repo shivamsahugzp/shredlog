@@ -3,10 +3,10 @@
 // Resume contract: update() (returned by render) never rebuilds the DOM. It only refreshes the clock, rest bar, header stats and the
 // "pick up where you left off" chip, so typed numbers, scroll position and the picker selection survive a screen lock.
 import { state, commit, startWorkout, finishWorkout, discardWorkout, deleteWorkout, findExercise, allExercises, searchExercises, addCustomExercise, allRoutines, saveRoutine, exerciseHistory, lastSetsFor, bestFor, latestWeight, workoutsOn, todayKey, dateKey, parseKey, lastNDays, uid } from '../state.js';
-import { h, icon, sheet, actionSheet, toast, confirmSheet, promptSheet, chips, segmented, stepper, field, ring, append, clear, emptyState, fmt, fmtClock, fmtDateLabel, fmtShortDate, fmtTime, haptic } from '../ui.js';
+import { h, icon, sheet, actionSheet, toast, confirmSheet, promptSheet, chips, segmented, stepper, field, append, clear, emptyState, fmt, fmtClock, fmtDateLabel, fmtShortDate, fmtTime, haptic } from '../ui.js';
 import { countUp, fill, pop, pulse, odometer, celebrate, prefersReducedMotion, quiet, EASE_OUT, EASE_SPRING, SPRING_SOFT, SPRING_POP } from '../motion.js';
 import { metBurn, workoutVolume } from '../calc.js';
-import { lineChart } from '../charts.js';
+import { lineChart, gradRing, animateRing } from '../charts.js';
 import { repRange, increment, nextSuggestion, weeklyVolume, volumeByGroup, volumeStatus, MUSCLE_GROUPS } from '../insights.js';
 import { bodyMap, bodyShapes, MUSCLES, MUSCLE_LABELS, groupColor, muscleColor, catGroup, musclesForCats, viewFor } from './body-map.js';
 import { weekPlans, weekThisWeek, weekStreak, sameWeekdaySession } from '../train-plan.js';
@@ -82,9 +82,9 @@ function rise(el, { delay = 0, y = 14, ms = 420, scale = 0.985 } = {}) {
   if (!el || !canAnim()) return;
   el.animate([{ opacity: 0, transform: `translateY(${y}px) scale(${scale})` }, { opacity: 1, transform: 'none' }], { duration: ms, delay, easing: EASE_OUT, fill: 'backwards' });
 }
-function popIn(el, delay = 0) {
+function popIn(el, delay = 0, ms = 420) {
   if (!el || !canAnim()) return;
-  el.animate([{ transform: 'scale(0)', opacity: 0 }, { transform: 'scale(1.25)', opacity: 1, offset: 0.6 }, { transform: 'scale(1)', opacity: 1 }], { duration: 420, delay, easing: EASE_SPRING, fill: 'backwards' });
+  el.animate([{ transform: 'scale(0)', opacity: 0 }, { transform: 'scale(1.25)', opacity: 1, offset: 0.6 }, { transform: 'scale(1)', opacity: 1 }], { duration: ms, delay, easing: EASE_SPRING, fill: 'backwards' });
 }
 // run fn once `el` is on screen (below-the-fold sections play their moment when the user gets there)
 function whenVisible(el, fn) {
@@ -785,17 +785,18 @@ function heroCard(plans, week) {
   const btns = [];
   let art = null;
   const goLabel = (title, sub) => h('span', { class: 'tr-go-t' }, h('b', null, title), sub ? h('small', null, sub) : null);
-  // once today's session is saved the big yellow button steps back: training again is possible, but it is no longer the call to action
-  const likeBtn = pre ? h('button', { class: (done.length ? 'btn soft' : 'btn primary') + ' lg block tr-go tr-go-like', onClick: () => startLikeLast(pre) }, icon('play', 22), goLabel(done.length ? 'Train again' : `Start like last ${pre.dayName}`, done.length ? `Like last ${pre.dayName} · ${preSub(pre)}` : preSub(pre))) : null;
+  const goIc = (name, size) => h('span', { class: 'tr-go-ic', 'aria-hidden': 'true' }, icon(name, size));
+  // once today's session is saved the big gradient Start button steps back: training again is possible, but it is no longer the call to action
+  const likeBtn = pre ? h('button', { class: (done.length ? 'btn soft' : 'btn primary') + ' lg block tr-go tr-go-like', onClick: () => startLikeLast(pre) }, goIc('play', 24), goLabel(done.length ? 'Train again' : `Start like last ${pre.dayName}`, preSub(pre))) : null;
   if (p.kind === 'train') {
     copy.push(h('div', { class: 'tr-hero-lead' }, 'You usually train'), h('div', { class: 'tr-gchips big' }, p.groups.map((g) => h('span', { class: 'tr-gchip', style: `--mc:${groupColor(catGroup(g))}` }, h('i'), g))), confidenceBar(p));
     const nEx = t ? (t.exercises || []).length : 0;
     const lastText = t ? `${done.length ? 'Same as' : 'Repeats'} last ${p.dayName} · ${nEx} exercise${nEx === 1 ? '' : 's'}` : 'Pick the exercises yourself';
-    btns.push(likeBtn || h('button', { class: 'btn primary lg block tr-go', onClick: () => (t ? startFromTemplate(t) : musclePicker({ muscles })) }, icon('play', 22), goLabel(done.length ? 'Train again' : 'Start', lastText)));
+    btns.push(likeBtn || h('button', { class: 'btn primary lg block tr-go', onClick: () => (t ? startFromTemplate(t) : musclePicker({ muscles })) }, goIc('play', 24), goLabel(done.length ? 'Train again' : 'Start', lastText)));
     art = miniMap({ heat: { }, view: 'both' }, 'tr-hero-art'); art.dataset.heat = JSON.stringify(heatOf(muscles));
   } else if (p.kind === 'rest') {
     copy.push(h('div', { class: 'tr-rest-h' }, 'Rest day'), h('div', { class: 'tr-hero-lead' }, 'Usually your rest day. Recovery is where muscle grows.'));
-    btns.push(h('button', { class: 'btn soft lg block tr-go', onClick: startMobility }, icon('moon', 20), goLabel('Light mobility', '10 minutes, no weights')));
+    btns.push(h('button', { class: 'btn soft lg block tr-go', onClick: startMobility }, goIc('moon', 22), goLabel('Light mobility', '10 minutes, no weights')));
     art = h('div', { class: 'tr-moon', 'aria-hidden': 'true' }, icon('moon', 44));
   } else if (pre) {
     // one session on this weekday, no confident pattern yet: still offer to repeat it
@@ -806,31 +807,31 @@ function heroCard(plans, week) {
     art = miniMap({ heat: { }, view: 'both' }, 'tr-hero-art'); art.dataset.heat = JSON.stringify(heatOf(musclesForCats(gs.length ? workoutCats(pre.workout) : [])));
   } else {
     copy.push(h('div', { class: 'tr-rest-h' }, `No pattern on ${p.dayName}s yet`), h('div', { class: 'tr-hero-lead' }, p.dataWeeks < 2 ? 'ShredLog learns your week after about two weeks of logging.' : 'Train on this day a few times and it will remember.'));
-    btns.push(h('button', { class: 'btn primary lg block tr-go', onClick: () => musclePicker() }, icon('target', 20), goLabel('Build a session', 'Pick the muscles you want')));
+    btns.push(h('button', { class: 'btn primary lg block tr-go', onClick: () => musclePicker() }, goIc('target', 22), goLabel('Build a session', 'Pick the muscles you want')));
     art = h('div', { class: 'tr-moon accent', 'aria-hidden': 'true' }, icon('dumbbell', 40));
   }
   const second = [];
   if (p.kind === 'rest') second.push(h('button', { class: 'btn sm', onClick: () => musclePicker() }, icon('dumbbell', 16), 'Train anyway'));
   else if (pre || (p.kind === 'train' && t)) second.push(h('button', { class: 'btn sm tr-build', onClick: () => musclePicker({ muscles }) }, icon('target', 16), 'Build'));
   second.push(h('button', { class: 'btn sm tr-empty-btn', onClick: () => begin({ name: 'Workout' }) }, icon('plus', 16), 'Empty'));
-  const card = h('div', { class: 'card tr-plan-card tr-plan-' + p.kind, style: `--hc:${tone}` },
+  const card = h('div', { class: 'card hero tr-plan-card tr-plan-' + p.kind, style: `--hc:${tone}` },
     h('div', { class: 'tr-hero-top' }, h('div', { class: 'tr-hero-copy' }, copy), art),
     h('div', { class: 'tr-hero-btns' }, btns, h('div', { class: 'tr-hero-second' }, second)),
     weekStrip(plans, week));
   if (art && art.dataset && art.dataset.heat) {
     const full = JSON.parse(art.dataset.heat);
-    if (intro()) { art.classList.add('bm-intro'); jobs.push(() => setTimeout(() => { art.setHeat(full); setTimeout(() => art.classList.remove('bm-intro'), 1200); }, 260)); }
+    if (intro()) { art.classList.add('bm-intro'); jobs.push(() => setTimeout(() => { art.setHeat(full); setTimeout(() => art.classList.remove('bm-intro'), 1000); }, 180)); }
     else art.setHeat(full);
   }
+  // first open: one sequence inside 600 ms (the section rise itself comes from app.js .mo-in): Start block, chips, strip days, their dots, ticks
   if (intro()) jobs.push(() => {
-    rise(card, { y: 18, ms: 480 });
-    card.querySelectorAll('.tr-gchip').forEach((c, i) => rise(c, { delay: 220 + i * 70, y: 8, ms: 320, scale: 0.9 }));
-    card.querySelectorAll('.tr-conf-bars i').forEach((c, i) => popIn(c, 360 + i * 40));
-    const go = card.querySelector('.tr-go'); if (go) rise(go, { delay: 300, y: 10, ms: 380 });
-    card.querySelectorAll('.tr-wk').forEach((c, i) => rise(c, { delay: 380 + i * 45, y: 8, ms: 300 }));
-    card.querySelectorAll('.tr-wk .tr-gdot').forEach((c, i) => popIn(c, 520 + i * 30));
-    card.querySelectorAll('.tr-wk-tick').forEach((c, i) => popIn(c, 700 + i * 60));
-    const m = card.querySelector('.tr-moon'); if (m) popIn(m, 200);
+    const go = card.querySelector('.tr-go'); if (go) rise(go, { delay: 90, y: 10, ms: 300, scale: 0.97 });
+    card.querySelectorAll('.tr-gchip').forEach((c, i) => rise(c, { delay: 120 + i * 45, y: 8, ms: 260, scale: 0.9 }));
+    card.querySelectorAll('.tr-conf-bars i').forEach((c, i) => popIn(c, 200 + i * 28, 300));
+    card.querySelectorAll('.tr-wk').forEach((c, i) => rise(c, { delay: 190 + i * 28, y: 8, ms: 240 }));
+    card.querySelectorAll('.tr-wk .tr-gdot').forEach((c, i) => popIn(c, 280 + i * 18, 300));
+    card.querySelectorAll('.tr-wk-tick').forEach((c, i) => popIn(c, 340 + i * 40, 300));
+    const m = card.querySelector('.tr-moon'); if (m) popIn(m, 150, 360);
   });
   return card;
 }
@@ -887,7 +888,7 @@ function weekMapCard() {
     const n = groups[g] || 0, st = volumeStatus(n, beginner);
     const word = !n ? 'Not yet' : st.label.startsWith('high') ? 'High' : st.label === 'very high' ? 'Very high' : st.label === 'on target' ? 'On target' : st.label === 'light' ? 'Light' : 'Low';
     const cls = !n ? '' : st.status === 'green' ? 'good' : st.status === 'amber' ? 'warn' : 'bad';
-    const pct = Math.min(100, (n / 16) * 100), track = h('i', { style: `background:${groupColor(g)};width:${pct}%` });
+    const pct = Math.min(100, (n / 16) * 100), track = h('i', { style: `width:${pct}%` });
     tracks.push([track, pct]);
     return h('div', { class: 'tr-gtile', style: `--gc:${groupColor(g)}` },
       h('div', { class: 'tr-gtile-top' }, h('i'), h('span', null, g)), h('div', { class: 'tr-gtile-n' }, h('b', null, fmt(n, 0)), h('small', null, 'sets')),
@@ -955,9 +956,10 @@ function homeHead(plans, week, streak) {
   const goal = Math.max(2, r ? r.daysPerWeek : plans.filter((p) => p.kind === 'train').length || 3);
   const pct = Math.min(100, (nWeek / goal) * 100);
   const lbl = h('b', { class: 'num-sm' }, `${nWeek}/${goal}`);
-  const rg = ring({ size: 56, stroke: 6, pct, color: nWeek >= goal ? 'var(--good)' : 'var(--accent)', children: lbl });
+  const full = nWeek >= goal;
+  const rg = gradRing({ size: 58, stroke: 6.5, pct: intro() ? 0 : pct, color: full ? 'var(--good)' : 'var(--accent)', color2: full ? undefined : 'var(--accent-2)', children: lbl });
   rg.classList.add('tr-wring'); rg.setAttribute('title', 'Days trained this week'); rg.setAttribute('role', 'img'); rg.setAttribute('aria-label', `${nWeek} of ${goal} days trained this week`);
-  if (intro()) { rg.fillEl.setAttribute('stroke-dashoffset', rg.fillEl.getAttribute('stroke-dasharray')); jobs.push(() => fill(rg.fillEl, pct, { ms: 800, delay: 250, axis: 'ring' })); }
+  if (intro()) jobs.push(() => animateRing(rg, pct, { ms: 500, delay: 120 }));
   return h('div', { class: 'screen-head tr-home-head' },
     h('div', { class: 'grow' }, h('h1', null, 'Train'), h('div', { class: 'sub' }, last7 ? `${last7} workout${last7 === 1 ? '' : 's'} in the last 7 days` : 'Nothing logged in the last 7 days'),
       streak.weeks >= 2 ? h('span', { class: 'pill accent tr-streak' }, icon('flame', 12), `${streak.weeks}-week streak`) : null),
@@ -994,20 +996,21 @@ function compareBars(v, c) {
     bar('This session', now, 'now'), bar(fmtShortDate(c.date), c.volume || 0, 'was'));
 }
 let jobs3 = [];   // motion for the verdict card, run once it is on screen
-function verdictCard(v) {
+function verdictCard(v, { party = false } = {}) {
   if (!v) return null;
   const tone = GRADE_TONE[v.grade] || 'var(--accent)', st = v.stats || {};
   const num = h('b', { class: 'num-md' }, String(v.score));
-  const rg = ring({ size: 76, stroke: 8, pct: v.score, color: tone, children: num });
+  const rg = gradRing({ size: 80, stroke: 8.5, pct: v.score, color: tone, color2: v.grade === 'solid' ? 'var(--accent-2)' : undefined, children: num });
   rg.classList.add('tr-vring');
+  const pill = gradePill(v.grade, 'big');
   const lines = (arr, cls, ico) => (arr && arr.length ? h('ul', { class: 'tr-vlist ' + cls }, arr.map((t) => h('li', null, icon(ico, 16), h('span', null, t)))) : null);
   const el = h('div', { class: 'card tr-verdict g-' + v.grade, style: `--vc:${tone}` },
-    h('div', { class: 'tr-vtop' }, rg, h('div', { class: 'grow tr-vhead' }, gradePill(v.grade), h('h3', null, v.headline), h('div', { class: 'small muted' }, `${v.score} of 100${st.planned ? ` · ${st.sets}/${st.planned} sets` : ''}`))),
+    h('div', { class: 'tr-vtop' }, rg, h('div', { class: 'grow tr-vhead' }, pill, h('h3', null, v.headline), h('div', { class: 'small muted' }, `${v.score} of 100${st.planned ? ` · ${st.sets}/${st.planned} sets` : ''}`))),
     lines(v.wins, 'wins', 'check'), lines(v.improve, 'improve', 'arrowUp'), v.compare ? compareBars(v, v.compare) : null);
   jobs3.push(() => {
-    if (canAnim()) rg.fillEl.setAttribute('stroke-dashoffset', rg.fillEl.getAttribute('stroke-dasharray'));
-    fill(rg.fillEl, v.score, { axis: 'ring', ms: 900, delay: 120 }); countUp(num, v.score, { from: 0, ms: 800 });
+    animateRing(rg, v.score, { ms: 900, delay: 120 }); countUp(num, v.score, { from: 0, ms: 800 });
     el.querySelectorAll('.tr-vlist li').forEach((li, i) => rise(li, { delay: 180 + i * 70, y: 8, ms: 320, scale: 1 }));
+    if (canAnim()) { popIn(pill, 700, 420); if (party && (v.grade === 'strong' || v.grade === 'solid')) setTimeout(() => { if (pill.isConnected) celebrate(pill, { kind: v.grade === 'strong' ? 'goal' : 'streak', count: v.grade === 'strong' ? 12 : 8 }); }, 820); }
   });
   return el;
 }
@@ -1224,14 +1227,15 @@ function paintStats(a) {
   const L = live, p = progress(a), v = volumeOf(a);
   if (p.done !== L.lastDone || p.total !== L.lastTotal) {
     L.count.textContent = `${p.done}/${p.total}`;
-    fill(L.ringEl.fillEl, p.total ? (p.done / p.total) * 100 : 0, { axis: 'ring', key: 'tr:ring:' + a.id, ms: 560 });
+    animateRing(L.ringEl, p.total ? (p.done / p.total) * 100 : 0, { key: 'tr:ring:' + a.id, ms: 560 });
+    if (L.head) L.head.style.setProperty('--prog', String(p.total ? +(p.done / p.total).toFixed(3) : 0));
     L.ringEl.classList.toggle('full', p.total > 0 && p.done === p.total);
     if (L.lastDone >= 0 && p.done > L.lastDone) pulse(L.ringEl, { scale: 1.14, ms: 380 });
     L.lastDone = p.done; L.lastTotal = p.total;
   }
   if (v !== L.lastVol) { odometer(L.vol, v, { fmt: (x) => fmt(x), key: 'tr:vol:' + a.id }); L.lastVol = v; }
 }
-// The next set to do gets a haldi number tag, so after the rest your eye lands on it.
+// The next set to do gets an accent number tag, so after the rest your eye lands on it.
 function markNext(a) {
   const L = live, n = nextSet(a, null), k = n ? n.s.k : '';
   if (L.nextK === k) return;
@@ -1245,7 +1249,6 @@ function nudgeToNext() {
   const rect = r.el.getBoundingClientRect(), vh = (window.visualViewport && window.visualViewport.height) || innerHeight;
   if (rect.bottom > vh - 200) window.scrollBy({ top: rect.top - vh * 0.4, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
 }
-const RING_R = 21.5, RING_C = 2 * Math.PI * RING_R;
 function showBar() {
   const b = live.bar; b.classList.remove('hide');
   if (live.quietShow) { live.quietShow = false; return; } // a redraw while resting must not replay the entrance
@@ -1274,7 +1277,7 @@ function paintRest(a) {
   const fresh = bar.classList.contains('hide');
   if (fresh) { bar.classList.add('snap'); showBar(); }
   const pct = left <= 0 ? 0 : Math.min(1, left / total);
-  L.rring.style.strokeDashoffset = (RING_C * (1 - pct)).toFixed(2);
+  L.rring.paintRing(pct * 100); // dash offset and the glowing cap both tween over 1 s (css), so the countdown glides
   if (fresh) { void bar.offsetWidth; bar.classList.remove('snap'); }
   const next = nextLabel(a, r);
   if (left <= 0) {
@@ -1298,17 +1301,17 @@ function changeRest(fn) { const a = state.active; if (!a?.rest) return; fn(a.res
 // A rest that ended while the screen was away must not greet the user with a stale countdown.
 function clearStaleRest(a) { if (a && a.rest && a.rest.endAt < Date.now() - 4000) { a.rest = null; commit(); } }
 function restBar() {
-  const rg = ring({ size: 48, stroke: 5, pct: 100, color: 'var(--accent)', children: h('span', { class: 'tr-rest-ic' }, icon('timer', 18)) });
+  const rg = gradRing({ size: 50, stroke: 5.5, pct: 100, color: 'var(--accent)', color2: 'var(--accent-2)', children: h('span', { class: 'tr-rest-ic' }, icon('timer', 18)) });
   const time = h('div', { class: 'time' }, '0:00');
   const jump = () => { const a = state.active, n = a && nextSet(a, (a.rest && a.rest.k) || null), r = n && live && live.rows.get(n.s.k); if (r) r.el.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' }); };
   const label = h('button', { class: 'tr-rest-next', 'aria-label': 'Next set. Tap to scroll to it', onClick: jump });
   const bar = h('div', { class: 'rest-banner tr-rest hide', role: 'timer', 'aria-live': 'off', dataset: { moFixed: '1' } }, rg,
-    h('button', { class: 'tr-rest-col', 'aria-label': 'Change rest time', onClick: () => restSheet(null) }, time),
+    h('button', { class: 'tr-rest-col', 'aria-label': 'Change rest time', onClick: () => restSheet(null) }, h('span', { class: 'tr-rest-time' }, h('i', { class: 'tr-rest-dot', 'aria-hidden': 'true' }), time)),
     h('button', { class: 'btn tr-rbtn', 'aria-label': 'Subtract 15 seconds', onClick: () => changeRest((r) => { r.endAt -= 15000; r.total = Math.max(15, (r.total || 90) - 15); }) }, '−15'),
     h('button', { class: 'btn tr-rbtn', 'aria-label': 'Add 15 seconds', onClick: () => changeRest((r) => { r.endAt += 15000; r.total = (r.total || 90) + 15; }) }, '+15'),
     h('button', { class: 'btn tr-rbtn skip', onClick: () => { haptic(); const a = state.active; if (a) { a.rest = null; commit(); tick(); } } }, 'Skip'),
     label);
-  return { bar, time, label, rring: rg.fillEl };
+  return { bar, time, label, rring: rg };
 }
 function restSheet(ex) {
   const cur = ex ? String(ex.restSec || 0) : String(state.settings.restSec || 90);
@@ -1620,12 +1623,19 @@ function buildRow(ex, i, prev, repaint) {
         setTimeout(nudgeToNext, 60);
       } else haptic();
     } else ref.inputs[Math.max(0, fs.findIndex(([k]) => k === need(ex.type)[0]))].focus();
-  } }, icon('check', 22));
+  } }, checkMark());
   ref.fillEl = h('span', { class: 'tr-rowfill', 'aria-hidden': 'true' });
   ref.el = h('div', { class: 'set-row tr-set', onContextmenu: (e) => { if (!(e.target.closest && e.target.closest('input'))) e.preventDefault(); } }, ref.fillEl, ref.nBtn, ref.prevEl, ref.inputs, ref.doneBtn);
   // long-press anywhere on the row (not the number boxes): set type (warm-up, drop, failure) and delete
   press(ref.el, () => setMenu(ex, i), { filter: (e) => !(e.target.closest && e.target.closest('input')) });
   return ref;
+}
+// The set tick: a faint check at rest, drawn in stroke by stroke when the set is ticked (css .ck-fg dashoffset). Own svg, so the draw can run.
+function checkMark() {
+  const NS = 'http://www.w3.org/2000/svg', svg = document.createElementNS(NS, 'svg'), mk = (cl) => { const p = document.createElementNS(NS, 'path'); p.setAttribute('d', 'M5.5 12.8l4.4 4.4L18.8 7.6'); p.setAttribute('class', cl); p.setAttribute('pathLength', '1'); return p; };
+  svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('class', 'ck'); svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('width', 22); svg.setAttribute('height', 22);
+  svg.append(mk('ck-bg'), mk('ck-fg'));
+  return svg;
 }
 // A short spring on the thing the thumb just touched.
 function springPop(el, from = 0.72) {
@@ -1687,7 +1697,7 @@ function buildCard(ex, ei) {
   const chipsRow = hist || hint ? h('div', { class: 'tr-chiprow' },
     hist ? h('span', { class: 'tr-lastchip', title: 'Last time' }, icon('clock', 12), h('span', { class: 'tr-last-l' }, 'Last'), h('b', null, lastLine(def, hist.sets)), h('small', null, agoText(hist.date))) : null,
     hint ? hintChip(ex, hint) : null) : null;
-  const card = h('section', { class: 'card tr-ex' },
+  const card = h('section', { class: 'card tr-ex', style: `--xc:${mus.length ? muscleColor(mus[0]) : exColor(def)}` },
     h('div', { class: 'tr-ex-head' },
       h('button', { class: 'tr-ex-thumb', 'aria-label': `Form guide for ${ex.name}`, onClick: open }, thumb(def)),
       h('div', { class: 'tr-ex-title' }, h('button', { class: 'tr-ex-name', onClick: open }, ex.name),
@@ -1771,12 +1781,11 @@ function drawActive(stage, root) {
   clearStaleRest(a);
   const elapsed = h('span', { class: 'tr-elapsed' }, hms((Date.now() - a.start) / 1000)), vol = h('span', { class: 'tr-vol' });
   const count = h('b', { class: 'num-sm' }, '0/0');
-  const rg = ring({ size: 46, stroke: 5, pct: 0, color: 'var(--accent)', children: count });
+  const rg = gradRing({ size: 48, stroke: 5.5, pct: 0, color: 'var(--accent)', color2: 'var(--accent-2)', children: count });
   rg.classList.add('tr-pring'); rg.setAttribute('role', 'img'); rg.setAttribute('aria-label', 'Sets done');
   const rb = restBar();
   const cardsEl = h('div', { class: 'tr-cards' });
   live = { id: a.id, root, elapsed, vol, count, ringEl: rg, bar: rb.bar, rtime: rb.time, rlabel: rb.label, rring: rb.rring, cardsEl, rows: new Map(), nextK: '', lastDone: -1, lastTotal: -1, lastVol: -1, notified: 0, hiding: false, quietShow: !intro() };
-  rb.rring.setAttribute('stroke-dasharray', RING_C.toFixed(2));
   kb = buildKbar();
   const head = h('div', { class: 'tr-head glass' },
     h('div', { class: 'tr-head-top' },
@@ -1786,6 +1795,7 @@ function drawActive(stage, root) {
       h('div', { class: 'tr-clock' }, icon('clock', 16), elapsed, h('span', { class: 'tr-sep' }, '·'), h('span', { class: 'tr-volw' }, vol, h('small', null, ' kg'))),
       rg,
       h('button', { class: 'btn primary sm tr-finish', onClick: finishSheet }, 'Finish')));
+  live.head = head;
   jobs2 = [];
   a.exercises.forEach((e, i) => cardsEl.append(buildCard(e, i)));
   append(stage, [head,
@@ -1837,7 +1847,7 @@ function finishSheet() {
   const s = sheet({
     title: 'Finish workout',
     content: (api) => h('div', { class: 'stack tr-fin' },
-      nSets ? verdictCard(verdict) : h('div', { class: 'tr-fin-hero' }, h('span', { class: 'tr-fin-badge' }, icon('clock', 26)), h('div', null, h('h3', null, 'Nothing ticked yet'), h('div', { class: 'small muted' }, `${name} · ${a.exercises.length} exercise${a.exercises.length === 1 ? '' : 's'}`))),
+      nSets ? verdictCard(verdict, { party: true }) : h('div', { class: 'tr-fin-hero' }, h('span', { class: 'tr-fin-badge' }, icon('clock', 26)), h('div', null, h('h3', null, 'Nothing ticked yet'), h('div', { class: 'small muted' }, `${name} · ${a.exercises.length} exercise${a.exercises.length === 1 ? '' : 's'}`))),
       h('div', { class: 'tr-fin-top' }, Object.keys(heat).length ? miniMap({ heat, view: 'both' }, 'tr-fin-map') : null, h('div', { class: 'tr-stats2' }, cells)),
       gs.length ? h('div', { class: 'tr-gchips' }, gs.map((g) => h('span', { class: 'tr-gchip', style: `--mc:${groupColor(g)}` }, h('i'), g))) : null,
       prs.length ? h('div', { class: 'tr-prcard tr-fin-pr' }, h('div', { class: 'row' }, icon('trophy', 18), h('b', null, `${prs.length} personal record${prs.length === 1 ? '' : 's'}`)), prs.map((p) => h('div', { class: 'small' }, `${p.name} · ${p.text}`))) : null,

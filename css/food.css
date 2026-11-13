@@ -7,29 +7,40 @@
 .fd-nav { flex: 0 1 216px; min-width: 0; gap: 2px; }
 .fd-nav .label { font-size: 16px; line-height: 1.15; }
 
-/* ---------- summary strip: ring, kcal left, four macros. Sticky: stays while the list scrolls ---------- */
-.fd-sum { position: sticky; top: calc(var(--sat) + 8px); z-index: 8; display: flex; align-items: center; gap: 10px; padding: 7px 12px; border-radius: var(--r-lg); margin-bottom: 8px; min-height: 64px; }
+/* ---------- summary strip: "1,311 of 2,150 kcal", what is left, and each macro as x / y g with what is still to go. Sticky: stays while the list scrolls ---------- */
+.fd-sum { position: sticky; top: calc(var(--sat) + 8px); z-index: 8; display: flex; flex-direction: column; gap: 9px; padding: 9px 12px 10px; border-radius: var(--r-lg); margin-bottom: 8px; }
+.fd-sum-top { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .fd-ring { flex: none; }
+.fd-ring svg { overflow: visible; }
+.fd-ring .fill { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent-2) 45%, transparent)); }
 .fd-pct { font: 800 12px/1 var(--font); font-stretch: var(--wdth-num); letter-spacing: -0.02em; color: var(--ink); }
-.fd-left { flex: none; display: flex; flex-direction: column; gap: 3px; min-width: 62px; }
-.fd-ln { font-size: 26px; display: block; }
-.fd-ll { font-size: 11px; line-height: 1; color: var(--muted); font-weight: 600; white-space: nowrap; }
-.fd-left.over .fd-ln, .fd-left.over .fd-ll { color: var(--bad); }
-.fd-macs { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.fd-kc2 { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.fd-eat { display: flex; align-items: baseline; white-space: nowrap; min-width: 0; }
+.fd-ln { font-size: 25px; display: block; }
+.fd-of { margin-left: 3px; font-size: 13px; font-weight: 600; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; }
+.fd-left { font-size: 13px; line-height: 1.1; font-weight: 650; color: var(--accent-text); white-space: nowrap; }
+.fd-left b { font: 800 15px/1 var(--font); font-stretch: var(--wdth-num); letter-spacing: -0.02em; }
+.fd-left.over { color: var(--bad); }
+.fd-tchip { position: relative; min-height: 34px; padding: 4px 11px 4px 9px; gap: 5px; font-size: 13px; color: var(--accent-text); background: var(--accent-soft); border-color: transparent; box-shadow: none; }
+.fd-tchip::after { content: ''; position: absolute; inset: -6px -3px; }
+.fd-macs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
 .fd-mac { min-width: 0; }
-.fd-mv { display: flex; align-items: baseline; white-space: nowrap; }
+.fd-ml { display: flex; align-items: center; gap: 5px; font-size: 11px; line-height: 1; color: var(--muted); font-weight: 650; white-space: nowrap; }
+.fd-ml .dot { width: 6px; height: 6px; }
+.fd-mv { display: flex; align-items: baseline; margin-top: 3px; white-space: nowrap; overflow: hidden; }
 .fd-mv b { font-size: 16px; }
-.fd-mv small { font-size: 10px; color: var(--muted); font-weight: 600; }
-@media (max-width: 380px) { .fd-mv small { display: none; } } /* narrow phones: the bar shows progress, the number would collide */
-.fd-mbar { height: 4px; border-radius: 2px; background: var(--card-3); margin: 4px 0 3px; overflow: hidden; }
+.fd-mv small { font-size: 10.5px; color: var(--muted); font-weight: 600; font-stretch: 100%; letter-spacing: 0; }
+.fd-mbar { height: 4px; border-radius: 2px; background: var(--card-3); margin: 5px 0 4px; overflow: hidden; }
 .fd-mbar i { display: block; height: 100%; border-radius: 2px; }
-.fd-ml { font-size: 10.5px; line-height: 1; color: var(--muted); font-weight: 600; white-space: nowrap; }
+.fd-mg { display: flex; align-items: center; gap: 3px; font-size: 10.5px; line-height: 1.1; color: var(--ink-2); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fd-mg.hit { color: var(--good); }
+.fd-mg.over { color: var(--f); }
 
 /* ---------- add food / diary switch ---------- */
 .seg.fd-view { margin: 0 0 8px; }
 .seg.fd-view button { min-height: 40px; }
 
-/* ---------- search row, action chips, protein pill, pool chips ---------- */
+/* ---------- search row, action chips, pool chips ---------- */
 .search input[type=search] { -webkit-appearance: none; appearance: none; }
 .fd-searchrow { display: flex; gap: 8px; align-items: center; }
 .fd-searchrow .search { flex: 1; min-width: 0; }
@@ -44,15 +55,6 @@
 .fd-pane .chip::after, .fd-diary .chip::after { content: ''; position: absolute; inset: -3px -2px; } /* 46 px hit area, no layout change */
 .fd-diary .chip { position: relative; }
 .seg.fd-view button::after { content: ''; position: absolute; inset: -3px 0; }
-.fd-nudgebox { margin-top: 4px; }
-.fd-nudgebox.hide { display: none; }
-.fd-nudge { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 0 12px; border-radius: 999px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); font-size: 13px; color: var(--ink); text-align: left; transition: transform .12s ease; }
-.fd-nudge:active { transform: scale(.985); }
-.fd-nudge::after { content: ''; position: absolute; inset: -3px 0; }
-.fd-nudge > svg:first-child { color: var(--accent-text); flex: none; }
-.fd-nudge-t { flex: none; font-weight: 650; white-space: nowrap; }
-.fd-nudge-t b { font-size: 16px; color: var(--accent-text); }
-.fd-nudge-s { min-width: 0; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fd-browse > .chips { margin-top: 2px; padding-bottom: 2px; }
 .fd-results { margin-top: 0; }
 
@@ -170,7 +172,7 @@
 .fd-text { margin-top: 12px; }
 .fd-textmeal { margin-bottom: 12px; display: flex; flex-direction: column; gap: 6px; }
 .fd-trow { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow), inset 0 1px 0 var(--hl); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
-.fd-trow.miss { border: 1px dashed var(--warn); box-shadow: none; }
+.fd-trow.miss { border: 1px dashed var(--f); box-shadow: none; }
 .fd-trow-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
 .fd-trow-name { flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: column; text-align: left; }
 .fd-trow-name .title { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -198,4 +200,117 @@
   .fd-row.fd-flash::after { animation: fd-flash 1.2s ease-out forwards; }
   @keyframes fd-steam { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
   .fd-spot svg .s { animation: fd-steam .9s cubic-bezier(.22, 1, .36, 1) .15s backwards; }
+}
+
+/* =====================================================================================================================
+   Coach (Today: full card, Food: compact strip) and the "how your targets are set" sheet. Tokens only.
+   ===================================================================================================================== */
+.fd-nudgebox { margin-top: 4px; }
+.fd-nudgebox.hide { display: none; }
+.card.fd-co { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card.fd-co.compact { gap: 8px; padding: 10px 10px 10px 12px; border-radius: var(--r-lg); }
+.fd-co-head { display: flex; align-items: flex-start; gap: 11px; min-width: 0; }
+.fd-co-head.sub { padding-top: 12px; border-top: 1px solid var(--line); }
+.fd-co-ic { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 12px; flex: none; background: var(--accent-soft); color: var(--accent-text); }
+.fd-co.compact .fd-co-ic { width: 30px; height: 30px; border-radius: 10px; }
+.fd-co-ic.p { background: var(--p-soft); color: var(--p); }
+.fd-co-ic.good { background: var(--good-soft); color: var(--good); }
+.fd-co-ic.warn { background: var(--f-soft); color: var(--f); }
+.fd-co-ic.train { background: var(--p-soft); color: var(--p); }
+.fd-co-ic.sm { width: 22px; height: 22px; border-radius: 50%; }
+.fd-co-title { font: 750 17px/1.2 var(--font); font-stretch: var(--wdth-head); letter-spacing: -0.015em; min-width: 0; overflow-wrap: anywhere; }
+.fd-co.compact .fd-co-title { font-size: 15px; line-height: 30px; }
+.fd-co-title.sm { font-size: 15px; }
+.fd-co-body { margin-top: 3px; font-size: 14px; line-height: 1.4; color: var(--ink-2); min-width: 0; }
+.fd-co-ideas { display: flex; flex-direction: column; gap: 8px; }
+.fd-co-idea { display: flex; align-items: stretch; gap: 6px; border-radius: var(--r-md); background: var(--card-2); min-width: 0; }
+.fd-co-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 11px; padding: 9px 4px 9px 9px; min-height: 60px; text-align: left; border-radius: var(--r-md); transition: background-color .15s ease, transform .12s ease; }
+.fd-co-main:active { background: var(--card-3); transform: scale(.99); }
+.fd-co-main .well { background: var(--card); }
+.fd-co-main .well.train { background: var(--p-soft); }
+.fd-co-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.fd-co-in { font-weight: 650; font-size: 15px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.fd-co-im { font-size: 12px; line-height: 1.25; color: var(--muted); }
+.fd-co-im b { color: var(--p); font-weight: 700; }
+.fd-co-add { position: relative; flex: none; align-self: center; width: 40px; height: 40px; margin-right: 8px; border-radius: 50%; display: grid; place-items: center; background: var(--grad-accent); color: var(--accent-ink); box-shadow: var(--shadow-accent); transition: transform .12s ease, filter .15s ease; }
+.fd-co-add::after { content: ''; position: absolute; inset: -4px; }
+.fd-co-add:active { transform: scale(.9); filter: brightness(.94); }
+.fd-co-train { display: flex; flex-direction: column; gap: 10px; }
+.fd-co-notes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.fd-co-notes li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.38; color: var(--ink-2); min-width: 0; }
+.fd-co-notes li > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.fd-co-gaps { display: flex; flex-direction: column; gap: 8px; }
+.fd-co-gap { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 12px 8px 12px; border-radius: var(--r-md); background: var(--card-2); text-align: left; transition: background-color .15s ease, transform .12s ease; }
+.fd-co-gap:active { background: var(--card-3); transform: scale(.99); }
+.fd-co-gap > svg { flex: none; color: var(--muted); }
+.fd-co-gd { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--f); }
+.fd-co-gap.red .fd-co-gd { background: var(--bad); }
+.fd-co-gt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fd-co-gt b { font-size: 14px; font-weight: 700; }
+.fd-co-gt span { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fd-co-ok { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--good); }
+/* compact strip (Food): a row of cards that scroll sideways */
+.fd-co-cards { margin-right: -10px; padding: 0 10px 2px 0; gap: 8px; }
+.fd-co-card { flex: none; width: 226px; display: flex; align-items: stretch; border-radius: var(--r-md); background: var(--card-2); scroll-snap-align: start; }
+.fd-co-cmain { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; padding: 9px 2px 9px 11px; text-align: left; justify-content: center; min-height: 62px; border-radius: var(--r-md); transition: background-color .15s ease; }
+.fd-co-cmain:active { background: var(--card-3); }
+.fd-co-cn { font-weight: 650; font-size: 14px; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.fd-co-card .fd-co-add { width: 34px; height: 34px; margin-right: 8px; }
+.fd-co-card .fd-co-add svg { width: 16px; height: 16px; }
+@media (max-width: 374px) { .fd-co-card { width: 208px; } .fd-co-main { padding-left: 8px; } }
+
+/* idea sheet + low-nutrient sheet */
+.fd-idea-items { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.4; color: var(--ink-2); }
+.fd-idea-items svg { flex: none; margin-top: 1px; color: var(--accent-text); }
+.fd-idea-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+.fd-idea-meta .pill svg { width: 13px; height: 13px; }
+.fd-fits { display: flex; flex-direction: column; gap: 12px; padding: 12px 14px; border-radius: var(--r-md); background: var(--card-2); }
+.fd-fit-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
+.fd-fit-top span { min-width: 0; }
+.fd-fit-top b { flex: none; font-size: 14px; color: var(--ink); white-space: nowrap; }
+.fd-fit-t { height: 8px; border-radius: 4px; background: var(--card-3); margin-top: 7px; overflow: hidden; }
+.fd-fit-t i { display: block; height: 100%; border-radius: 4px; background: var(--grad-accent); }
+.fd-fit-t i.bad, .fd-fit-t i.red { background: var(--bad); }
+.fd-fit-t i.amber { background: var(--f); }
+.fd-gap-hero { display: flex; flex-direction: column; gap: 2px; padding: 14px; border-radius: var(--r-md); background: var(--card-2); }
+.fd-gap-pct { display: flex; align-items: baseline; gap: 10px; }
+.fd-gap-pct b { font-size: 34px; }
+.fd-gap-pct span { min-width: 0; font-size: 13px; line-height: 1.3; color: var(--ink-2); }
+.fd-gap-hero .micro { margin-top: 8px; }
+.fd-gap-foods h3 { margin-bottom: 8px; font-size: 15px; }
+.fd-gap-food { min-height: 52px; }
+.fd-gap-food .sub { white-space: nowrap; }
+.fd-gap-food .trail b { display: inline; font-size: 15px; }
+
+/* how your targets are set */
+.fd-tg { gap: 20px; }
+.fd-tg-sec { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.fd-tg-sec h3 { font-size: 15px; }
+.fd-tg-chain { display: flex; flex-direction: column; }
+.fd-tg-step { position: relative; display: flex; align-items: center; gap: 12px; padding: 10px 0; min-width: 0; }
+.fd-tg-step + .fd-tg-step { border-top: 1px solid var(--line); }
+.fd-tg-op { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; flex: none; background: var(--card-2); color: var(--ink-2); font: 800 17px/1 var(--font); }
+.fd-tg-op svg { width: 16px; height: 16px; }
+.fd-tg-l { font-weight: 650; font-size: 15px; line-height: 1.2; }
+.fd-tg-s { margin-top: 2px; font-size: 12px; line-height: 1.3; color: var(--muted); }
+.fd-tg-n { flex: none; font-size: 22px; white-space: nowrap; }
+.fd-tg-n small { font: 600 12px var(--font); font-stretch: 100%; letter-spacing: 0; color: var(--muted); }
+.fd-tg-step.b .fd-tg-op { background: var(--accent-soft); color: var(--accent-text); }
+.fd-tg-step.total { margin-top: 4px; padding: 12px; border: 0; border-radius: var(--r-md); background: var(--grad-hero), var(--card-2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent); }
+.fd-tg-step.total .fd-tg-op { background: var(--grad-accent); color: var(--accent-ink); }
+.fd-tg-step.total .fd-tg-n { font-size: 30px; }
+.fd-tg-split { display: flex; gap: 3px; height: 14px; }
+.fd-tg-split > span { min-width: 0; display: block; border-radius: 4px; background: var(--card-2); overflow: hidden; }
+.fd-tg-split i { display: block; height: 100%; border-radius: 4px; }
+.fd-tg-split i.p { background: var(--p); } .fd-tg-split i.c { background: var(--c); } .fd-tg-split i.f { background: var(--f); }
+.fd-tg-macros { display: flex; flex-direction: column; }
+.fd-tg-m { display: flex; align-items: center; gap: 12px; padding: 9px 0; min-width: 0; }
+.fd-tg-m + .fd-tg-m { border-top: 1px solid var(--line); }
+.fd-tg-m .dot { width: 10px; height: 10px; }
+.fd-tg-m .fd-tg-n { font-size: 19px; }
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fd-co-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .card.fd-co.fresh > * { animation: fd-co-rise .42s cubic-bezier(.22,1,.36,1) backwards; }
+  .card.fd-co.fresh > :nth-child(2) { animation-delay: 60ms; } .card.fd-co.fresh > :nth-child(3) { animation-delay: 120ms; } .card.fd-co.fresh > :nth-child(4) { animation-delay: 180ms; } .card.fd-co.fresh > :nth-child(5) { animation-delay: 240ms; }
 }

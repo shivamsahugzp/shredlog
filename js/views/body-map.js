@@ -13,7 +13,7 @@ export const MUSCLES = ['chest', 'front delts', 'side delts', 'rear delts', 'bic
 export const MUSCLE_LABELS = Object.fromEntries(MUSCLES.map((m) => [m, m.charAt(0).toUpperCase() + m.slice(1)]));
 // coarse group → CSS colour token (same fixed order as the Progress tab: Chest, Back, Shoulders, Arms, Legs, Core)
 export const GROUP_VAR = { Chest: '--g1', Back: '--g2', Shoulders: '--g3', Arms: '--g4', Legs: '--g5', Core: '--g6' };
-export const GROUP_FALLBACK = { Chest: '#2a78d6', Back: '#eb6834', Shoulders: '#1baf7a', Arms: '#eda100', Legs: '#e87ba4', Core: '#6250d6' };
+export const GROUP_FALLBACK = { Chest: '#E13156', Back: '#0096AF', Shoulders: '#BC8712', Arms: '#894ED6', Legs: '#0F9068', Core: '#C841A5' }; // only used when a --g token is missing
 export const groupOf = (muscle) => MUSCLE_GROUPS[muscle] || null;
 export const groupColor = (group) => (GROUP_VAR[group] ? `var(${GROUP_VAR[group]}, ${GROUP_FALLBACK[group]})` : 'var(--muted)');
 export const muscleColor = (muscle) => groupColor(groupOf(muscle));
@@ -129,6 +129,7 @@ export function bodyMap({ selected = [], onToggle, heat = null, view = 'both', f
   const sel = new Set(selected || []);
   let heatNow = isHeat ? { ...heat } : null;
   const byMuscle = new Map();           // muscle → [path elements across both sides and figures]
+  const layers = new Map();             // muscle → [{hf, hg}]: gradient fill + glow twins that sit above the base path (opacity-driven, so they tween)
   let tipTimer = 0;
 
   const tip = h('div', { class: 'bm-tip', 'aria-hidden': 'true' });
@@ -136,17 +137,20 @@ export function bodyMap({ selected = [], onToggle, heat = null, view = 'both', f
 
   const label = (m) => MUSCLE_LABELS[m] || m;
   function paint(m) {
+    let hot, o = 1;
     for (const p of byMuscle.get(m) || []) {
       if (isHeat) {
         const v = clamp01(heatNow[m]);
-        p.classList.toggle('hot', v > 0);
-        p.style.setProperty('--bm-o', String(+(0.22 + 0.78 * v).toFixed(2)));
+        hot = v > 0; o = +(0.22 + 0.78 * v).toFixed(2);
+        p.classList.toggle('hot', hot);
+        p.style.setProperty('--bm-o', String(o));
       } else {
-        const on = sel.has(m);
+        const on = sel.has(m); hot = on;
         p.classList.toggle('on', on);
         p.setAttribute('aria-pressed', on ? 'true' : 'false');
       }
     }
+    for (const { hf, hg } of layers.get(m) || []) { for (const el of [hf, hg]) { el.classList.toggle('on', !!hot); el.style.setProperty('--bm-o', String(o)); } }
   }
   function showTip(path, m) {
     const wr = wrap.getBoundingClientRect(), pr = path.getBoundingClientRect();
@@ -158,7 +162,8 @@ export function bodyMap({ selected = [], onToggle, heat = null, view = 'both', f
     clearTimeout(tipTimer); tipTimer = setTimeout(() => tip.classList.remove('on'), 1200);
   }
   function pulse(m) {
-    for (const p of byMuscle.get(m) || []) { p.classList.remove('bm-pulse'); void p.getBoundingClientRect(); p.classList.add('bm-pulse'); }
+    const els = [...(byMuscle.get(m) || []), ...(layers.get(m) || []).flatMap((l) => [l.hf, l.hg])];
+    for (const p of els) { p.classList.remove('bm-pulse'); void p.getBoundingClientRect(); p.classList.add('bm-pulse'); }
   }
   function activate(path) {
     const m = path.dataset.muscle; if (!m) return;
@@ -182,28 +187,46 @@ export function bodyMap({ selected = [], onToggle, heat = null, view = 'both', f
 
   function figure(side) {
     const defs = side === 'front' ? FRONT : BACK;
-    const clipId = `bm-clip-${id}-${side}`;
+    const clipId = `bm-clip-${id}-${side}`, glowId = `bm-glow-${id}-${side}`;
     const muscles = svg('g', { class: 'bm-muscles', 'clip-path': `url(#${clipId})` });
+    const glows = svg('g', { class: 'bm-glows', filter: `url(#${glowId})`, 'aria-hidden': 'true' });
+    const gdefs = svg('defs', null, svg('clipPath', { id: clipId }, svg('path', { d: BODY })), svg('filter', { id: glowId, filterUnits: 'userSpaceOnUse', x: -30, y: -20, width: W + 60, height: H + 40 }, svg('feGaussianBlur', { stdDeviation: 3.8 })));
+    // one vertical gradient per group colour: a lighter top into the full colour at the foot, so a hot muscle reads as lit from above
+    const gradIds = new Map();
+    const gradFor = (color) => {
+      if (gradIds.has(color)) return gradIds.get(color);
+      const gid = `bm-g-${id}-${side}-${gradIds.size}`, lg = svg('linearGradient', { id: gid, x1: 0, y1: 0, x2: 0.25, y2: 1 }), a = svg('stop', { offset: '0%' }), b = svg('stop', { offset: '100%' });
+      a.style.stopColor = `color-mix(in srgb, ${color} 50%, white)`; b.style.stopColor = color;
+      lg.append(a, b); gdefs.append(lg); gradIds.set(color, `url(#${gid})`); return `url(#${gid})`;
+    };
+    const hotLayer = svg('g', { class: 'bm-hotlayer', 'aria-hidden': 'true' });
     const seen = new Set();
     for (const [m, d] of defs) {
       const first = !seen.has(m + side); seen.add(m + side);
+      const col = muscleColor(m);
       // one path per body side so left and right both carry data-muscle; only the first is a tab stop
       [d, mirror(d)].forEach((dd, i) => {
-        const attrs = { d: dd, class: 'bm-p', 'data-muscle': m, style: `--bm-c:${muscleColor(m)};--bm-i:${TRAIN_ORDER(m)}` };
+        const attrs = { d: dd, class: 'bm-p', 'data-muscle': m, style: `--bm-c:${col};--bm-i:${TRAIN_ORDER(m)}` };
         if (!isHeat) Object.assign(attrs, { role: 'button', 'aria-label': label(m), 'aria-pressed': 'false', tabindex: i === 0 && first ? '0' : '-1', 'aria-hidden': i === 0 ? null : 'true' });
         const p = svg('path', attrs, isHeat ? null : svg('title', null));
         if (!isHeat) p.firstChild.textContent = label(m);
         muscles.append(p);
         if (!byMuscle.has(m)) byMuscle.set(m, []);
         byMuscle.get(m).push(p);
+        const st = `--bm-c:${col};--bm-i:${TRAIN_ORDER(m)}`;
+        const hf = svg('path', { d: dd, class: 'bm-hf', fill: gradFor(col), style: st }), hg = svg('path', { d: dd, class: 'bm-hg', style: st });
+        hotLayer.append(hf); glows.append(hg);
+        if (!layers.has(m)) layers.set(m, []);
+        layers.get(m).push({ hf, hg });
       });
     }
+    muscles.append(hotLayer);
     const details = (side === 'front' ? DETAIL_FRONT : DETAIL_BACK).flatMap((d) => [d, mirror(d)]).map((d) => svg('path', { d, class: 'bm-detail' }));
     if (side === 'front') details.push(svg('ellipse', { cx: 75, cy: 139.5, rx: 1.5, ry: 2.3, class: 'bm-detail bm-navel' }));
     const el = svg('svg', { class: 'bm-svg', viewBox: `0 0 ${W} ${H}`, role: isHeat ? null : 'group', 'aria-label': isHeat ? null : (side === 'front' ? 'Front of body' : 'Back of body'), 'aria-hidden': isHeat ? 'true' : null, focusable: 'false' },
-      svg('defs', null, svg('clipPath', { id: clipId }, svg('path', { d: BODY }))),
+      gdefs,
       svg('path', { d: BODY, class: 'bm-body' }), svg('path', { d: HEAD, class: 'bm-head' }),
-      muscles, svg('path', { d: BODY, class: 'bm-outline' }), details);
+      muscles, glows, svg('path', { d: BODY, class: 'bm-outline' }), details);
     return h('figure', { class: 'bm-fig' }, el, h('figcaption', { class: 'bm-cap' }, side === 'front' ? 'Front' : 'Back'));
   }
   for (const side of view === 'front' ? ['front'] : view === 'back' ? ['back'] : ['front', 'back']) wrap.append(figure(side));

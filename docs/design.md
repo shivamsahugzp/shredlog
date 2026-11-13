@@ -1,4 +1,4 @@
-# ShredLog design system — "Iron & Haldi"
+# ShredLog design system — "Neel" (v2.1)
 
 This is the contract every screen is built against. Read it fully before touching a view.
 Tokens and shared components live in `css/app.css`, `css/motion.css`, `js/ui.js`, `js/motion.js`.
@@ -18,13 +18,13 @@ Semantic tokens only. Never hard-code a hex in a view; never invent a new colour
 
 | Token | Role | Dark | Light |
 |---|---|---|---|
-| `--bg` | page | `#120F0C` warm graphite | `#F5F3F0` chalk |
+| `--bg` | page | `#070B14` cool ink | `#F2F5F9` cool white |
 | `--card` | raised surface | `#1C1915` | `#FEFDFC` |
 | `--card-2` | inset surface (inputs, tracks) | `#27231F` | `#EFECE8` |
 | `--card-3` | pressed / hover | `#33302B` | `#E6E2DC` |
 | `--line` | hairlines | `rgba(255,255,255,.08)` | `rgba(31,26,20,.09)` |
 | `--ink` / `--ink-2` / `--muted` | text | `#F5F1EA` / `#BBB7AF` / `#908B84` | `#1F1A14` / `#524C45` / `#736E67` |
-| `--accent` | **haldi**: the one CTA colour, active states, highlights | `#F9CC21` | `#EDBE1A` |
+| `--accent` / `--accent-2` | **cobalt → cyan**: the one CTA colour (`--grad-accent` gradient), active states, highlights. Yellow is never used outside `--warn`. | `#4A86FB` / `#37D2F2` | `#2168F2` / `#0BB1CE` |
 | `--accent-ink` | text on accent | `#1F1A14` | `#1F1A14` |
 | `--accent-text` | accent used as text/links on surfaces | `#F3C530` | `#9D7200` |
 | `--accent-soft` | tinted fills behind accent content | 12 % accent mix | 16 % accent mix |

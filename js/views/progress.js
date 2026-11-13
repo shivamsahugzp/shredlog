@@ -5,8 +5,8 @@ import { state, dayIfAny, dayTotals, intakeByDate, weights, lastNDays, shiftDate
 import { dayVerdict, sessionVerdict, weekVerdict, stepsKcal } from '../verdict.js';
 import { adaptiveTdee, trendWeights, tdee, GOALS, bmi, e1rm, workoutVolume, cigStats } from '../calc.js';
 import { weightInsight, nutritionGaps, budgetProtein, volumeByGroup, volumeStatus, recoveryByGroup, deloadAdvice, suggestDay, nextSuggestion } from '../insights.js';
-import { lineChart, barChart, stackedBarChart, legend, sparkline } from '../charts.js';
-import { h, icon, ring, toast, confirmSheet, segmented, chips, emptyState, fmt, fmtShortDate, fmtDow, fmtDateLabel, clear } from '../ui.js';
+import { lineChart, barChart, stackedBarChart, legend, sparkline, gradRing, animateRing } from '../charts.js';
+import { h, icon, toast, confirmSheet, segmented, chips, emptyState, fmt, fmtShortDate, fmtDow, fmtDateLabel, clear } from '../ui.js';
 import { countUp, pop, quiet, stagger, fill, remember, canIntro, EASE_OUT } from '../motion.js';
 
 const SUBS = [{ id: 'weight', label: 'Weight' }, { id: 'food', label: 'Food' }, { id: 'train', label: 'Training' }, { id: 'habits', label: 'Habits' }];
@@ -81,14 +81,31 @@ const clampPct = (v) => Math.max(0, Math.min(100, v * 100));
 const niceName = (n) => cap(String(n || '')).replace(/^Vitamin ([a-z]\d*)$/i, (_, x) => 'Vitamin ' + x.toUpperCase());
 const pill = (cls, ...kids) => h('span', { class: 'pill ' + cls }, ...kids);
 const note = (text) => h('p', { class: 'pg-note' }, text);
-const cap2 = (left, right) => h('div', { class: 'pg-cap' }, h('span', null, left), right ? h('small', null, right) : null);
+// small gradient icon well (tone is a colour token); used in section heads and card captions
+const ico = (name, tone, size = 16) => h('span', { class: 'pg-ico', style: { '--tone': tone }, 'aria-hidden': 'true' }, icon(name, size));
+const CAP_ICON = {
+  'Weight and trend': ['chartLineUp', 'var(--accent)'], 'Energy': ['zap', 'var(--c)'], 'Daily average': ['cal', 'var(--c)'], 'Calories per day': ['flame', 'var(--c)'],
+  'Protein per day': ['egg', 'var(--p)'], 'Weekly budget': ['cal', 'var(--accent)'], 'Where your calories come from': ['chart', 'var(--f)'], 'This week': ['cal', 'var(--accent)'],
+  'Hard sets per week': ['dumbbell', 'var(--p)'], 'Last 7 days': ['heartbeat', 'var(--good)'], 'Training load': ['chartLineUp', 'var(--p)'], 'Steps': ['steps', 'var(--p)'], 'Cigarettes per day': ['cig', 'var(--cig)'],
+};
+const SEC_ICON = {
+  'Energy balance': ['flame', 'var(--accent)'], 'Nutrients': ['leaf', 'var(--good)'], 'Meal ideas for your gaps': ['bulb', 'var(--accent)'], 'Cheapest protein for your diet and budget': ['bowl', 'var(--c)'],
+  'Recent sessions': ['dumbbell', 'var(--p)'], 'Next session suggestions': ['target', 'var(--accent)'], 'Recent personal records': ['trophy', 'var(--accent)'], 'Strength trend': ['chartLineUp', 'var(--p)'],
+};
+const cap2 = (left, right) => { const ci = CAP_ICON[left]; return h('div', { class: 'pg-cap' }, h('span', { class: 'pg-cap-l' }, ci ? ico(ci[0], ci[1]) : null, left), right ? h('small', null, right) : null); };
 const sub3 = (text) => h('h3', { class: 'pg-sub' }, text);
 const chartCard = (...kids) => h('div', { class: 'card pad-s pg-chart' }, kids);
-const section = (title, ...kids) => h('section', { class: 'section' }, h('div', { class: 'section-head' }, h('h2', null, title)), kids);
+// section header: gradient icon well + the same h2 as before (text unchanged)
+const sectionHead = (name, title, tone) => h('div', { class: 'section-head pg-sh' }, name ? ico(name, tone, 18) : null, h('h2', null, title));
+const section = (title, ...kids) => { const si = SEC_ICON[title] || []; return h('section', { class: 'section' }, sectionHead(si[0], title, si[1]), kids); };
+// long explanations fold away behind a one-line tap target so the cards read as numbers first (open state survives redraws)
+const openWhy = new Set();
+const why = (id, text, label = 'How this is worked out') => h('details', { class: 'pg-why', open: openWhy.has(id), onToggle: (e) => { if (e.target.open) openWhy.add(id); else openWhy.delete(id); } },
+  h('summary', null, icon('info', 14), h('span', { class: 'grow' }, label), h('span', { class: 'pg-chev' }, icon('down', 14))), h('p', null, text));
 const day = (key) => Math.round(parseKey(key).getTime() / 864e5);
 const mondayOf = (key) => shiftDate(key, -((parseKey(key).getDay() + 6) % 7));
 // a track (data-grow) is laid out at its final width and animated by grow()
-const track = (pct, color, cls = 'mini-bar') => h('div', { class: cls }, h('i', { 'data-grow': '', style: { width: Math.max(0, Math.min(100, pct)) + '%', background: color } }));
+const track = (pct, color, cls = 'mini-bar') => h('div', { class: cls }, h('i', { 'data-grow': '', style: { width: Math.max(0, Math.min(100, pct)) + '%', '--bc': color } }));
 const meterRow = (label, value, target, unit, color) => h('div', { class: 'pg-mrow' },
   h('div', { class: 'row between small' }, h('span', { class: 'strong' }, label), h('span', { class: 'muted' }, `${fmt(value)} / ${fmt(target)} ${unit}`)),
   track(clampPct(value / target), color));
@@ -156,14 +173,14 @@ function weightHero(c, ws) {
   let side;
   if (target && Math.abs(first - target) >= 0.5) {
     const pct = Math.max(0, Math.min(100, (first - lw.kg) / (first - target) * 100));
-    const r = ring({ size: 98, stroke: 10, pct, color: 'var(--accent)', children: [h('div', { class: 'num-sm' }, Math.round(pct) + '%'), h('small', null, 'to goal')] });
-    jobs.push(() => fill(r.fillEl, pct, { axis: 'ring', key: 'pg:wring', ms: 900 }));
+    const r = gradRing({ size: 98, stroke: 10, pct, color: 'var(--accent)', color2: 'var(--accent-2)', children: [h('div', { class: 'num-sm' }, Math.round(pct) + '%'), h('small', null, 'to goal')] });
+    jobs.push(() => animateRing(r, pct, { key: 'pg:wring', ms: 560, delay: 80 }));
     side = h('div', { class: 'pg-hero-side' }, r, h('div', { class: 'micro muted' }, `Goal ${num1(target)} kg`));
   } else {
     const byDate = new Map(ws.map((w) => [w.date, w.kg]));
     side = h('div', { class: 'pg-hero-side' }, sparkline({ points: lastNDays(21, c.ctx.today).map((k) => byDate.get(k) ?? null), color: 'var(--accent-text)', width: 104, height: 52 }), h('div', { class: 'micro muted' }, 'Last 3 weeks'));
   }
-  return h('div', { class: 'card pg-hero' },
+  return h('div', { class: 'card hero pg-hero pg-hero-weight' },
     h('div', { class: 'pg-hero-main' },
       h('div', { class: 'small muted ellipsis' }, `Latest weigh-in · ${fmtDateLabel(lw.date, c.today)}`),
       h('div', { class: 'num-xl pg-big' }, val, h('small', null, 'kg')),
@@ -193,7 +210,7 @@ function weightChart(c, ws, target) {
   };
   const labels = c.keys.map(fmtShortDate);
   const raw = { name: 'Weight', color: 'var(--muted)', dots: true, line: false, dotR: 3, opacity: 1, points: c.keys.map((k, i) => ({ x: labels[i], y: byDate.get(k)?.kg ?? null })) };
-  const trend = { name: 'Trend', color: 'var(--accent-text)', areaColor: 'var(--accent)', width: 2.75, end: true, points: c.keys.map((k, i) => ({ x: labels[i], y: trendAt(k) })) };
+  const trend = { name: 'Trend', color: 'var(--accent-text)', areaColor: 'var(--accent)', width: 2.75, end: true, fmtEnd: (v) => `${v.toFixed(1)} kg`, points: c.keys.map((k, i) => ({ x: labels[i], y: trendAt(k) })) };
   return lineChart({ series: [raw, trend], area: true, target: target || undefined, clampTarget: true, targetLabel: true, height: 200, fmtY: num1, unit: ' kg', xLabels: 5, label: 'Weight and trend' });
 }
 
@@ -213,7 +230,7 @@ function saveRate(v) { try { localStorage.setItem(RATE_KEY, String(v)); } catch 
 function statTiles(c) {
   const wi = weightInsight(), goal = GOALS.find((g) => g.id === c.p.goal);
   const goalRate = goal ? +(goal.kcal * 7 / 7700).toFixed(2) : null, lw = wi?.last;
-  const tile = (lbl, v, unit, ...rest) => h('div', { class: 'tile pg-stat' }, h('div', { class: 'lbl' }, lbl), h('div', { class: 'val' }, v, unit ? h('small', null, ' ' + unit) : null), ...rest);
+  const tile = (lbl, v, unit, ...rest) => h('div', { class: 'tile pg-stat' }, h('div', { class: 'lbl' }, icon(lbl === 'To goal' ? 'flag' : 'trendDown', 14), lbl), h('div', { class: 'val' }, v, unit ? h('small', null, ' ' + unit) : null), ...rest);
   let a, b;
   if (wi?.rate != null) {
     const rateEl = h('span', { class: 'pg-rate' }, signed(wi.rate, Math.abs(wi.rate) < 0.1 ? 2 : 1));
@@ -240,11 +257,11 @@ function bmiCard(c, ws) {
   const b = bmi(lw.kg, c.p.heightCm), lo = 15, hi = 32, pos = (v) => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100));
   const word = b < 18.5 ? 'below range' : b < 23 ? 'healthy (Asian cut-offs)' : b < 25 ? 'above range (Asian cut-offs)' : 'well above range (Asian cut-offs)';
   const tone = b >= 18.5 && b < 23 ? 'good' : 'warn';
-  const seg = (a, z, color) => h('i', { style: { flex: String(z - a), background: color } });
+  const seg = (a, z, color) => h('i', { style: { flex: String(z - a), '--bc': color } });
   const mark = h('b', { class: 'pg-mark', style: { left: pos(b) + '%' }, 'aria-hidden': 'true' });
   jobs.push(() => pop(mark));
   return h('div', { class: 'card pg-bmi' },
-    h('div', { class: 'row between' }, h('div', null, h('div', { class: 'small muted' }, 'BMI'), h('div', { class: 'num-md' }, String(b))), pill(tone, icon(tone === 'good' ? 'check' : 'info', 12), word)),
+    h('div', { class: 'row between' }, h('div', { class: 'row' }, ico('ruler', 'var(--accent)'), h('div', null, h('div', { class: 'small muted' }, 'BMI'), h('div', { class: 'num-md' }, String(b)))), pill(tone, icon(tone === 'good' ? 'check' : 'info', 12), word)),
     h('div', { class: 'pg-scale', role: 'img', 'aria-label': `BMI ${b}, ${word}` }, seg(lo, 18.5, 'var(--warn)'), seg(18.5, 23, 'var(--good)'), seg(23, 25, 'var(--warn)'), seg(25, hi, 'var(--bad)'), mark),
     h('div', { class: 'pg-ticks', 'aria-hidden': 'true' }, [18.5, 23, 25].map((v) => h('span', { style: { left: pos(v) + '%' } }, String(v)))),
     h('p', { class: 'pg-note' }, 'South Asian bodies carry more fat at the same BMI, so the healthy range ends at 23, not 25.'));
@@ -263,7 +280,7 @@ function energyCard(c) {
   const sign = net < 0 ? MINUS : net > 0 ? '+' : '';
   const netEl = h('span', null, `${sign}${fmt(Math.abs(net))}`);
   const w = (v) => (v / max * 100) + '%';
-  const seg = (v, color) => (v > 0 ? h('span', { style: { width: w(v), background: color } }) : null);
+  const seg = (v, color) => (v > 0 ? h('span', { style: { width: w(v), '--bc': color } }) : null);
   const row = (label, value, ...segs) => h('div', { class: 'pg-en-row' }, h('span', { class: 'pg-en-l' }, label), h('div', { class: 'pg-en-track' }, h('div', { class: 'pg-en-bar', 'data-sweep': '' }, segs)), h('b', null, fmt(value)));
   jobs.push(() => countUp(netEl, Math.abs(net), { key: 'pg:en:net', fmt: (v) => `${sign}${fmt(Math.round(v))}` }));
   return h('div', { class: 'card pg-energy' },
@@ -273,7 +290,7 @@ function energyCard(c) {
       pill(good == null ? '' : good ? 'good' : 'warn', icon(net < 0 ? 'arrowDown' : 'arrowUp', 12), net === 0 ? 'Even' : net < 0 ? 'Deficit' : 'Surplus')),
     h('div', { class: 'pg-en-rows' }, row('In', inn, seg(inn, 'var(--c)')), row('Out', out, seg(rest, 'var(--muted)'), seg(walk, 'var(--p)'), seg(train, 'var(--accent)'))),
     legend([{ label: 'Resting', color: 'var(--muted)', value: fmt(rest) }, walk > 0 ? { label: 'Walking', color: 'var(--p)', value: fmt(walk) } : null, train > 0 ? { label: 'Training', color: 'var(--accent)', value: fmt(train) } : null].filter(Boolean)),
-    note(`Out is an estimate: resting from your profile, walking from your steps${walk > 0 ? '' : ' (none logged, so it is left out)'}, training from your logged sessions. Today and partial days are left out.`));
+    why('energy-out', `Out is an estimate: resting from your profile, walking from your steps${walk > 0 ? '' : ' (none logged, so it is left out)'}, training from your logged sessions. Today and partial days are left out.`));
 }
 
 // ---------- energy balance ----------
@@ -293,14 +310,14 @@ function measuredBlock(c, res) {
   const heroNum = h('span', null, fmt(res.tdee));
   jobs.push(() => countUp(heroNum, res.tdee, { key: 'pg:tdee', fmt: (v) => fmt(v) }));
   const diff = formula ? res.tdee - formula : null;
-  const bar = (label, v, color, strong) => h('div', { class: 'pg-cmp' + (strong ? ' on' : '') }, h('span', null, label), h('div', { class: 'pg-cmp-track' }, h('i', { 'data-grow': '', style: { width: (v / top * 100) + '%', background: color } })), h('b', null, fmt(v)));
+  const bar = (label, v, color, strong) => h('div', { class: 'pg-cmp' + (strong ? ' on' : '') }, h('span', null, label), h('div', { class: 'pg-cmp-track' }, h('i', { 'data-grow': '', style: { width: (v / top * 100) + '%', '--bc': color } })), h('b', null, fmt(v)));
   const gap = res.avgIntake - res.tdee;
   const out = [
     h('div', { class: 'row between wrap pg-etop' }, h('div', null, h('div', { class: 'small muted' }, 'Your measured burn'), h('div', { class: 'pg-hero2' }, '≈ ', heroNum, h('small', null, ' kcal/day'))),
       diff != null && Math.abs(diff) >= 25 ? pill('', icon(diff > 0 ? 'arrowUp' : 'arrowDown', 12), `${fmt(Math.abs(diff))} vs formula`) : null),
     h('div', { class: 'pg-cmps' }, formula ? bar('Formula', formula, 'var(--muted)') : null, bar('Measured', res.tdee, 'var(--accent)', true)),
     h('p', { class: 'pg-line' }, `You ate about ${fmt(res.avgIntake)} kcal a day, ${gap < 0 ? `${fmt(-gap)} under` : `${fmt(gap)} over`} what you burn.`),
-    note(`Energy window: weigh-ins over the last ${res.span} days, food logged on ${res.days} of them (weight trend ${signed(res.slopePerWeek)} kg/week). The weight card above uses the last 14 days, so the two rates can differ.`)];
+    why('energy-window', `Energy window: weigh-ins over the last ${res.span} days, food logged on ${res.days} of them (weight trend ${signed(res.slopePerWeek)} kg/week). The weight card above uses the last 14 days, so the two rates can differ.`, 'Where this number comes from')];
   if (c.t.kcal && Math.abs(suggested - c.t.kcal) >= 75) {
     out.push(h('div', { class: 'pg-suggest' }, h('p', { class: 'small' }, `For your ${goal.label.toLowerCase()} goal (${goal.sub}) eat about `, h('b', null, `${fmt(suggested)} kcal`), `. Target now ${fmt(c.t.kcal)}.`),
       h('button', { class: 'btn primary block', onClick: () => applyTarget(suggested) }, `Update target to ${fmt(suggested)}`)));
@@ -319,8 +336,8 @@ async function applyTarget(N) {
 function energyNote(c, ws, intake, res) {
   const wd = new Set(ws.map((w) => w.date));
   const both = lastNDays(28, c.today).filter((k) => intake[k] > 0 && wd.has(k)).length, n = Math.min(both, 14);
-  const r = ring({ size: 76, stroke: 8, pct: n / 14 * 100, color: 'var(--accent)', children: [h('div', { class: 'num-sm' }, String(n)), h('small', null, 'of 14')] });
-  jobs.push(() => fill(r.fillEl, n / 14 * 100, { axis: 'ring', key: 'pg:ering', ms: 800 }));
+  const r = gradRing({ size: 76, stroke: 8, pct: n / 14 * 100, color: 'var(--accent)', color2: 'var(--accent-2)', children: [h('div', { class: 'num-sm' }, String(n)), h('small', null, 'of 14')] });
+  jobs.push(() => animateRing(r, n / 14 * 100, { key: 'pg:ering', ms: 560, delay: 60 }));
   return h('div', { class: 'pg-wait' }, r, h('div', { class: 'grow' }, h('div', { class: 'strong' }, 'Measured burn is warming up'),
     h('p', { class: 'small muted' }, res ? `Your logs give an odd result (${fmt(res.tdee)} kcal). Log every meal and weigh in the same way each time.` : `Needs about 14 days with both food and weight logged (${both} so far).`)));
 }
@@ -340,8 +357,9 @@ function foodView(c) {
 
 function ringStat(label, value, targetV, unit, color, key) {
   const pct = targetV ? Math.min(100, value / targetV * 100) : 0, num = h('span', null, fmt(value));
-  const r = ring({ size: 100, stroke: 10, pct, color, children: [h('div', { class: 'num-sm' }, num), h('small', null, unit)] });
-  jobs.push(() => { fill(r.fillEl, pct, { axis: 'ring', key: 'pg:' + key, ms: 900 }); countUp(num, value, { key: 'pg:n:' + key, fmt: (v) => fmt(v), ms: 700 }); });
+  const r = gradRing({ size: 100, stroke: 10, pct, color, children: [h('div', { class: 'num-sm' }, num), h('small', null, unit)] });
+  r.style.setProperty('--rg', color);
+  jobs.push(() => { animateRing(r, pct, { key: 'pg:' + key, ms: 560, delay: key === 'rp' ? 140 : 80 }); countUp(num, value, { key: 'pg:n:' + key, fmt: (v) => fmt(v), ms: 560 }); });
   return h('div', { class: 'pg-ringstat' }, r, h('div', { class: 'strong' }, label), h('div', { class: 'micro muted' }, targetV ? `target ${fmt(targetV)} ${unit}` : 'no target set'));
 }
 
@@ -352,7 +370,7 @@ function foodHero(c, tot, logged) {
   if (t.kcal) { const r = aK / t.kcal; kv = r > 1.1 ? ['warn', icon('arrowUp', 12), `${fmt(aK - t.kcal)} over`] : r >= 0.9 ? ['good', icon('check', 12), 'On target'] : ['accent', icon('arrowDown', 12), `${fmt(t.kcal - aK)} under`]; }
   let pv = null;
   if (t.p) pv = aP >= t.p * 0.9 ? ['good', icon('check', 12), 'On target'] : ['warn', icon('arrowDown', 12), `${fmt(t.p - aP)} g short`];
-  return h('div', { class: 'card pg-hero pg-rings' },
+  return h('div', { class: 'card hero pg-hero pg-rings' },
     h('div', { class: 'pg-rings-head' }, h('div', { class: 'strong' }, 'Daily average'), h('div', { class: 'micro muted' }, `${logged.length} of ${c.keys.length} days logged`)),
     h('div', { class: 'pg-rings-row' },
       h('div', null, ringStat('Calories', aK, t.kcal, 'kcal', 'var(--c)', 'rk'), kv ? h('div', { class: 'pg-ringpill' }, pill(...kv)) : null),
@@ -383,7 +401,7 @@ function weekBudget(c) {
     cap2('Weekly budget', `${fmt(eaten)} of ${fmt(budget)} kcal`),
     h('div', { class: 'heat' }, keys.map((k) => weekCell(k, c))),
     h('div', { class: 'pg-days' }, keys.map((k) => h('span', null, fmtDow(k)[0]))),
-    h('div', { class: 'pg-track', style: { marginTop: '12px' } }, h('i', { 'data-grow': '', style: { width: clampPct(eaten / budget) + '%', background: left < 0 ? 'var(--bad)' : 'var(--c)' } }), h('b', { class: 'pg-pace', style: { left: ((dow + 1) / 7 * 100) + '%' } })),
+    h('div', { class: 'pg-track', style: { marginTop: '12px' } }, h('i', { 'data-grow': '', style: { width: clampPct(eaten / budget) + '%', '--bc': left < 0 ? 'var(--bad)' : 'var(--c)' } }), h('b', { class: 'pg-pace', style: { left: ((dow + 1) / 7 * 100) + '%' } })),
     note(text + ' Tick = within 10% of target; the marker is an even pace by tonight.'));
 }
 
@@ -399,7 +417,7 @@ function weekCell(k, c) {
 
 function splitCard(c, tot, logged) {
   const sum = (f) => logged.reduce((a, k) => a + tot[k][f], 0), t = c.t;
-  return chartCard(cap2('Where your calories come from', 'daily average'),
+  return chartCard(cap2('Where your calories come from', 'average'),
     splitRow('You', sum('p') * 4, sum('c') * 4, sum('f') * 9), t.p ? splitRow('Target', t.p * 4, (t.c || 0) * 4, (t.f || 0) * 9) : null,
     legend([{ label: 'Protein', color: 'var(--p)' }, { label: 'Carbs', color: 'var(--c)' }, { label: 'Fat', color: 'var(--f)' }]));
 }
@@ -423,7 +441,7 @@ function nutrientSection(c) {
   const micros = [...g.micros].sort((a, b) => bad(b) - bad(a));
   const n = (s) => micros.filter((m) => m.status === s).length;
   const card = h('div', { class: 'card' });
-  if (hasMicro) card.append(h('div', { class: 'pg-strip', 'aria-hidden': 'true', 'data-sweep': '' }, [['red', 'bad'], ['amber', 'warn'], ['green', 'good']].map(([s, v]) => n(s) ? h('i', { style: { flex: n(s), background: `var(--${v})` } }) : null)),
+  if (hasMicro) card.append(h('div', { class: 'pg-strip', 'aria-hidden': 'true', 'data-sweep': '' }, [['red', 'bad'], ['amber', 'warn'], ['green', 'good']].map(([s, v]) => n(s) ? h('i', { style: { flex: n(s), '--bc': `var(--${v})` } }) : null)),
     h('div', { class: 'pg-pills' }, n('red') ? pill('bad', icon('warn', 12), `${n('red')} low`) : null, n('amber') ? pill('warn', `${n('amber')} a bit low`) : null, n('green') ? pill('good', icon('check', 12), `${n('green')} fine`) : null));
   card.append(h('div', { class: 'small muted', style: { margin: '10px 0 4px' } }, `Average of the last ${g.days} logged day${g.days === 1 ? '' : 's'}`));
   const m = g.macros;
@@ -528,15 +546,15 @@ function weekCard(c) {
       stat('s', wv.sessions, '', 'Sessions', 'in 7 days'),
       stat('a', wv.avgScore, '/100', 'Day score', 'average of 7 days'),
       stat('p', wv.proteinDays, wv.loggedDays ? `/${wv.loggedDays}` : '', 'Protein', 'days on target')),
-    note('Day score: protein 35, calories near target 30, training 25, steps 10.'));
+    why('day-score', 'Day score: protein 35, calories near target 30, training 25, steps 10.', 'How the day score works'));
 }
 
 function sessionRow(w) {
   const v = safe(sessionVerdict, w);
   if (!v) return null;
   const [tone, ico, word] = GRADE[v.grade] || GRADE.solid, st = v.stats, k = dateKey(new Date(w.start));
-  const r = ring({ size: 48, stroke: 5, pct: v.score, color: tone === 'accent' ? 'var(--accent)' : `var(--${tone})`, children: h('span', { class: 'pg-ses-n' }, String(v.score)) });
-  jobs.push(() => fill(r.fillEl, v.score, { axis: 'ring', key: 'pg:ses:' + w.id, ms: 700 }));
+  const r = gradRing({ size: 48, stroke: 5, pct: v.score, color: tone === 'accent' ? 'var(--accent)' : `var(--${tone})`, color2: tone === 'accent' ? 'var(--accent-2)' : undefined, children: h('span', { class: 'pg-ses-n' }, String(v.score)) });
+  jobs.push(() => animateRing(r, v.score, { key: 'pg:ses:' + w.id, ms: 560, delay: 120 }));
   const improve = v.improve[0], win = v.wins[0], line = improve || win;
   return h('div', { class: 'pg-ses' },
     h('div', { class: 'pg-ses-top' }, r,
@@ -546,9 +564,9 @@ function sessionRow(w) {
 }
 
 function sessionsSection() {
-  const rows = [...state.workouts].sort((a, b) => b.start - a.start).slice(0, 6).map(sessionRow).filter(Boolean);
+  const rows = [...state.workouts].sort((a, b) => b.start - a.start).slice(0, 4).map(sessionRow).filter(Boolean);
   if (!rows.length) return null;
-  return section('Recent sessions', h('div', { class: 'card pad-s pg-ses-list' }, rows, note('Score out of 100 from completion, volume vs last time, records and rep ranges. Under each: the top thing to fix, or the best win.')));
+  return section('Recent sessions', h('div', { class: 'card pad-s pg-ses-list' }, rows, why('ses-score', 'Score out of 100 from completion, volume vs last time, records and rep ranges. Under each: the top thing to fix, or the best win.', 'How sessions are scored')));
 }
 
 function trainHero(c) {
@@ -560,7 +578,7 @@ function trainHero(c) {
   const val = h('span', null, String(thisWk));
   jobs.push(() => countUp(val, thisWk, { key: 'pg:tw', ms: 500 }));
   const planned = routine?.daysPerWeek;
-  return h('div', { class: 'card pg-hero pg-trainhero' },
+  return h('div', { class: 'card hero pg-hero pg-trainhero' },
     h('div', { class: 'row between top' },
       h('div', null, h('div', { class: 'small muted' }, 'Workouts this week'), h('div', { class: 'num-xl pg-big' }, val, h('small', null, planned ? `of ${planned}` : 'done'))),
       h('div', { class: 'pg-last' }, h('div', { class: 'num-md' }, String(lastWk)), h('div', { class: 'micro muted' }, 'last week'))),
@@ -607,7 +625,7 @@ function loadCard(c) {
   return chartCard(cap2('Training load', 'weight × reps, per week'),
     h('div', { class: 'row between pg-loadhead' }, h('div', { class: 'num-md' }, `${kFmt(cur)}`, h('small', null, 'kg so far this week')),
       chg != null ? pill(chg >= 0 ? 'good' : 'accent', icon(chg >= 0 ? 'arrowUp' : 'arrowDown', 12), `${Math.abs(chg)}% ${chg >= 0 ? 'above' : 'below'} last week`) : null),
-    active >= 2 ? lineChart({ series: [{ name: 'Load', color: 'var(--p)', dots: true, dotR: 3, width: 2.5, end: true, points: weeks.map((w) => ({ x: w.label, y: w.v })) }], area: true, height: 150, fmtY: kFmt, unit: ' kg', xLabels: 4, yMin: 0, label: 'Weekly training load' })
+    active >= 2 ? lineChart({ series: [{ name: 'Load', color: 'var(--p)', dots: true, dotR: 3, width: 2.5, end: true, fmtEnd: (v) => `${kFmt(v)} kg`, points: weeks.map((w) => ({ x: w.label, y: w.v })) }], area: true, height: 150, fmtY: kFmt, unit: ' kg', xLabels: 4, yMin: 0, label: 'Weekly training load' })
       : h('div', { class: 'empty' }, h('b', null, 'Train a couple of weeks'), 'The load trend needs two weeks with workouts.'));
 }
 
@@ -617,7 +635,7 @@ function nextCard(c) {
     if (dateKey(new Date(w.start)) < since) continue;
     for (const ex of w.exercises || []) if ((ex.sets || []).some((x) => x.done)) counts.set(ex.exId, (counts.get(ex.exId) || 0) + 1);
   }
-  const top = [...counts].sort((a, b) => b[1] - a[1]).map(([id]) => ({ id, ex: findExercise(id), s: nextSuggestion(id) })).filter((x) => x.ex && x.s).slice(0, 5);
+  const top = [...counts].sort((a, b) => b[1] - a[1]).map(([id]) => ({ id, ex: findExercise(id), s: nextSuggestion(id) })).filter((x) => x.ex && x.s).slice(0, 4);
   if (!top.length) return null;
   return section('Next session suggestions', h('div', { class: 'card pad-s' }, top.map((x) => { const k = KIND[x.s.kind] || ['', x.s.kind];
     return h('div', { class: 'pg-sug' }, h('div', { class: 'row between' }, h('b', { class: 'ellipsis' }, x.ex.name), pill(k[0], k[1])), h('div', { class: 'small muted' }, x.s.text)); })));
@@ -669,7 +687,7 @@ function stepsCard(c) {
   const k = (v) => (v >= 1000 ? `${+(v / 1000).toFixed(1)}k` : String(Math.round(v)));
   const stat = (id, label, to, unit, sub, extra) => { const el = h('span', null, to == null ? '–' : fmt(to)); if (to != null) jobs.push(() => countUp(el, to, { key: 'pg:st:' + id, fmt: (v) => fmt(Math.round(v)), ms: 500 })); return h('div', { class: 'pg-sstat' }, h('div', { class: 'micro muted' }, label), h('div', { class: 'num-md' }, el, unit ? h('small', null, unit) : null), h('div', { class: 'micro muted ellipsis' }, sub), extra || null); };
   const span = Math.min(rangeDays, 30), keys = lastNDays(span, c.today);
-  return h('div', { class: 'card pg-steps' },
+  return h('div', { class: 'card hero pg-steps' },
     cap2('Steps', `last ${span} days`),
     h('div', { class: 'pg-sstats' },
       stat('avg', '7-day avg', avg7 == null ? null : Math.round(avg7), '', avg7 == null ? 'no steps this week' : `goal ${fmt(goal)}`),

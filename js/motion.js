@@ -2,7 +2,8 @@
 // and every function is a no-op under prefers-reduced-motion. No imports: ui.js, charts.js and the views import this.
 
 const mq = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
-export const prefersReducedMotion = () => !!(mq && mq.matches);
+// In-app setting wins: data-motion="full" animates even when the OS asks for less, "reduced" never animates, "auto" follows the OS.
+export const prefersReducedMotion = () => { const m = typeof document !== 'undefined' ? document.documentElement.getAttribute('data-motion') : null; if (m === 'reduced') return true; if (m === 'full') return false; return !!(mq && mq.matches); };
 const canAnimate = () => !prefersReducedMotion() && typeof Element !== 'undefined' && typeof Element.prototype.animate === 'function';
 
 export const EASE_OUT = 'cubic-bezier(.22,1,.36,1)';

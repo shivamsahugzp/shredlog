@@ -3,15 +3,17 @@
 //
 // Rules this file follows (docs/design.md):
 //  - The whole screen is rebuilt on every state change, but only inside quiet(): the element that changed pops, nothing else replays.
-//  - First open of the session plays one orchestrated moment: glance rings fill, hero number counts, bars grow, cards stagger (max 6).
+//  - First open plays one orchestrated moment: app.js rises the sections in turn (.mo-in), the glance rings fill ~60 ms apart (gradient arc, glowing head),
+//    numbers count up, bars grow. Nothing here staggers the sections a second time.
 //  - Every counter has a visible minus (removes the latest entry, Undo toast) and a list of today's entries (long-press or the list button).
 //  - Past-day logs carry a noon timestamp (metaFor) so they never reset "since last" or land at the wrong hour; times are never shown for those.
 import { state, day, dayIfAny, dateKey, setCheckin, logSymptom, removeSymptom, setRedFlags, logHabit, removeHabit, habitEntries, habitCount, habitByDate, lastHabitTs, waterMl, chaiCount, coffeeCount, setMeasurements, measurementSeries, setWeight, latestWeight, weights, lastNDays, shiftDate, commit, isChai, isCoffee, trackWater, setSteps, stepsOn } from '../state.js';
 import { stepsKcal } from '../verdict.js';
 import { cigStats } from '../calc.js';
 import { SYMPTOMS, TAG_LABELS, RED_FLAGS, symptomPatterns } from '../insights.js';
-import { h, icon, sheet, toast, stepper, ring, longPress, append, clear, fmt, fmtTime, fmtDateLabel, fmtShortDate, fmtDow, haptic } from '../ui.js';
-import { quiet, stagger, countUp, fill, pop, pulse, seen, remember, recall, canIntro, EASE_OUT, prefersReducedMotion } from '../motion.js';
+import { h, icon, sheet, toast, stepper, longPress, append, clear, fmt, fmtTime, fmtDateLabel, fmtShortDate, fmtDow, haptic } from '../ui.js';
+import { quiet, countUp, fill, pop, pulse, seen, remember, recall, canIntro, EASE_OUT, prefersReducedMotion } from '../motion.js';
+import { gradRing, animateRing } from '../charts.js';
 
 let seenParams = null; // one-shot ctx.params handling (params keep the same identity until go() is called again)
 
@@ -50,11 +52,12 @@ const SPOTS = {
 const spot = (name, tone = 'var(--sleep)') => h('span', { class: 'bd-spot', style: { '--tone': tone }, 'aria-hidden': 'true', html: SPOTS[name] });
 const emptyBlock = (name, tone, text, action) => mk('bd-empty', spot(name, tone), h('p', null, text), action || null);
 
-// Tiny monotone-cubic sparkline (Fritsch-Butland tangents: no false dips).
+// Tiny monotone-cubic sparkline (Fritsch-Butland tangents: no false dips). Soft area gradient, a blurred glow twin of the line and a haloed end dot.
+let sparkSeq = 0;
 function spark(vals, { w = 84, hgt = 26, color = 'var(--accent)', cls = '' } = {}) {
   const NS = 'http://www.w3.org/2000/svg', n = vals.length;
-  const svg = document.createElementNS(NS, 'svg');
-  svg.setAttribute('viewBox', `0 0 ${w} ${hgt}`); svg.setAttribute('class', 'bd-spark ' + cls); svg.setAttribute('aria-hidden', 'true');
+  const el = (tag, attrs = {}) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
+  const svg = el('svg', { viewBox: `0 0 ${w} ${hgt}`, class: 'bd-spark ' + cls, 'aria-hidden': 'true' });
   if (n < 2) return svg;
   const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1, pad = 3;
   const pts = vals.map((v, i) => [pad + (i / (n - 1)) * (w - 2 * pad), hgt - pad - ((v - lo) / span) * (hgt - 2 * pad)]);
@@ -65,25 +68,32 @@ function spark(vals, { w = 84, hgt = 26, color = 'var(--accent)', cls = '' } = {
   t.push(m[n - 2]);
   let d = `M${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
   for (let i = 0; i < n - 1; i++) { const s = dx[i] / 3; d += `C${(pts[i][0] + s).toFixed(1)} ${(pts[i][1] + t[i] * s).toFixed(1)} ${(pts[i + 1][0] - s).toFixed(1)} ${(pts[i + 1][1] - t[i + 1] * s).toFixed(1)} ${pts[i + 1][0].toFixed(1)} ${pts[i + 1][1].toFixed(1)}`; }
-  const path = document.createElementNS(NS, 'path');
-  path.setAttribute('d', d); path.setAttribute('fill', 'none'); path.setAttribute('stroke-width', '2'); path.setAttribute('stroke-linecap', 'round'); path.setAttribute('stroke-linejoin', 'round'); path.style.stroke = color;
-  const dot = document.createElementNS(NS, 'circle');
-  dot.setAttribute('cx', pts[n - 1][0]); dot.setAttribute('cy', pts[n - 1][1]); dot.setAttribute('r', '2.8'); dot.style.fill = color;
-  svg.append(path, dot);
-  if (canIntro()) path.animate([{ strokeDasharray: '1 1', strokeDashoffset: 1 }, { strokeDasharray: '1 1', strokeDashoffset: 0 }], { duration: 600, easing: EASE_OUT, fill: 'backwards' }), path.setAttribute('pathLength', '1');
+  const id = 'bdsp' + (++sparkSeq);
+  const grad = el('linearGradient', { id: 'g' + id, x1: 0, y1: 0, x2: 0, y2: 1 }), s0 = el('stop', { offset: '0%', 'stop-opacity': 0.32 }), s1 = el('stop', { offset: '100%', 'stop-opacity': 0 });
+  s0.style.stopColor = color; s1.style.stopColor = color; grad.append(s0, s1);
+  const blur = el('filter', { id: 'f' + id, filterUnits: 'userSpaceOnUse', x: -6, y: -6, width: w + 12, height: hgt + 12 }); blur.append(el('feGaussianBlur', { stdDeviation: 2 }));
+  svg.append(el('defs'), el('defs'));
+  svg.firstChild.append(grad, blur);
+  const area = el('path', { d: `${d}L${pts[n - 1][0].toFixed(1)} ${hgt}L${pts[0][0].toFixed(1)} ${hgt}Z`, fill: `url(#g${id})`, stroke: 'none' });
+  const glow = el('path', { d, fill: 'none', 'stroke-width': 5, 'stroke-linecap': 'round', opacity: 0.25, filter: `url(#f${id})` }); glow.style.stroke = color;
+  const path = el('path', { d, fill: 'none', 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }); path.style.stroke = color;
+  const halo = el('circle', { cx: pts[n - 1][0], cy: pts[n - 1][1], r: 5.6, opacity: 0.25 }); halo.style.fill = color;
+  const dot = el('circle', { cx: pts[n - 1][0], cy: pts[n - 1][1], r: 2.8 }); dot.style.fill = color;
+  svg.append(area, glow, path, halo, dot);
+  if (canIntro()) {
+    for (const p of [glow, path]) { p.setAttribute('pathLength', '1'); p.animate([{ strokeDasharray: '1 1', strokeDashoffset: 1 }, { strokeDasharray: '1 1', strokeDashoffset: 0 }], { duration: 600, easing: EASE_OUT, fill: 'backwards' }); }
+    area.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: 300, fill: 'backwards' });
+    for (const p of [halo, dot]) p.animate([{ opacity: 0 }, { opacity: p === halo ? 0.25 : 1 }], { duration: 240, delay: 520, fill: 'backwards' });
+  }
   return svg;
 }
 
-// Progress ring with a lighter second lap above 100 %. Fill animates from the last painted value (0 on first open).
-function pRing(c, { id, size, stroke, raw, color, children, delay = 0, lapTone = 'var(--ink)' }) {
-  const pct = clamp(raw, 0, 100);
-  const r = ring({ size, stroke, pct, color, children });
-  c.jobs.push(() => fill(r.fillEl, pct, { axis: 'ring', key: `bd:ring:${id}:${c.key}`, ms: 900, delay }));
-  if (raw > 100) {
-    const lap = r.fillEl.cloneNode(false); lap.style.stroke = `color-mix(in srgb, ${lapTone} 38%, ${color})`;
-    r.querySelector('svg').append(lap);
-    c.jobs.push(() => fill(lap, clamp(raw - 100, 0, 100), { axis: 'ring', key: `bd:ring2:${id}:${c.key}`, ms: 900, delay: delay + 300 }));
-  }
+// Progress ring (charts.js gradRing): gradient arc, blurred glow and a glowing head that rides the arc; a lighter second lap above 100 %.
+// The fill animates from the last painted value (0 on first open), the head follows it frame by frame.
+function pRing(c, { id, size, stroke, raw, color, color2, children, delay = 0, ms = 900 }) {
+  const pct = clamp(raw, 0, 200);
+  const r = gradRing({ size, stroke, pct, color, color2, children });
+  c.jobs.push(() => animateRing(r, pct, { key: `bd:ring:${id}:${c.key}`, ms, delay }));
   return r;
 }
 
@@ -109,13 +119,12 @@ export function render(container, ctx) {
   container.append(root);
   const ui = { pending: null, since: null, sleepDraft: null };
   let drawn = false;
-  // Build first, swap second (a throwing build cannot blank the screen). Intros and the card stagger play on the first draw only.
+  // Build first, swap second (a throwing build cannot blank the screen). Ring/number intros replay on the first draw only (redraws are quiet).
   const draw = () => {
     const jobs = [];
     const run = () => { ui.since = null; const next = build(ctx, ui, draw, jobs); clear(root); root.append(next); };
     if (drawn) quiet(run); else run();
     for (const j of jobs) { try { j(); } catch (e) { console.error(e); } }
-    if (!drawn) stagger(root.firstElementChild, { key: 'body' });
     drawn = true;
   };
   draw();
@@ -163,19 +172,20 @@ function glanceCard(c) {
   const n = habitCount(key, 'cig'), lim = t.cigLimit || 0;
   const kfmt = (v) => (v >= 1000 ? n1(v / 1000) + 'k' : String(Math.round(v)));
   const items = [];
-  if (trackWater()) { const glass = state.settings.glassMl || 250, wGoal = (t.water || 8) * glass, ml = waterMl(key); items.push({ id: 'water', card: 'water', label: 'Water', raw: (ml / wGoal) * 100, color: 'var(--water)', to: ml / 1000, f: (v) => n1(v), unit: 'L' }); }
+  if (trackWater()) { const glass = state.settings.glassMl || 250, wGoal = (t.water || 8) * glass, ml = waterMl(key); items.push({ id: 'water', card: 'water', label: 'Water', raw: (ml / wGoal) * 100, color: 'var(--water)', color2: 'var(--accent)', to: ml / 1000, f: (v) => n1(v), unit: 'L' }); }
   items.push(
-    { id: 'steps', card: 'steps', label: 'Steps', raw: (steps / sGoal) * 100, color: 'var(--p)', to: steps, f: kfmt, unit: '' },
-    { id: 'sleep', card: 'sleep', label: 'Sleep', raw: (hrs / sTarget) * 100, color: 'var(--sleep)', to: hrs, f: n1, unit: 'h' },
+    { id: 'steps', card: 'steps', label: 'Steps', raw: (steps / sGoal) * 100, color: 'var(--p)', color2: 'var(--accent-2)', to: steps, f: kfmt, unit: '' },
+    { id: 'sleep', card: 'sleep', label: 'Sleep', raw: (hrs / sTarget) * 100, color: 'var(--sleep)', color2: 'var(--accent)', to: hrs, f: n1, unit: 'h' },
     p.smoker
       ? { id: 'cig', card: 'cig', label: 'Cigarettes', raw: lim ? (n / lim) * 100 : n ? 100 : 0, color: lim && n > lim ? 'var(--bad)' : lim && n >= lim * 0.8 ? 'var(--warn)' : 'var(--cig)', to: n, f: (v) => String(Math.round(v)), unit: lim ? `/${lim}` : '' }
-      : { id: 'ck', card: 'checkin', label: 'Check-in', raw: d.checkin ? 100 : 0, color: 'var(--accent)', icon: d.checkin ? 'check' : 'edit' });
-  const card = h('div', { class: 'card bd-glance', style: { '--n': items.length } });
+      : { id: 'ck', card: 'checkin', label: 'Check-in', raw: d.checkin ? 100 : 0, color: 'var(--accent)', color2: 'var(--accent-2)', icon: d.checkin ? 'check' : 'edit' });
+  const card = h('div', { class: 'card hero bd-glance', style: { '--n': items.length } });
   items.forEach((it, i) => {
     let center;
     if (it.icon) center = h('span', { class: 'bd-gl-n ico' }, icon(it.icon, 22));
-    else { const numEl = h('span', null); center = h('span', { class: 'bd-gl-n' }, numEl, it.unit ? h('small', null, it.unit) : null); c.jobs.push(() => countUp(numEl, it.to, { key: `bd:gl:${it.id}:${key}`, ms: 700, fmt: it.f })); if (changed(`bd:glv:${it.id}:${key}`, it.to)) c.jobs.push(() => pop(center)); }
-    const r = pRing(c, { id: 'gl-' + it.id, size: items.length > 3 ? 68 : 76, stroke: 7, raw: it.raw, color: it.color, children: center, delay: i * 90 });
+    else { const numEl = h('span', null); center = h('span', { class: 'bd-gl-n' }, numEl, it.unit ? h('small', null, it.unit) : null); c.jobs.push(() => countUp(numEl, it.to, { key: `bd:gl:${it.id}:${key}`, ms: 500, fmt: it.f })); if (changed(`bd:glv:${it.id}:${key}`, it.to)) c.jobs.push(() => pop(center)); }
+    // the sequence: rings start 60 ms apart after the card begins to rise (80 ms), each 360 ms long, so the last one lands inside ~600 ms
+    const r = pRing(c, { id: 'gl-' + it.id, size: items.length > 3 ? 68 : 76, stroke: 7, raw: it.raw, color: it.color, color2: it.color2, children: center, delay: 80 + i * 60, ms: 360 });
     card.append(h('button', { class: 'bd-gl pressable', 'aria-label': `${it.label}. Jump to it.`, onClick: () => { haptic(); scrollTo(it.card); } }, r, h('span', { class: 'bd-gl-l' }, it.label)));
   });
   return card;
@@ -461,6 +471,7 @@ function sinceParts(ts) {
 }
 function sinceHero(box, ts, animate) {
   clear(box);
+  box.classList.toggle('lit', okTs(ts) && Date.now() - ts > 3600000); // past the first hour the number wears the drifting gradient
   sinceParts(ts).forEach(([v, u], i) => {
     const el = h('span', null, String(v)); box.append(el, u ? h('small', null, u) : null);
     if (animate && typeof v === 'number') countUp(el, v, { key: `bd:since:${u}`, ms: 700 });
@@ -479,7 +490,7 @@ function milestoneList(last, animate) {
   return mk('bd-tlw', mk('bd-tl-sub', icon('trophy', 15), h('span', null, okTs(last) ? `${done} of ${n} reached` : 'Recovery timeline'), h('small', null, sub)),
     mk('bd-tl', mk('bd-tl-rail', rail), h('ul', null, MILESTONES.map((m, i) => {
       const ok = i < done, isNext = i === done && okTs(last);
-      const node = isNext ? ring({ size: 24, stroke: 3.5, pct: frac * 100, color: 'var(--accent)' }) : h('i', null, ok ? icon('check', 13) : null);
+      const node = isNext ? gradRing({ size: 24, stroke: 3.5, pct: frac * 100, color: 'var(--accent)', color2: 'var(--accent-2)' }) : h('i', null, ok ? icon('check', 13) : null);
       return h('li', { class: (ok ? 'done' : isNext ? 'next' : '') }, h('span', { class: 'bd-tl-node' }, node), h('b', null, m.label), h('span', { class: 'grow' }, m.text));
     }))));
 }
@@ -547,7 +558,7 @@ function cigCards(c) {
     wkAvg != null && base ? h('span', { class: 'bd-delta ' + (wkAvg <= base ? 'good' : 'bad') }, icon(wkAvg <= base ? 'arrowDown' : 'arrowUp', 12), `${Math.abs(Math.round((1 - wkAvg / base) * 100))}%`) : null)];
   if (p.cigCost) tiles.push(mk('bd-stat', h('div', { class: 'num-sm good' }, '₹ ', fmt(cs.moneySaved)), h('div', { class: 'micro muted' }, 'saved, 30 days')), mk('bd-stat', h('div', { class: 'num-sm' }, '₹ ', fmt(spentAll)), h('div', { class: 'micro muted' }, 'spent, 30 days')));
 
-  const counter = h('div', { class: 'card bd-cig' }, head('cig', 'cig', 'Cigarettes', h('button', { class: 'icon-btn plain', 'aria-label': 'Show today’s entries', onClick: () => cigEntries(c) }, icon('list'))),
+  const counter = h('div', { class: 'card hero bd-cig' }, head('cig', 'cig', 'Cigarettes', h('button', { class: 'icon-btn plain', 'aria-label': 'Show today’s entries', onClick: () => cigEntries(c) }, icon('list'))),
       mk('bd-hero', mk('bd-hero-l', h('div', { class: 'bd-cap' }, 'Since last'), big, h('div', { class: 'small muted' }, lastTxt)), mk('bd-hero-r', ringBtn, h('div', { class: 'bd-cap center' }, label))),
       pills.length ? mk('bd-chips tight', pills) : null,
       bigCounter({ minusLabel: 'Remove the last cigarette', mainLabel: '+1 cigarette', count: n, onMinus: () => dropLatest(c, 'cig', 'cigarette'), onList: () => cigEntries(c), icoName: null,
@@ -676,7 +687,7 @@ function waterCard(c) {
   const center = h('span', { class: 'bd-ring-c' }, numEl, h('small', null, `of ${lf(goal)} L`));
   c.jobs.push(() => countUp(numEl, ml, { key: `bd:water:${key}`, ms: 700, fmt: lf }));
   if (changed(`bd:waterv:${key}`, ml)) c.jobs.push(() => pop(center));
-  const r = pRing(c, { id: 'water', size: 112, stroke: 10, raw: (ml / goal) * 100, color: ml >= goal ? 'var(--good)' : 'var(--water)', children: center, delay: 80, lapTone: 'var(--ink)' });
+  const r = pRing(c, { id: 'water', size: 112, stroke: 10, raw: (ml / goal) * 100, color: ml >= goal ? 'var(--good)' : 'var(--water)', color2: ml >= goal ? undefined : 'var(--accent)', children: center, delay: 80 });
   const done = Math.floor(ml / glass), part = ml / glass - done, tally = Math.max(glasses, Math.ceil(ml / glass));
   const tallyEl = mk('bd-glasses' + (tally > 10 ? ' many' : ''), Array.from({ length: tally }, (_, i) => h('i', { class: i < done ? 'on' : i === done && part > 0.01 ? 'half' : '' })));
   const str = strength(key, (k) => clamp(waterMl(k) / goal, 0, 1));
@@ -758,7 +769,7 @@ function stepsCard(c) {
   c.jobs.push(() => { countUp(numEl, steps, { key: `bd:steps:${key}`, ms: 700, fmt: (v) => fmt(Math.round(v)) }); countUp(pctEl, Math.min(999, Math.round(pct)), { key: `bd:stepspct:${key}`, ms: 700 }); });
   if (changed(`bd:stepsv:${key}`, steps)) c.jobs.push(() => pop(numEl));
   const center = h('span', { class: 'bd-ring-c' }, h('span', { class: 'num-md' }, pctEl, h('small', null, '%')), h('small', null, 'of goal'));
-  const r = pRing(c, { id: 'steps', size: 100, stroke: 10, raw: pct, color: reached ? 'var(--good)' : 'var(--p)', children: center, delay: 100 });
+  const r = pRing(c, { id: 'steps', size: 100, stroke: 10, raw: pct, color: reached ? 'var(--good)' : 'var(--p)', color2: reached ? undefined : 'var(--accent-2)', children: center, delay: 100 });
   const ringBtn = h('button', { class: 'bd-ringbtn pressable', 'aria-label': `${fmt(steps)} of ${fmt(goal)} steps. Edit steps and goal.`, onClick: () => stepsSheet(key) }, r);
   const str = strength(key, (k) => clamp(stepsOn(k) / goal, 0, 1));
   const pills = [];
@@ -770,7 +781,7 @@ function stepsCard(c) {
   if (str) pills.push(h('span', { class: 'pill accent', title: 'Average of daily results with a 13-day half-life' }, `Habit strength ${str.pct}%`));
   const goalBtn = h('button', { class: 'pill bd-goalpill pressable', 'aria-label': `Daily goal ${fmt(goal)} steps. Change it.`, onClick: () => stepsSheet(key) }, icon('target', 12), `Goal ${fmt(goal)}`);
   const rough = h('div', { class: 'chips bd-qs', role: 'group', 'aria-label': 'Set a rough step count' }, quickSteps(goal).map((v) => h('button', { class: 'chip' + (steps === v ? ' on' : ''), 'aria-pressed': steps === v ? 'true' : 'false', 'aria-label': `Set steps to ${fmt(v)}`, onClick: () => { haptic(); setStepsUndoable(key, v, `Steps set to ${fmt(v)}`); } }, fmt(v))));
-  const card = h('div', { class: 'card bd-steps' }, head('steps', 'train', 'Steps', goalBtn),
+  const card = h('div', { class: 'card hero bd-steps' }, head('steps', 'train', 'Steps', goalBtn),
     mk('bd-steps-hero', mk('bd-steps-l', h('div', { class: 'bd-cap' }, key === c.today ? 'Today' : fmtDateLabel(key, c.today)), h('div', { class: 'num-xl bd-steps-big' }, numEl), h('div', { class: 'bd-steps-unit' }, 'steps')), ringBtn),
     mk('bd-steps-pills', pills),
     mk('bd-steps-act',
@@ -952,7 +963,7 @@ function patternsSection(c) {
   card.append(head('heart', 'food', 'Food patterns', res.ready ? h('span', { class: 'small muted' }, `${res.covered} days of check-ins`) : null));
   if (!res.ready) {
     const numEl = h('span', null); c.jobs.push(() => countUp(numEl, res.covered, { key: 'bd:cov', ms: 600 }));
-    const r = pRing(c, { id: 'cov', size: 84, stroke: 9, raw: (res.covered / 14) * 100, color: 'var(--accent)', children: h('span', { class: 'bd-ring-c' }, h('span', { class: 'num-md' }, numEl), h('small', null, 'of 14')) });
+    const r = pRing(c, { id: 'cov', size: 84, stroke: 9, raw: (res.covered / 14) * 100, color: 'var(--accent)', color2: 'var(--accent-2)', children: h('span', { class: 'bd-ring-c' }, h('span', { class: 'num-md' }, numEl), h('small', null, 'of 14')) });
     card.append(mk('bd-hero compact', mk('bd-ringbtn', r), mk('bd-hero-l', h('b', null, `${res.covered} of 14 days with check-ins`), h('p', { class: 'small ink2' }, 'After two weeks of check-ins the app looks for foods that keep showing up before bloating, gas, acidity, low energy or poor sleep.'))));
     const tips = generalTips(key);
     if (tips.length) append(card, [h('div', { class: 'bd-sub' }, 'General tips'), tips.map((t) => mk('bd-gtip', h('b', { class: 'small' }, t.label), h('div', { class: 'small' }, t.text)))]);

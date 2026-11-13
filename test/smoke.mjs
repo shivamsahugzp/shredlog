@@ -53,9 +53,9 @@ try {
   await evalJs(`document.querySelector('.quick .qt .minus')?.dispatchEvent(new MouseEvent('click',{bubbles:true}))`); await sleep(400);
   const afterMinus = await evalJs(`(async()=>{const s=await import('./js/state.js');return JSON.stringify({chai:s.chaiCount(s.todayKey()),cig:s.habitCount(s.todayKey(),'cig'),minus:document.querySelectorAll('.quick .qt .minus').length})})()`);
   check('tile minus removes the latest chai', /"chai":0/.test(afterMinus) && /"cig":1/.test(afterMinus), afterMinus);
-  await evalJs(`(async()=>{const s=await import('./js/state.js'); s.setSetting('accent','neel'); return 1})()`); await sleep(200);
-  check('accent setting applies to the document', await evalJs(`document.documentElement.getAttribute('data-accent')==='neel'`));
-  await evalJs(`(async()=>{const s=await import('./js/state.js'); s.setSetting('accent','haldi'); return 1})()`); await sleep(100);
+  await evalJs(`(async()=>{const s=await import('./js/state.js'); s.setSetting('accent','jamun'); return 1})()`); await sleep(200);
+  check('accent setting applies to the document', await evalJs(`document.documentElement.getAttribute('data-accent')==='jamun'`));
+  await evalJs(`(async()=>{const s=await import('./js/state.js'); s.setSetting('accent','neel'); return 1})()`); await sleep(100);
   const segOk = await evalJs(`(()=>{const el=document.querySelector('.seg'); if(!el) return 'noseg'; const n=el.querySelectorAll('button[data-id]').length; const th=el.querySelector('.seg-thumb'); return th && Math.abs(th.getBoundingClientRect().width*n - (el.clientWidth-6)) < 12 ? 'ok' : 'bad '+n+' '+(th&&th.getBoundingClientRect().width)+' '+el.clientWidth})()`);
   check('segmented thumb sized to its options', segOk === 'ok' || segOk === 'noseg', segOk);
   // data safety: a daily safety copy exists after the first save; a v1-shaped backup imports with every entry intact and a pre-import copy is kept

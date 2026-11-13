@@ -1,8 +1,9 @@
-// Today: how the day went. Calorie ring, "your day" recap (in / out / net, day score, steps), quick-log tiles, training verdict,
-// check-in, day ledger, week glance. Swipe right/left to change day. Water shows only when Settings turns it on.
+// Today: how the day is going. Hero (daily target, eaten, left, macros with what is still to go; tap for how the targets are set), quick-log tiles,
+// coach, energy card (eaten, burned so far and why, balance, day score), training verdict, check-in, day ledger, week glance.
+// Swipe right/left to change day. Water shows only when Settings turns it on.
 import { state, day, dayIfAny, dayTotals, habitCount, habitEntries, waterMl, chaiCount, isChai, logHabit, removeHabit, logFood, removeFood, findFood, setWeight, latestWeight, weights, workoutsOn, shiftDate, lastNDays, lastHabitTs, commit, dateKey, trackWater, setSteps, stepsOn } from '../state.js';
 import { scaleFood } from '../calc.js';
-import { tidyName } from './food-extras.js';
+import { tidyName, coachCard, targetsSheet, gradientRing } from './food-extras.js';
 import { todayPlan } from '../train-plan.js';
 import { dayVerdict, weekVerdict, stepsKcal } from '../verdict.js';
 import { h, icon, sheet, toast, stepper, counterTile, ring, fmt, fmtTime, fmtDateLabel, fmtShortDate, fmtDur, fmtDow, sinceText, ago, clear, haptic } from '../ui.js';
@@ -142,70 +143,84 @@ function build(ctx, jobs, cache) {
     page.append(h('div', { class: 'callout' }, icon('share'), h('div', { class: 'grow' }, h('b', null, 'Install this on your phone. '), 'In Safari tap Share, then “Add to Home Screen”. Then use only the home-screen icon: Safari and the icon keep separate data.'), h('button', { class: 'icon-btn plain', 'aria-label': 'Dismiss', onClick: () => { state.settings.hideInstallHint = true; commit(); } }, icon('x'))));
   }
 
-  // ---- hero: the calorie dial ----
-  const R = 160, STROKE = 12;
-  const pctMain = t.kcal ? Math.min(100, (tot.kcal / t.kcal) * 100) : 0, pctLap = over && t.kcal ? Math.min(100, ((tot.kcal - t.kcal) / t.kcal) * 100) : 0;
-  const numEl = h('span', { class: 'td-kcal' });
+  // ---- hero: daily target, eaten, left. The ring is the picture, the macros say what is still to go. Tap anywhere: how the targets are set ----
+  const R = 132, STROKE = 12;
+  const pctRaw = t.kcal ? (tot.kcal / t.kcal) * 100 : 0, pctMain = Math.min(100, pctRaw), pctLap = over && t.kcal ? Math.min(100, ((tot.kcal - t.kcal) / t.kcal) * 100) : 0;
+  const pctEl = h('span', { class: 'td-kcal' }), eatEl = h('span', { class: 'td-kcal' }), leftEl = h('span', { class: 'td-kcal' });
   const rg = ring({ size: R, stroke: STROKE, pct: pctMain, color: over ? 'var(--bad)' : 'var(--accent)', cls: 'td-ring' + (over ? ' over' : ''),
-    children: [h('div', { class: 'num-xl td-num' + (over ? ' bad' : '') }, numEl), h('small', null, over ? 'kcal over' : 'kcal left')] });
-  rg.setAttribute('role', 'img'); rg.setAttribute('aria-label', `${fmt(Math.abs(left))} kcal ${over ? 'over' : 'left'} of ${fmt(t.kcal)}`);
+    children: [h('div', { class: 'num-lg td-num' + (over ? ' bad' : '') }, pctEl, h('span', { class: 'td-pc' }, '%')), h('small', null, 'of target')] });
+  rg.setAttribute('role', 'img'); rg.setAttribute('aria-label', `${Math.round(pctRaw)}% of your daily target eaten`);
+  if (!over) gradientRing(rg, 'td-grad');
   const dl = dial(R, STROKE, pctMain, over); rg.insertBefore(dl, rg.querySelector('.ring-in'));
-  let lap = null, knob = null;
-  if (over) { lap = rg.fillEl.cloneNode(false); lap.setAttribute('class', 'fill lap2'); rg.fillEl.after(lap); }
-  { // a small handle at the end of the arc; it rides the stroke as it grows
-    knob = svgEl('g', { class: 'td-knob' }); knob.append(svgEl('circle', { cx: R - STROKE / 2, cy: R / 2, r: 2.6 }));
-    rg.querySelector('svg:not(.td-dial)').append(knob);
-  }
-  const angle = (pct) => (pct / 100) * 360;
+  const ringSvg = rg.querySelector('svg:not(.td-dial)');
+  let lap = null;
+  if (over) { lap = rg.fillEl.cloneNode(false); lap.setAttribute('class', 'fill lap2'); lap.style.stroke = 'var(--bad)'; rg.fillEl.after(lap); }
+  // the glowing end-cap: a soft halo, a solid disc and a pin, riding the end of the arc as it grows
+  const cap = svgEl('g', { class: 'td-cap' }), cx = R - STROKE / 2, cy = R / 2;
+  { const defs = ringSvg.querySelector('defs') || ringSvg.insertBefore(svgEl('defs'), ringSvg.firstChild), rgd = svgEl('radialGradient', { id: 'td-halo' }); rgd.style.color = over ? 'var(--bad)' : 'var(--accent-2)';
+    rgd.append(svgEl('stop', { offset: '0', 'stop-color': 'currentColor', 'stop-opacity': '.75' }), svgEl('stop', { offset: '1', 'stop-color': 'currentColor', 'stop-opacity': '0' })); defs.append(rgd);
+    cap.append(svgEl('circle', { cx, cy, r: STROKE * 1.7, fill: 'url(#td-halo)' }), svgEl('circle', { cx, cy, r: STROKE / 2 + 0.6, class: 'core' }), svgEl('circle', { cx, cy, r: 2.3, class: 'pin' }));
+    ringSvg.append(cap); }
+  const angle = (pc) => (pc / 100) * 360;
+  // a number that counts up on the first open and rolls like an odometer after that
+  const numAnim = (el, val, k, from = 0) => {
+    const prev = recall(k);
+    if (first) { countUp(el, val, { from, key: k, ms: 1000, fmt }); remember('odo:' + k, fmt(val)); }
+    else { odometer(el, val, { key: k, fmt }); remember(k, val); if (prev != null && prev !== val) pulse(el.parentNode, { scale: 1.06, ms: 360 }); }
+  };
   jobs.push(() => {
-    const prevMain = recall(`rg:${key}`, 0), prevLap = recall(`rl:${key}`, 0), ms = first ? 950 : 520;
-    fill(rg.fillEl, pctMain, { axis: 'ring', key: `rg:${key}`, ms, delay: first ? 120 : 0 });
-    if (lap) fill(lap, pctLap, { axis: 'ring', key: `rl:${key}`, ms, delay: first ? 600 : 0 });
-    else remember(`rl:${key}`, 0);
-    // knob: rotate from the old end to the new one with the same easing as the stroke
-    const toA = angle(over ? pctLap : pctMain), fromA = angle(over ? prevLap : prevMain);
-    knob.style.transformOrigin = `${R / 2}px ${R / 2}px`; knob.style.transform = `rotate(${toA}deg)`;
-    knob.style.opacity = (over ? pctLap : pctMain) > 0.5 ? '1' : '0';
-    if (canAnim() && Math.abs(toA - fromA) > 1) knob.animate([{ transform: `rotate(${fromA}deg)` }, { transform: `rotate(${toA}deg)` }], { duration: ms, delay: over ? (first ? 600 : 0) : first ? 120 : 0, easing: EASE_OUT, fill: 'backwards' });
-    // dial ticks light up in sequence on the first open
-    if (first && canAnim()) dl.litTicks.forEach((ln, i) => ln.animate([{ opacity: 0.1 }, { opacity: 1 }], { duration: 200, delay: 140 + (i / Math.max(1, dl.litTicks.length)) * 760, fill: 'backwards', easing: 'ease-out' }));
-    // the number
-    const shown = Math.abs(left), txt = (v) => fmt(v);
-    const prevShown = recall(`kl:${key}`);
-    if (first) { countUp(numEl, shown, { from: over ? 0 : t.kcal, key: `kl:${key}`, ms: 900, fmt: txt }); remember(`odo:kl:${key}`, txt(shown)); }
-    else { odometer(numEl, shown, { key: `kl:${key}`, fmt: txt }); remember(`kl:${key}`, shown); if (prevShown != null && prevShown !== shown) pulse(numEl.parentNode, { scale: 1.07, ms: 360 }); }
+    const prevMain = recall(`rg:${key}`, 0), prevLap = recall(`rl:${key}`, 0), ms = first ? 1100 : 520;
+    fill(rg.fillEl, pctMain, { axis: 'ring', key: `rg:${key}`, ms, delay: first ? 140 : 0 });
+    if (lap) fill(lap, pctLap, { axis: 'ring', key: `rl:${key}`, ms, delay: first ? 640 : 0 }); else remember(`rl:${key}`, 0);
+    const toA = angle(over ? pctLap : pctMain), fromA = angle(over ? prevLap : prevMain), dly = over ? (first ? 640 : 0) : first ? 140 : 0;
+    cap.style.transformOrigin = `${R / 2}px ${R / 2}px`; cap.style.transform = `rotate(${toA}deg)`;
+    cap.style.opacity = (over ? pctLap : pctMain) > 0.5 ? '1' : '0';
+    if (canAnim() && Math.abs(toA - fromA) > 1) cap.animate([{ transform: `rotate(${fromA}deg)` }, { transform: `rotate(${toA}deg)` }], { duration: ms, delay: dly, easing: EASE_OUT, fill: 'backwards' });
+    if (first && canAnim()) { cap.animate([{ opacity: 0 }, { opacity: 0, offset: 0.2 }, { opacity: 1 }], { duration: ms + dly, easing: 'ease-out' }); dl.litTicks.forEach((ln, i) => ln.animate([{ opacity: 0.1 }, { opacity: 1 }], { duration: 200, delay: 140 + (i / Math.max(1, dl.litTicks.length)) * 860, fill: 'backwards', easing: 'ease-out' })); }
+    countUp(pctEl, Math.round(pctRaw), { key: `kp:${key}`, ms: first ? 1000 : 520, fmt: (v) => String(Math.round(v)) });
+    numAnim(eatEl, tot.kcal, `ke:${key}`, 0);
+    numAnim(leftEl, Math.abs(left), `kl:${key}`, over ? 0 : t.kcal);
   });
 
   const protHit = t.p > 0 && tot.p >= t.p;
-  const fact = (label, val, unit) => h('div', { class: 'td-fact' }, h('span', { class: 'td-fact-l' }, label), h('b', null, val, unit ? h('small', null, unit) : null));
   const macro = (k, label, eaten, target, cls) => {
-    const val = h('span'), bar = h('i'), hit = k === 'p' && protHit;
+    const val = h('span'), bar = h('i'), to = target > 0 ? Math.round(target - eaten) : null, done = to != null && to <= 0, good = k === 'p' || k === 'fiber';
+    const goTxt = to == null ? '' : !done ? `${fmt(to)} g to go` : good ? 'Done' : `${fmt(-to)} g over`;
     const row = h('div', { class: 'td-macro ' + cls },
-      h('div', { class: 'td-macro-top' }, h('span', { class: 'td-macro-name' }, h('i', { class: 'dot ' + cls }), label), hit ? h('span', { class: 'td-hit', 'aria-label': 'Target reached' }, icon('check', 13)) : null),
-      h('div', { class: 'td-macro-val' }, val, h('small', null, `/ ${target} g`)),
+      h('div', { class: 'td-macro-top' }, h('span', { class: 'td-macro-name' }, h('i', { class: 'dot ' + cls }), label),
+        h('span', { class: 'td-togo' + (done ? (good ? ' hit' : ' over') : '') }, done && good ? h('span', { class: 'td-hit', 'aria-label': 'Target reached' }, icon('check', 11)) : null, goTxt)),
+      h('div', { class: 'td-macro-val' }, val, h('small', null, target ? `/ ${fmt(target)} g` : 'g')),
       h('div', { class: 'td-track' }, bar));
     jobs.push(() => {
       const prev = recall(`mv:${k}:${key}`);
-      countUp(val, Math.round(eaten), { key: `mv:${k}:${key}`, ms: 650 });
-      fill(bar, target ? Math.min(100, (eaten / target) * 100) : 0, { key: `mb:${k}:${key}`, delay: first ? 160 : 0, ms: 650 });
+      countUp(val, Math.round(eaten), { key: `mv:${k}:${key}`, ms: 750 });
+      fill(bar, target ? Math.min(100, (eaten / target) * 100) : 0, { key: `mb:${k}:${key}`, delay: first ? 220 : 0, ms: 750 });
       if (prev != null && prev !== Math.round(eaten)) pulse(val, { scale: 1.14, ms: 380 });
     });
     return row;
   };
   // the first time protein crosses its target this session: a small burst
   const goalKey = 'pgoal:' + key;
-  const macrosEl = h('div', { class: 'td-macros' }, macro('p', 'Protein', tot.p, t.p, 'p'), macro('c', 'Carbs', tot.c, t.c, 'c'), macro('f', 'Fat', tot.f, t.f, 'f'));
+  const macrosEl = h('div', { class: 'td-macros' }, macro('p', 'Protein', tot.p, t.p, 'p'), macro('c', 'Carbs', tot.c, t.c, 'c'), macro('f', 'Fat', tot.f, t.f, 'f'), macro('fiber', 'Fibre', tot.fiber, t.fiber, 'fiber'));
   if (isToday && recall(goalKey) === false && protHit) jobs.push(() => { celebrate(macrosEl.querySelector('.td-hit') || macrosEl, { kind: 'goal' }); haptic('success'); });
   if (isToday) remember(goalKey, protHit);
-  const hero = h('div', { class: 'card fuel td-fuel' + (over ? ' over' : '') },
-    h('div', { class: 'td-fuel-main' }, rg, macrosEl),
-    h('div', { class: 'td-facts' }, fact('Eaten', fmt(tot.kcal), ' kcal'), fact('Fibre', Math.round(tot.fiber), ` / ${t.fiber} g`), fact('Sugar', Math.round(tot.sugar), ' g')));
+  const hero = h('div', { class: 'card hero fuel td-fuel pressable' + (over ? ' over' : ''), role: 'button', tabindex: '0',
+    'aria-label': `Daily target ${fmt(t.kcal)} kcal. Eaten ${fmt(tot.kcal)}. ${fmt(Math.abs(left))} ${over ? 'over' : 'left'}. Tap to see how your targets are set.`,
+    onClick: () => targetsSheet(ctx), onKeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); targetsSheet(ctx); } } },
+    h('div', { class: 'td-t-row' }, h('span', { class: 'td-t-l' }, 'Daily target'), h('b', { class: 'num td-t-n' }, fmt(t.kcal)), h('small', { class: 'td-t-u' }, 'kcal')),
+    h('div', { class: 'td-fuel-main' }, rg,
+      h('div', { class: 'td-eq' },
+        h('div', { class: 'td-eq-eaten' }, h('span', { class: 'td-eq-l' }, isToday ? 'Eaten so far' : 'Eaten that day'), h('div', { class: 'num-lg td-eq-n' }, eatEl, h('small', null, 'kcal'))),
+        h('div', { class: 'td-eq-left' + (over ? ' over' : '') }, h('span', { class: 'td-eq-l' }, over ? 'Over by' : 'Left to eat'), h('div', { class: 'num-md td-eq-n' }, leftEl, h('small', null, 'kcal'))))),
+    macrosEl,
+    h('div', { class: 'td-hero-foot' }, h('span', null, 'Sugar ', h('b', { class: 'num' }, Math.round(tot.sugar)), ' g'), h('span', { class: 'td-hero-how' }, 'How your targets are set', icon('right', 14))));
   page.append(hero); rise.push(hero);
 
-  // ---- your day: in, out, net, the day score, steps ----
-  // It sits below the quick-log tiles: the recap grows from a slim card to a tall one the moment something is logged, and anything above
-  // it would push the tile that was just tapped (and its Undo minus) off the screen.
-  const recap = dv ? recapCard(ctx, key, isToday, dv, jobs, first) : null;
+  // ---- coach + energy: both sit below the quick-log tiles, because they grow the moment something is logged and anything above the
+  // tiles would push the tile that was just tapped (and its Undo minus) off the screen. ----
+  const coach = isToday ? coachCard(ctx, key, { fresh: first }) : null;
+  if (coach) rise.push(coach);
+  const recap = dv ? energyCard(ctx, key, isToday, dv, jobs, first) : null;
   if (recap) rise.push(recap);
 
   // ---- quick-log tiles: tap = +1, minus removes the last, hold opens the list ----
@@ -251,6 +266,7 @@ function build(ctx, jobs, cache) {
   page.append(quick);
   if (p.smoker && cigs && isToday) page.append(h('p', { class: 'td-note' }, `Last cigarette ${Date.now() - (lastHabitTs('cig') || 0) < 60000 ? 'just now' : sinceText(lastHabitTs('cig')) + ' ago'}${lim ? ` · limit ${lim}` : ''}${lim && cigs > lim ? ' · over limit' : ''}`));
   else if ((chai || cigs || water) && !state.settings.todayTileHint) page.append(h('p', { class: 'td-note' }, 'Tap to add one. Tap − to remove the last. Hold a tile to edit.'));
+  if (coach) page.append(coach);
   if (recap) page.append(recap);
   if (first && canAnim()) jobs.push(() => tiles.forEach((el, i) => enter(el, 190 + i * 45, 12, 300)));
 
@@ -336,7 +352,7 @@ function build(ctx, jobs, cache) {
 }
 
 // ---------------------------------------------------------------- shared bits for the verdict pieces
-const TONE = { good: 'var(--good)', accent: 'var(--accent)', warn: 'var(--warn)', bad: 'var(--bad)' };
+const TONE = { good: 'var(--good)', accent: 'var(--accent)', warn: 'var(--f)', bad: 'var(--bad)' }; // caution tone is the rose token: nothing on Today is yellow
 const GRADE = { strong: { word: 'Strong', ico: 'zap', tone: 'good' }, solid: { word: 'Solid', ico: 'check', tone: 'accent' }, light: { word: 'Light', ico: 'leaf', tone: 'warn' } };
 const gradePill = (g) => { const m = GRADE[g] || GRADE.solid; return h('span', { class: 'td-grade ' + g }, icon(m.ico, 15), m.word); };
 const signed = (n, unit = '') => `${n > 0 ? '+' : n < 0 ? '−' : ''}${fmt(Math.abs(n))}${unit}`;
@@ -440,11 +456,11 @@ function verdictSheet(ctx, w, v) {
   return api;
 }
 
-// ---------------------------------------------------------------- your day: in → out → net, the day score, steps, and (evening) the week
+// ---------------------------------------------------------------- energy: eaten, burned (and why), balance, then the day score
 const scoreWord = (s, done) => (s >= 80 ? 'Strong' : s >= 60 ? 'Solid' : s >= 40 ? (done ? 'Fair' : 'Building') : done ? 'Light' : 'Early');
 const scoreTone = (s) => (s >= 75 ? 'good' : s >= 45 ? 'accent' : 'warn');
 const WORD_ICO = { good: 'zap', accent: 'check', warn: 'leaf' };
-// Is this net what the user is after? Cutting wants a deficit, bulking a surplus, maintaining stays close to even.
+// Is this balance what the user is after? Cutting wants a deficit, bulking a surplus, maintaining stays close to even.
 function netTone(net, goal) {
   const g = String(goal || 'cut');
   if (g.startsWith('cut')) return net <= 0 ? 'good' : net < 300 ? 'warn' : 'bad';
@@ -459,68 +475,69 @@ function lineKind(s) {
   return ['info', 'info'];
 }
 
-function recapCard(ctx, key, isToday, dv, jobs, first) {
+function energyCard(ctx, key, isToday, dv, jobs, first) {
   const hour = new Date().getHours(), eve = !isToday || hour >= 20; // after 8 pm, or looking back at a finished day
   const bare = !dv.items && !dv.steps && !dv.sessions.length;
   if (bare && !isToday) return null;
-  const tone = scoreTone(dv.score), word = bare ? (eve ? 'Nothing logged' : 'Not started') : scoreWord(dv.score, eve);
-  const k = (n) => `rc:${n}:${key}`, d0 = first ? 160 : 0;
-  const card = h('div', { class: 'card td-recap' + (eve ? ' eve' : '') + (bare ? ' bare' : '') });
+  const b = dv.burn, tone = scoreTone(dv.score), word = bare ? (eve ? 'Nothing logged' : 'Not started') : scoreWord(dv.score, eve);
+  const k = (n) => `rc:${n}:${key}`, d0 = first ? 160 : 0, so = isToday ? ' so far' : '';
+  const card = h('div', { class: 'card td-recap td-energy' + (eve ? ' eve' : '') + (bare ? ' bare' : '') });
+  const hrs = Math.max(1, Math.floor(b.dayFrac * 24 + 0.01));
 
-  // head: title and the one-word verdict on the left, the 0-100 ring on the right
-  const scoreEl = h('span', { class: 'td-score-n' }, bare ? '–' : String(dv.score));
-  const rg = ring({ size: bare ? 46 : eve ? 74 : 62, stroke: bare ? 5 : eve ? 8 : 7, pct: bare ? 0 : dv.score, color: TONE[tone], cls: 'td-score', children: [scoreEl] });
-  rg.setAttribute('role', 'img'); rg.setAttribute('aria-label', bare ? 'Day score: nothing logged yet' : `Day score ${dv.score} out of 100, ${word}`);
   card.append(h('div', { class: 'td-rc-head' },
-    h('div', { class: 'grow' }, h('h3', null, eve ? 'Evening recap' : 'Your day so far'),
-      h('div', { class: 'td-rc-sub' }, h('span', { class: 'td-word ' + (bare ? '' : tone) }, bare ? null : icon(WORD_ICO[tone], 14), word), dv.partial ? h('span', { class: 'pill warn' }, 'Partly logged') : h('span', { class: 'small muted' }, bare ? '' : 'day score'))),
-    rg));
-  jobs.push(() => {
-    const prev = recall(`dsn:${key}`);
-    if (!bare) { fill(rg.fillEl, dv.score, { axis: 'ring', key: `ds:${key}`, ms: 900, delay: d0 }); countUp(scoreEl, dv.score, { key: `dsn:${key}`, ms: 900 }); if (prev != null && prev !== dv.score) pulse(rg, { scale: 1.08, ms: 380 }); }
-    else { remember(`ds:${key}`, 0); remember(`dsn:${key}`, 0); }
-  });
+    h('div', { class: 'grow' }, h('h3', null, isToday ? 'Energy today' : 'Energy that day'), h('div', { class: 'td-en-sub' }, 'Calories you ate against calories you burned')),
+    dv.partial ? h('span', { class: 'pill accent nowrap' }, 'Partly logged') : null));
 
-  // energy flow: In → Out → Net, then two thin bars (In above, Out split into resting / walking / training)
+  // eaten − burned = balance: three numbers, each with what it is
   if (!bare) {
     const noFood = !dv.items, net = dv.net, nt = noFood ? '' : netTone(net, state.profile?.goal);
     const sgn = (v) => { const r = Math.round(v); return (r < 0 ? '−' : r > 0 ? '+' : '') + fmt(Math.abs(r)); };
-    const inEl = h('b', { class: 'td-fl-n' }, fmt(dv.intake)), outEl = h('b', { class: 'td-fl-n' }, fmt(dv.burn.total)), netEl = h('b', { class: 'td-fl-n' }, noFood ? '–' : sgn(net));
+    const inEl = h('b', { class: 'td-fl-n' }, fmt(dv.intake)), outEl = h('b', { class: 'td-fl-n' }, fmt(b.total)), netEl = h('b', { class: 'td-fl-n' }, noFood ? '–' : sgn(net));
     const col = (cls, label, valEl, sub) => h('div', { class: 'td-fl ' + cls }, h('span', { class: 'td-fl-l' }, label), valEl, sub);
-    const arrow = () => h('span', { class: 'td-fa', 'aria-hidden': 'true' }, icon('arrowRight', 14));
-    const netSub = h('span', { class: 'td-fl-s' }, noFood ? 'log food' : Math.abs(net) < 25 ? 'even' : [icon(net < 0 ? 'arrowDown' : 'arrowUp', 12), net < 0 ? 'deficit' : 'surplus']);
-    card.append(h('div', { class: 'td-flow', role: 'group', 'aria-label': noFood ? `Out about ${fmt(dv.burn.total)} kcal` : `${fmt(dv.intake)} kcal in, ${fmt(dv.burn.total)} out, net ${sgn(net)}` },
-      col('in', 'In', inEl, h('span', { class: 'td-fl-s' }, 'kcal eaten')), arrow(), col('out', 'Out', outEl, h('span', { class: 'td-fl-s' }, 'kcal burned')), arrow(), col('net ' + nt, 'Net', netEl, netSub)));
-    const mx = Math.max(dv.intake, dv.burn.total, 1), seg = (cls) => h('i', { class: cls });
-    const bIn = seg('in'), bR = seg('r'), bW = seg('w'), bT = seg('t');
-    card.append(h('div', { class: 'td-bars', 'aria-hidden': 'true' },
-      h('div', { class: 'td-bar' }, h('span', { class: 'td-bar-l' }, 'In'), h('div', { class: 'td-bar-t' }, bIn)),
-      h('div', { class: 'td-bar' }, h('span', { class: 'td-bar-l' }, 'Out'), h('div', { class: 'td-bar-t' }, bR, bW, bT))));
-    const lg = (cls, label, v) => h('div', { class: 'td-lg' }, h('span', { class: 'td-lg-l' }, h('i', { class: cls }), label), h('b', null, fmt(v)));
-    card.append(h('div', { class: 'td-legend' }, lg('r', 'Resting', dv.burn.resting), lg('w', 'Walking', dv.burn.steps), lg('t', 'Training', dv.burn.workouts)));
-    if (isToday && dv.burn.restingFull) card.append(h('p', { class: 'td-rc-note micro muted' }, `Resting burn so far: ${fmt(dv.burn.resting)} of ${fmt(dv.burn.restingFull)} kcal for the full day.`));
+    const op = (g) => h('span', { class: 'td-fa', 'aria-hidden': 'true' }, g);
+    const netSub = h('span', { class: 'td-fl-s' }, noFood ? 'log food' : Math.abs(net) < 25 ? 'about even' : [icon(net < 0 ? 'arrowDown' : 'arrowUp', 12), net < 0 ? 'deficit' : 'surplus']);
+    card.append(h('div', { class: 'td-flow', role: 'group', 'aria-label': noFood ? `Burned about ${fmt(b.total)} kcal${so}` : `Eaten ${fmt(dv.intake)} kcal, burned ${fmt(b.total)}${so}, balance ${sgn(net)}` },
+      col('in', 'Eaten', inEl, h('span', { class: 'td-fl-s' }, 'kcal in')), op(icon('minus', 14)), col('out', 'Burned' + so, outEl, h('span', { class: 'td-fl-s' }, 'kcal out')), op('='), col('net ' + nt, 'Balance' + so, netEl, netSub)));
     jobs.push(() => {
-      countUp(inEl, dv.intake, { key: k('in'), ms: 750, fmt }); countUp(outEl, dv.burn.total, { key: k('out'), ms: 750, fmt });
+      countUp(inEl, dv.intake, { key: k('in'), ms: 750, fmt }); countUp(outEl, b.total, { key: k('out'), ms: 750, fmt });
       if (!noFood) countUp(netEl, net, { key: k('net'), ms: 750, fmt: sgn }); else remember(k('net'), 0);
-      const pc = (v) => (v / mx) * 100, o = { ms: 650, delay: d0 };
-      fill(bIn, pc(dv.intake), { ...o, key: k('bi') }); fill(bR, pc(dv.burn.resting), { ...o, key: k('br') }); fill(bW, pc(dv.burn.steps), { ...o, key: k('bw'), delay: d0 + 90 }); fill(bT, pc(dv.burn.workouts), { ...o, key: k('bt'), delay: d0 + 180 });
     });
+  } else {
+    card.append(h('p', { class: 'td-en-bare' }, isToday ? `Nothing eaten yet. Your body has burned about ${fmt(b.total)} kcal at rest so far today.` : 'Nothing was logged this day.'));
   }
 
-  // steps: tap to add or change them (the same sheet the Steps tile opens)
-  const sp = dv.stepGoal ? Math.min(100, (dv.steps / dv.stepGoal) * 100) : 0, sBar = h('i');
-  card.append(h('button', { class: 'td-r-steps', 'aria-label': dv.steps ? `${fmt(dv.steps)} of ${fmt(dv.stepGoal)} steps. Tap to edit.` : 'Add your steps for the day', onClick: () => stepsSheet(ctx, key) },
-    h('span', { class: 'well stp' }, icon('steps')),
-    h('div', { class: 'grow' }, dv.steps
-      ? [h('div', { class: 'td-r-st-top' }, h('b', null, `${fmt(dv.steps)} steps`), h('span', { class: 'small muted nowrap' }, `${Math.round((dv.steps / dv.stepGoal) * 100)}% of ${fmt(dv.stepGoal)}`)), h('div', { class: 'td-track stp' }, sBar)]
-      : [h('div', { class: 'td-r-st-top' }, h('b', { class: 'txt' }, 'Add your steps')), h('div', { class: 'micro muted' }, 'Walking burn counts once you do')]),
-    h('span', { class: 'td-r-go', 'aria-hidden': 'true' }, icon('right', 16))));
-  jobs.push(() => fill(sBar, sp, { key: k('st'), ms: 650, delay: d0 }));
+  // where the burned number comes from: resting + walking + training, as one bar and three plain rows
+  if (!bare || b.steps || b.workouts) {
+    const mx = Math.max(b.total, 1), seg = (cls) => h('i', { class: cls }), bR = seg('r'), bW = seg('w'), bT = seg('t');
+    const sp = dv.stepGoal ? Math.min(100, (dv.steps / dv.stepGoal) * 100) : 0, sBar = h('i');
+    const trained = dv.sessions.map((x) => x.name).filter(Boolean).join(', ');
+    const dot = (cls) => h('i', { class: 'td-bk-dot ' + cls });
+    const row = (cls, label, val, sub, extra) => [dot(cls), h('div', { class: 'td-bk-t' }, h('span', { class: 'td-bk-l' }, label), h('span', { class: 'td-bk-s' }, sub), extra || null), h('b', { class: 'td-bk-n' }, fmt(val))];
+    card.append(h('div', { class: 'td-bk' },
+      h('div', { class: 'td-bk-bar', 'aria-hidden': 'true' }, h('div', { class: 'td-bar-t' }, bR, bW, bT)),
+      h('div', { class: 'td-bk-row' }, row('r', 'Resting', b.resting, isToday ? `your body at rest, ${hrs} of 24 h` : 'your body at rest, all 24 h')),
+      h('button', { class: 'td-bk-row td-bk-tap td-r-steps', 'aria-label': dv.steps ? `Walking ${fmt(b.steps)} kcal from ${fmt(dv.steps)} of ${fmt(dv.stepGoal)} steps. Tap to edit.` : 'Walking 0 kcal. Add your steps for the day.', onClick: () => stepsSheet(ctx, key) },
+        row('w', 'Walking', b.steps, dv.steps ? `${fmt(dv.steps)} steps, ${Math.round(sp)}% of ${fmt(dv.stepGoal)}` : 'add steps', dv.steps ? h('div', { class: 'td-track stp' }, sBar) : null), h('span', { class: 'td-r-go', 'aria-hidden': 'true' }, icon('right', 16))),
+      h('div', { class: 'td-bk-row' }, row('t', 'Training', b.workouts, dv.sessions.length ? trained : isToday ? 'no workout yet' : 'no workout')),
+      b.everyday > 0 ? h('div', { class: 'td-bk-row' }, row('e', 'Everyday movement', b.everyday, 'estimate from your activity level, until you add steps')) : null));
+    jobs.push(() => { const pc = (v) => (v / mx) * 100, o = { ms: 650, delay: d0 }; fill(bR, pc(b.resting), { ...o, key: k('br') }); fill(bW, pc(b.steps), { ...o, key: k('bw'), delay: d0 + 90 }); fill(bT, pc(b.workouts), { ...o, key: k('bt'), delay: d0 + 180 }); fill(sBar, sp, { key: k('st'), ms: 650, delay: d0 }); });
+    card.append(h('p', { class: 'td-rc-note' }, isToday
+      ? `Burned so far = resting burn for the hours passed today + walking${b.everyday > 0 ? ' (estimated until you add steps)' : ''} + training. By midnight resting reaches ${fmt(b.restingFull)}.`
+      : `Burned = resting burn for the full day + walking${b.everyday > 0 ? ' (estimated)' : ''} + training.`));
+  }
 
-  // the sentences
-  // the energy sentence repeats the three numbers above; the session sentence repeats the training card below; an empty day has nothing to say
-  const lines = bare ? [] : (dv.lines || []).filter((l) => !/kcal in, about/.test(l) && !(dv.sessions.length && /^(Strong|Solid|Light) session/.test(l)));
-  if (lines.length) card.append(h('ul', { class: 'td-rl' }, lines.map((l) => { const [ico, cls] = lineKind(l); return noteRow(ico, cls, l); })));
+  // the day score, then the sentences
+  if (!bare) {
+    const scoreEl = h('span', { class: 'td-score-n' }, String(dv.score));
+    const rg = ring({ size: eve ? 70 : 62, stroke: 7, pct: dv.score, color: TONE[tone], cls: 'td-score', children: [scoreEl] });
+    rg.setAttribute('role', 'img'); rg.setAttribute('aria-label', `Day score ${dv.score} out of 100, ${word}`);
+    card.append(h('div', { class: 'td-sc' }, rg, h('div', { class: 'grow' }, h('div', { class: 'td-rc-sub' }, h('span', { class: 'td-word ' + tone }, icon(WORD_ICO[tone], 14), word), h('span', { class: 'small muted' }, 'day score')),
+      h('div', { class: 'micro muted td-sc-how' }, dv.scoreParts ? `Out of 100: protein ${dv.scoreParts.protein}/${dv.scoreMax.protein}, calories ${dv.scoreParts.calories}/${dv.scoreMax.calories}, training ${dv.scoreParts.training}/${dv.scoreMax.training}, steps ${dv.scoreParts.steps}/${dv.scoreMax.steps}.` : 'Out of 100: protein, calories near target, training and steps.'))));
+    jobs.push(() => { const prev = recall(`dsn:${key}`); fill(rg.fillEl, dv.score, { axis: 'ring', key: `ds:${key}`, ms: 900, delay: d0 }); countUp(scoreEl, dv.score, { key: `dsn:${key}`, ms: 900 }); if (prev != null && prev !== dv.score) pulse(rg, { scale: 1.08, ms: 360 }); });
+    // the energy sentence repeats the three numbers above; the session sentence repeats the training card below; the protein shortfall is in the hero and the coach
+    const lines = (dv.lines || []).filter((l) => !/kcal in, about/.test(l) && !(dv.sessions.length && /^(Strong|Solid|Light) session/.test(l)) && !(isToday && /^Protein \d+ g short/.test(l)));
+    if (lines.length) card.append(h('ul', { class: 'td-rl' }, lines.map((l) => { const [ico, cls] = lineKind(l); return noteRow(ico, cls, l); })));
+  }
 
   if (eve) { const wk = weekStrip(key, jobs); if (wk) card.append(wk); }
   return card;

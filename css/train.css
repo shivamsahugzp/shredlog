@@ -180,7 +180,8 @@
 .tr-volw small { margin-left: 3px; font: 600 12px var(--font); color: var(--muted); letter-spacing: 0; }
 .tr-pring { flex: none; }
 .tr-pring .ring-in b { font-size: 12px; letter-spacing: -0.01em; }
-.tr-pring.full .fill { stroke: var(--good) !important; }
+.tr-pring.full .fill, .tr-pring.full .glow { stroke: var(--good) !important; }
+.tr-pring.full .cap circle:first-child { fill: var(--good) !important; }
 .tr-finish { flex: none; min-height: 46px; padding: 0 20px; }
 .tr.tr-active { padding-bottom: 104px; } /* room for the rest bar, reserved the whole workout so a finished rest never shrinks the page under your thumb */
 .tr-cards { display: flex; flex-direction: column; gap: 12px; }
@@ -239,8 +240,9 @@ body:has(.rest-banner:not(.hide)) #toasts { bottom: calc(var(--tab-h) + var(--sa
 .tr-rest .ring { flex: none; color: var(--accent-text); }
 .tr-rest .ring .tr-rest-ic svg { position: static; width: 18px; height: 18px; transform: none; }
 .tr-rest .ring .track { stroke: var(--card-3); }
-.tr-rest .ring .fill { stroke: var(--accent); transition: stroke-dashoffset 1s linear, stroke .3s; }
-.tr-rest.snap .ring .fill { transition: none; }
+.tr-rest .ring .fill, .tr-rest .ring .glow { transition: stroke-dashoffset 1s linear; }
+.tr-rest .ring .cap { transition: transform 1s linear, opacity .2s ease; }
+.tr-rest.snap .ring .fill, .tr-rest.snap .ring .glow, .tr-rest.snap .ring .cap { transition: none; }
 .tr-rest-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; color: inherit; }
 .rest-banner.tr-rest .time { font: 800 28px/1 var(--font); font-stretch: var(--wdth-num); letter-spacing: -0.03em; min-width: 0; transition: color .2s; }
 .tr-rest-col .micro { max-width: 100%; color: var(--muted); }
@@ -249,7 +251,7 @@ body:has(.rest-banner:not(.hide)) #toasts { bottom: calc(var(--tab-h) + var(--sa
 .tr-rest.soon .time { color: var(--accent-text); }
 .tr-rest.done { background: color-mix(in srgb, var(--good) 22%, var(--card)); border-color: color-mix(in srgb, var(--good) 55%, transparent); }
 .tr-rest.done .time { color: var(--good); }
-.tr-rest.done .ring .fill { stroke: var(--good); }
+.tr-rest.done .ring .fill, .tr-rest.done .ring .glow { stroke: var(--good); }
 
 /* ================= sheets: form guide ================= */
 .tr-detail { gap: 16px; }
@@ -334,10 +336,10 @@ body:has(.rest-banner:not(.hide)) #toasts { bottom: calc(var(--tab-h) + var(--sa
 /* plate calculator */
 .tr-bar { display: flex; align-items: center; height: 110px; padding: 0 10px; background: var(--card-2); border-radius: var(--r-md); overflow-x: auto; }
 .tr-rod { flex: none; width: 40px; height: 10px; background: linear-gradient(var(--muted), var(--ink-2)); border-radius: 3px 0 0 3px; }
-.tr-plate { flex: none; width: 17px; margin-right: 2px; border-radius: 4px; display: grid; place-items: center; font: 700 9px var(--font); background: var(--pc); color: #fff; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .18); writing-mode: vertical-rl; }
+.tr-plate { flex: none; width: 17px; margin-right: 2px; border-radius: 4px; display: grid; place-items: center; font: 700 9px var(--font); background: linear-gradient(90deg, color-mix(in srgb, var(--pc) 78%, white), var(--pc) 55%, color-mix(in srgb, var(--pc) 82%, black)); color: var(--accent-ink); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .18); writing-mode: vertical-rl; }
 .tr-collar { flex: none; width: 8px; height: 20px; margin-left: 2px; background: var(--ink-2); border-radius: 3px; }
-.tp25 { --pc: #D13B3B; } .tp20 { --pc: #3457D5; } .tp15 { --pc: #E0B100; color: #1B1F2E; } .tp10 { --pc: #1F9D5B; } .tp5 { --pc: #F1F2F6; color: #1B1F2E; } .tp2_5 { --pc: #2B3045; } .tp1_25 { --pc: #9AA0B3; color: #1B1F2E; }
-.tr-plate.tp15, .tr-plate.tp5, .tr-plate.tp1_25 { color: #1B1F2E; }
+.tp25 { --pc: var(--bad); } .tp20 { --pc: var(--accent); } .tp15 { --pc: var(--warn); } .tp10 { --pc: var(--good); } .tp5 { --pc: color-mix(in srgb, var(--ink) 10%, var(--card)); } .tp2_5 { --pc: var(--ink-2); } .tp1_25 { --pc: var(--muted); }
+.tr-plate.tp5 { color: var(--ink); } .tr-plate.tp15 { color: var(--bg); }
 .tr-plate-list { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .tr-pchip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--card-2); font-size: 14px; white-space: nowrap; }
 .tr-pdot { width: 10px; height: 10px; border-radius: 50%; background: var(--pc); box-shadow: inset 0 0 0 1px rgba(128, 128, 128, .4); }
@@ -369,18 +371,25 @@ body:has(.rest-banner:not(.hide)) #toasts { bottom: calc(var(--tab-h) + var(--sa
 .bm-body, .bm-head { fill: var(--bm-skin); stroke: var(--bm-line); stroke-width: 1.5; stroke-linejoin: round; }
 .bm-outline { fill: none; stroke: var(--bm-line); stroke-width: 1.5; stroke-linejoin: round; pointer-events: none; }
 .bm-p { fill: var(--bm-muscle); stroke: var(--bm-line); stroke-width: .7; stroke-linejoin: round; cursor: pointer; outline: none; transition: fill .18s ease, fill-opacity .18s ease; transform-box: fill-box; transform-origin: center; }
-.bm-p.on { fill: var(--bm-c); stroke: color-mix(in srgb, var(--bm-c) 60%, var(--ink)); stroke-width: 1; }
+.bm-p.on { fill: color-mix(in srgb, var(--bm-c) 30%, var(--bm-muscle)); stroke: color-mix(in srgb, var(--bm-c) 60%, var(--ink)); stroke-width: 1; }
 .bm-p.bm-focus { stroke: var(--accent); stroke-width: 2; }
 .bm-heat .bm-p { cursor: default; }
-.bm-heat .bm-p.hot { fill: var(--bm-c); fill-opacity: var(--bm-o, 1); }
+.bm-heat .bm-p.hot { fill: color-mix(in srgb, var(--bm-c) 22%, var(--bm-muscle)); }
+/* gradient fill + glow twins (body-map.js): opacity-driven so they tween; the glow group is one blurred layer per figure */
+.bm-hf { opacity: 0; pointer-events: none; stroke: color-mix(in srgb, var(--bm-c) 55%, var(--ink)); stroke-width: .8; stroke-linejoin: round; transition: opacity .25s ease; transform-box: fill-box; transform-origin: center; }
+.bm-hf.on { opacity: var(--bm-o, 1); }
+.bm-glows { pointer-events: none; }
+.bm-hg { opacity: 0; fill: var(--bm-c); pointer-events: none; transition: opacity .4s ease; transform-box: fill-box; transform-origin: center; }
+.bm-hg.on { opacity: calc(var(--bm-o, 1) * .95); }
 .bm-detail { fill: none; stroke: var(--bm-line); stroke-width: .8; stroke-linecap: round; opacity: .75; pointer-events: none; }
 .bm-navel { fill: var(--bm-line); stroke: none; }
 .bm-tip { position: absolute; z-index: 2; transform: translate(-50%, -100%); padding: 6px 11px; border-radius: 999px; background: var(--ink); color: var(--bg); font: 600 12px/1 var(--font); white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s ease; box-shadow: var(--shadow); }
 .bm-tip.on { opacity: 1; }
 @media (prefers-reduced-motion: no-preference) {
-  .bm-p.bm-pulse { animation: bm-pulse .3s ease-out; }
+  .bm-p.bm-pulse, .bm-hf.bm-pulse, .bm-hg.bm-pulse { animation: bm-pulse .3s ease-out; }
   @keyframes bm-pulse { 0% { transform: scale(1); } 45% { transform: scale(1.07); } 100% { transform: scale(1); } }
-  .bm-intro .bm-p { transition: fill .45s ease, fill-opacity .45s ease; transition-delay: calc(var(--bm-i, 0) * 32ms); }
+  .bm-intro .bm-p, .bm-intro .bm-hf { transition: fill .4s ease, opacity .4s ease; transition-delay: calc(var(--bm-i, 0) * 20ms); }
+  .bm-intro .bm-hg { transition: opacity .5s ease; transition-delay: calc(var(--bm-i, 0) * 20ms + 80ms); }
 }
 /* compact maps (cards): hairlines need to be heavier at small scale, caption hidden */
 .bm-compact { gap: 2px; }
@@ -528,3 +537,148 @@ button.tr-hintchip:active { transform: scale(.98); }
 .tr-tray-sub .tr-clear { padding-left: 0; height: 28px; }
 .tr-picker.filled { --bm-h: min(196px, 25dvh); } /* opened with a list already in it: a smaller figure, so the list is on the first screen */
 .tr-pre-ex { margin-top: 4px; line-height: 1.4; }
+
+
+/* =====================================================================================================
+   v4 visual upgrade: hero Start block, glowing week strip, gradient rings, tick sweep, richer cards.
+   Everything below is tokens only; motion is transform / opacity / stroke-dashoffset and is switched off by the shared reduced-motion rules.
+   ===================================================================================================== */
+
+/* ---------- home head ---------- */
+.tr-wring { filter: drop-shadow(0 4px 10px color-mix(in srgb, var(--accent) 35%, transparent)); }
+.tr-home-head h1 { font-size: 30px; }
+.tr-streak { background: linear-gradient(135deg, var(--accent-soft), color-mix(in srgb, var(--accent-2) 16%, transparent)); }
+
+/* ---------- hero: today's plan ---------- */
+.card.hero.tr-plan-card { isolation: isolate; padding: 16px 16px 14px;
+  background: radial-gradient(110% 80% at 100% 0%, color-mix(in srgb, var(--hc, var(--accent)) 30%, transparent), transparent 62%), radial-gradient(90% 60% at 0% 100%, color-mix(in srgb, var(--accent-2) 13%, transparent), transparent 62%), var(--grad-hero), var(--card); }
+.card.hero.tr-plan-card::before { background: linear-gradient(135deg, color-mix(in srgb, var(--hc, var(--accent)) 75%, transparent), color-mix(in srgb, var(--accent) 28%, transparent) 48%, color-mix(in srgb, var(--accent-2) 55%, transparent)); }
+.tr-hero-day b { font-size: 26px; font-stretch: 82%; letter-spacing: -0.025em; }
+.tr-hero-art { position: relative; filter: drop-shadow(0 8px 18px color-mix(in srgb, var(--hc, var(--accent)) 28%, transparent)); }
+.tr-hero-art::before { content: ''; position: absolute; z-index: -1; inset: 4% -16% 2%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--hc, var(--accent)) 26%, transparent), transparent); pointer-events: none; }
+.tr-conf-bars i.on { background: linear-gradient(90deg, var(--hc, var(--accent)), color-mix(in srgb, var(--hc, var(--accent)) 55%, white)); box-shadow: 0 0 8px -1px color-mix(in srgb, var(--hc, var(--accent)) 80%, transparent); }
+.tr-gchip { background: linear-gradient(135deg, color-mix(in srgb, var(--mc) 24%, var(--card)), color-mix(in srgb, var(--mc) 9%, var(--card))); }
+.tr-gchip i { box-shadow: 0 0 8px 1px color-mix(in srgb, var(--mc) 75%, transparent); }
+
+/* the big Start block: condensed numeral-style title, a glowing play disc, a slow sheen */
+.tr-hero-btns { margin-top: 16px; gap: 10px; }
+.tr-go { position: relative; overflow: hidden; min-height: 80px; padding: 0 18px 0 14px; gap: 12px; border-radius: 24px; }
+.tr-go > * { position: relative; z-index: 1; }
+.tr-go-ic { flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .22); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 0 0 6px rgba(255, 255, 255, .09); }
+.btn.soft.tr-go .tr-go-ic { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent-text); box-shadow: inset 0 1px 0 var(--hl), 0 0 0 6px color-mix(in srgb, var(--accent) 8%, transparent); }
+.tr-go-t b { font: 800 32px/1 var(--font); font-stretch: 74%; letter-spacing: -0.02em; }
+.tr-go-t small { font-size: 12.5px; opacity: .82; }
+.tr-go-like { padding: 0 16px 0 14px; }
+.tr-go-like .tr-go-t b { font-size: 23px; font-stretch: 78%; letter-spacing: -0.015em; }
+.btn.primary.tr-go::after { content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none; background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .3) 50%, transparent 62%); transform: translateX(-130%); animation: tr-shine 5.2s ease-in-out 1.4s infinite; }
+@keyframes tr-shine { 0%, 55% { transform: translateX(-130%); } 90%, 100% { transform: translateX(130%); } }
+.tr-hero-second .btn { background: color-mix(in srgb, var(--card-2) 80%, transparent); }
+
+/* ---------- week strip ---------- */
+.tr-week-strip { gap: 5px; margin-top: 14px; }
+.tr-wk { transition: transform .12s ease, box-shadow .2s ease; }
+.tr-wk.did { background: linear-gradient(180deg, color-mix(in srgb, var(--good) 24%, var(--card-2)), color-mix(in srgb, var(--good) 8%, var(--card-2))); box-shadow: inset 0 1px 0 var(--hl), 0 8px 16px -12px var(--good); }
+.tr-wk.today { background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 20%, var(--card-2)), var(--accent-soft)); box-shadow: 0 0 0 2px var(--accent), 0 8px 20px -6px color-mix(in srgb, var(--accent) 70%, transparent); }
+.tr-wk.today .tr-wk-d { font-weight: 800; }
+.tr-wk-dots.solid .tr-gdot { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--gc) 50%, white), var(--gc) 72%); box-shadow: 0 0 0 1px color-mix(in srgb, var(--gc) 45%, transparent), 0 0 9px 1px color-mix(in srgb, var(--gc) 78%, transparent); }
+.tr-wk-tick { background: linear-gradient(135deg, var(--good), color-mix(in srgb, var(--good) 55%, var(--accent-2))); box-shadow: 0 0 9px color-mix(in srgb, var(--good) 75%, transparent); }
+
+/* ---------- build card, week map, routines, history ---------- */
+.tr-build-card { background: radial-gradient(90% 90% at 100% 50%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%), linear-gradient(135deg, color-mix(in srgb, var(--accent) 15%, var(--card)), var(--card) 74%); border-color: color-mix(in srgb, var(--accent) 34%, var(--line)); }
+.tr-build-fig { position: relative; isolation: isolate; }
+.tr-build-fig::before { content: ''; position: absolute; z-index: -1; inset: 6% -10%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--accent-2) 24%, transparent), transparent); pointer-events: none; }
+.tr-weekmap { background: radial-gradient(70% 50% at 0% 0%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%), var(--card); }
+.tr-gtile { background: linear-gradient(180deg, color-mix(in srgb, var(--gc) 9%, var(--card-2)), var(--card-2)); }
+.tr-gtile-top i { box-shadow: 0 0 7px 1px color-mix(in srgb, var(--gc) 70%, transparent); }
+.tr-gtile-t { overflow: visible; }
+.tr-gtile-t i { background: linear-gradient(90deg, color-mix(in srgb, var(--gc) 50%, transparent), var(--gc)); box-shadow: 0 0 10px -1px color-mix(in srgb, var(--gc) 75%, transparent); }
+.tr-rdays i { background: linear-gradient(90deg, color-mix(in srgb, var(--dc) 70%, transparent), var(--dc)); }
+.tr-rdays i.on { box-shadow: 0 0 10px 1px color-mix(in srgb, var(--dc) 55%, transparent); }
+.tr-rcard.cur { box-shadow: var(--shadow), inset 0 1px 0 var(--hl), 0 12px 26px -16px color-mix(in srgb, var(--accent) 80%, transparent); }
+.tr-hdots i { background-image: linear-gradient(180deg, rgba(255, 255, 255, .35), transparent); box-shadow: 0 0 8px -1px currentColor; }
+.tr-hrow .trail b { background: linear-gradient(135deg, var(--ink), color-mix(in srgb, var(--ink) 65%, var(--accent))); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.tr-hrow .trail b small { -webkit-text-fill-color: var(--muted); }
+.tr-resume { background: radial-gradient(90% 120% at 0% 50%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%), linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, var(--card)), var(--card) 80%); }
+
+/* grade pill: gradient, hairline, a glow when strong */
+.tr-grade { border: 1px solid transparent; }
+.tr-grade.g-strong { background: linear-gradient(135deg, color-mix(in srgb, var(--good) 26%, var(--card)), color-mix(in srgb, var(--accent-2) 16%, var(--card))); color: var(--good); border-color: color-mix(in srgb, var(--good) 38%, transparent); box-shadow: 0 0 14px -4px color-mix(in srgb, var(--good) 70%, transparent); }
+.tr-grade.g-solid { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 24%, var(--card)), color-mix(in srgb, var(--accent-2) 16%, var(--card))); color: var(--accent-text); border-color: color-mix(in srgb, var(--accent) 36%, transparent); }
+.tr-grade.g-light { background: linear-gradient(135deg, color-mix(in srgb, var(--warn) 24%, var(--card)), color-mix(in srgb, var(--warn) 8%, var(--card))); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 34%, transparent); }
+.tr-grade.big { padding: 6px 13px; font-size: 13px; gap: 6px; }
+.tr-grade.big.g-strong { box-shadow: 0 0 22px -4px color-mix(in srgb, var(--good) 80%, transparent); }
+
+/* ---------- exercise rows and cards ---------- */
+.tr-thumb { border: 1.5px solid transparent; background: linear-gradient(color-mix(in srgb, var(--tc) 18%, var(--card-2)), color-mix(in srgb, var(--tc) 7%, var(--card-2))) padding-box, linear-gradient(135deg, var(--tc), color-mix(in srgb, var(--tc) 25%, var(--accent-2))) border-box; box-shadow: 0 6px 14px -10px var(--tc); }
+.tr-ex { background: radial-gradient(120% 70% at 0% 0%, color-mix(in srgb, var(--xc, var(--accent)) 11%, transparent), transparent 62%), var(--card); }
+.tr-ex-thumb { position: relative; }
+.tr-mdots i { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--mc, var(--muted)) 70%, transparent); }
+.tr-lastchip { background: linear-gradient(135deg, var(--card-2), color-mix(in srgb, var(--card-2) 70%, var(--card))); }
+.tr-prow.on { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 80%); }
+.tr-prow.on .tr-check { background: var(--grad-accent); border-color: transparent; box-shadow: 0 0 12px -2px color-mix(in srgb, var(--accent) 80%, transparent); }
+.tr-pmap::before { background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 22%, transparent), color-mix(in srgb, var(--accent-2) 6%, transparent) 60%, transparent); }
+.tr-mchip { background: linear-gradient(135deg, color-mix(in srgb, var(--mc) 26%, var(--card)), color-mix(in srgb, var(--mc) 10%, var(--card))); }
+.tr-mchip i { box-shadow: 0 0 7px 1px color-mix(in srgb, var(--mc) 75%, transparent); }
+.tr-see { background: var(--grad-accent); box-shadow: var(--shadow-accent); }
+.tr-kb.next { background: var(--grad-accent); }
+.tr-steps li::before { background: var(--grad-accent); box-shadow: 0 4px 10px -4px color-mix(in srgb, var(--accent) 80%, transparent); }
+.tr-prcard { background: linear-gradient(135deg, var(--accent-soft), color-mix(in srgb, var(--accent-2) 12%, transparent)); }
+.tr-tool.hot { background: linear-gradient(135deg, var(--accent-soft), color-mix(in srgb, var(--accent-2) 14%, transparent)); }
+.tr-fin-badge { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--good) 40%, white), var(--good)); color: var(--accent-ink); }
+.tr-fin-badge.pr { background: var(--grad-accent); }
+
+/* ---------- active workout: glass head, progress hairline ---------- */
+.tr-head { background-image: linear-gradient(180deg, color-mix(in srgb, var(--accent) 9%, transparent), transparent 80%); }
+.tr-head::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2.5px; background: var(--grad-accent); transform: scaleX(var(--prog, 0)); transform-origin: 0 50%; transition: transform .6s var(--tr-out); box-shadow: 0 0 12px color-mix(in srgb, var(--accent) 75%, transparent); pointer-events: none; }
+.tr-clock > svg { filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent) 60%, transparent)); }
+.tr-pring { filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--accent) 35%, transparent)); }
+.tr-finish { background: var(--grad-accent); }
+.tr-set.is-next .n { background: var(--grad-accent); box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--accent) 80%, transparent); }
+
+/* set tick: green sweep across the row, check drawn in stroke by stroke */
+.tr-rowfill { overflow: hidden; background: linear-gradient(90deg, color-mix(in srgb, var(--good) 34%, transparent), color-mix(in srgb, var(--good) 9%, transparent)); }
+.tr-set.is-pr .tr-rowfill { background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 34%, transparent), color-mix(in srgb, var(--accent-2) 10%, transparent)); }
+.tr-rowfill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent 28%, rgba(255, 255, 255, .42) 50%, transparent 72%); transform: translateX(-135%); transition: transform .8s var(--tr-out) .12s; }
+.tr-set.is-done .tr-rowfill::after { transform: translateX(135%); }
+.tr-ex .set-row .done.on { background: linear-gradient(135deg, var(--good), color-mix(in srgb, var(--good) 52%, var(--accent-2))); border-color: transparent; color: var(--accent-ink); box-shadow: 0 8px 18px -8px color-mix(in srgb, var(--good) 85%, transparent), inset 0 1px 0 rgba(255, 255, 255, .3); }
+.set-row .done .ck { width: 22px; height: 22px; overflow: visible; }
+.set-row .done .ck path { fill: none; stroke: currentColor; stroke-width: 2.7; stroke-linecap: round; stroke-linejoin: round; }
+.set-row .done .ck-bg { opacity: .38; }
+.set-row .done .ck-fg { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .34s ease-out .08s; }
+.set-row .done.on .ck-fg { stroke-dashoffset: 0; }
+.set-row .done.on .ck-bg { opacity: 0; }
+.tr-ex .set-row .done.on svg.ck { animation: none; }
+
+/* rest bar: gradient ring (charts.js gradRing), pulsing dot in the last 10 s */
+.rest-banner.tr-rest { background-image: linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%); box-shadow: var(--shadow-float), 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent); }
+.tr-rest .ring { filter: drop-shadow(0 0 7px color-mix(in srgb, var(--accent) 45%, transparent)); }
+.tr-rest-time { display: inline-flex; align-items: center; gap: 8px; }
+.tr-rest-dot { display: none; position: relative; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex: none; box-shadow: 0 0 10px var(--accent); }
+.tr-rest.soon .tr-rest-dot { display: block; animation: tr-dot 1s ease-in-out infinite; }
+.tr-rest.soon .tr-rest-dot::after { content: ''; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid var(--accent); opacity: 0; animation: tr-dot-ring 1s ease-out infinite; }
+.tr-rest.done .tr-rest-dot { display: none; }
+@keyframes tr-dot { 0%, 100% { transform: scale(.8); opacity: .75; } 50% { transform: scale(1.15); opacity: 1; } }
+@keyframes tr-dot-ring { 0% { transform: scale(.6); opacity: .8; } 100% { transform: scale(1.6); opacity: 0; } }
+.tr-rest.soon .ring { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 70%, transparent)); }
+.tr-rest.done .ring { filter: drop-shadow(0 0 9px color-mix(in srgb, var(--good) 60%, transparent)); }
+
+/* verdict card */
+.tr-verdict { background: radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--vc) 18%, transparent), transparent 66%), radial-gradient(80% 60% at 100% 100%, color-mix(in srgb, var(--accent-2) 8%, transparent), transparent 70%), var(--card); }
+.tr-vring { filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--vc) 38%, transparent)); }
+.tr-vring .ring-in .num-md { font-size: 28px; }
+.tr-cmp-t i.now { background: linear-gradient(90deg, color-mix(in srgb, var(--vc) 55%, transparent), var(--vc)); box-shadow: 0 0 10px -1px color-mix(in srgb, var(--vc) 70%, transparent); }
+
+/* ---------- pressable feedback on everything tappable here ---------- */
+.tr-hrow, .tr-resume, .tr-build-fig, .tr-prow-main, .tr-trow-main, .tr-mchip, .tr-see, .tr-clear, .tr-gtile, .tr-lastchip, .tr-rest-col, .tr-rest-next, .tr-ex-thumb, .tr-ex-name, .tr-line, .tr-info, .tr-set .prev, .tr-kb, .tr-hintchip { transition: transform .12s ease, background-color .15s ease, box-shadow .2s ease; }
+.tr-hrow:active, .tr-resume:active, .tr-build-fig:active, .tr-prow-main:active, .tr-trow-main:active, .tr-mchip:active, .tr-see:active, .tr-clear:active, .tr-gtile:active, .tr-lastchip:active, .tr-ex-thumb:active, .tr-line:active { transform: scale(.975); }
+.tr-ex-name:active, .tr-rest-col:active, .tr-rest-next:active { opacity: .7; }
+.tr-rbtn:active, .rest-banner.tr-rest .tr-rbtn:active { transform: scale(.94); }
+.tr-finish:active, .tr-add:active { transform: scale(.97); }
+
+@media (max-width: 374px) {
+  .tr-go-t b { font-size: 28px; }
+  .tr-go-like .tr-go-t b { font-size: 21px; }
+  .tr-go { min-height: 76px; padding-left: 12px; }
+  .tr-go-ic { width: 42px; height: 42px; }
+  .tr-hero-day b { font-size: 24px; }
+}

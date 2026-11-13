@@ -1,6 +1,11 @@
-// Pure helpers for the Food tab: entry snapshots, recipes, text parsing, starter plates. No DOM here.
-import { state, findFood, searchFoods } from '../state.js';
-import { scaleFood } from '../calc.js';
+// Helpers for the Food tab (entry snapshots, recipes, text parsing, starter plates: no DOM) and, at the bottom, the coach and the
+// "how your targets are set" sheet that Today and Food share (these build DOM with ui.js).
+import { state, findFood, searchFoods, dayTotals, workoutsOn, dateKey, logFood, removeFood } from '../state.js';
+import { scaleFood, bmr, defaultTargets, ACTIVITY, GOALS } from '../calc.js';
+import { nutritionGaps, microAverages, dietOk, proteinIdeas } from '../insights.js';
+import { todayPlan } from '../train-plan.js';
+import { h, icon, sheet, toast, segmented, fmt, haptic } from '../ui.js';
+import { fill, prefersReducedMotion } from '../motion.js';
 
 // ---- shared constants ----
 export const MEALS = [
@@ -237,3 +242,257 @@ export function segFix(el, options, value) {
 
 // "Chai (milk, 1 tsp sugar) 150 ml cup" already says its serving next to the name: drop the repeat in lists.
 export const tidyName = (n) => String(n || '').replace(/\s+\d+\s*ml\s+cup$/i, '');
+
+// =====================================================================================================================
+// Coach + "how your targets are set": shared by Today (full card) and Food (compact strip). Classes are fd-co-* / fd-tg-*, styled in food.css.
+// Everything the coach says comes from what is logged today, the clock, the diet and budget in the profile, today's plan and the last
+// seven days of nutrients. Nothing is invented: with nothing logged it says what to log first.
+// =====================================================================================================================
+const rn = Math.round;
+const hashStr = (s) => { let x = 0; for (let i = 0; i < s.length; i++) x = (x * 31 + s.charCodeAt(i)) >>> 0; return x; };
+const whenWord = (hr) => (hr < 11 ? 'This morning' : hr < 16 ? 'At lunch' : hr < 19 ? 'This evening' : hr < 22 ? 'Tonight' : 'Before bed');
+export const mealNow = (d = new Date()) => { const hr = d.getHours(); return hr < 11 ? 'breakfast' : hr < 16 ? 'lunch' : hr < 19 ? 'snacks' : 'dinner'; };
+// "Til / sesame seeds" -> "sesame seeds", "Mushrooms, UV/sun-exposed (check label)" -> "mushrooms"
+const shortFood = (n) => String(n || '').split(/\s*[(,]/)[0].split(' / ').sort((a, b) => b.length - a.length)[0].trim().toLowerCase();
+const shortName = (n) => String(n || '').replace(/\s*\(.*\)/, '');
+
+// Protein per unit (g) and what each diet suggests (first match wins): the "plus this much" part of a sentence.
+const SOURCES = {
+  egg: { p: 6, cap: 4, text: (n) => `${n} egg${n > 1 ? 's' : ''}` },
+  dal: { p: 7, cap: 2, text: (n) => `${n} katori dal` },
+  paneer: { p: 18, cap: 2, text: (n) => `${n * 100} g paneer` },
+  whey: { p: 24, cap: 1, text: (n) => `${n} scoop whey` },
+  chicken: { p: 30, cap: 3, text: (n) => `${n * 100} g chicken` },
+  soya: { p: 16, cap: 2, text: (n) => `${n * 100} g soya chunks (cooked)` },
+};
+const DIET_SOURCES = { veg: ['paneer', 'dal', 'soya'], jain: ['paneer', 'dal', 'soya'], egg: ['egg', 'paneer'], nonveg: ['chicken', 'egg'], vegan: ['soya', 'dal'] };
+export function proteinIdea(left, diet, max = 2, skip = []) {
+  let rem = left;
+  const parts = [];
+  for (const key of (DIET_SOURCES[diet] || DIET_SOURCES.veg).filter((k) => !skip.includes(k))) {
+    const s = SOURCES[key];
+    const n = Math.min(s.cap, Math.floor(rem / s.p + 0.4));
+    if (n < 1) continue;
+    parts.push(s.text(n)); rem -= n * s.p;
+    if (parts.length === 2) break;
+  }
+  if (diet !== 'vegan' && !skip.includes('whey') && rem >= 20 && parts.length < max) parts.push(SOURCES.whey.text(1));
+  return parts.join(' + ');
+}
+
+// Meal ideas from data/knowledge.json that fit the diet, the budget and what is left of today's calories, best first.
+// `want` are knowledge tags to favour (pre_workout, post_workout, late_night_light); `lean` keeps only light, protein-dense ones.
+const BREAKFASTY = /oats|egg|omelette|idli|poha|upma|chilla|dosa|banana|yogurt|toast|shake|smoothie|sprouts|paratha|besan|ragi/i, HEAVY = /curry|rice|biryani|\bdal\b|chole|rajma|palak|kadhi|thali|khichdi|sabzi/i;
+function pickIdeas({ diet, budget, left, pLeft, hour, key, want = [], gapIds = [], lean = false, max = 3, exclude = [] }) {
+  const aim = Math.min(45, Math.max(18, pLeft / (hour < 11 ? 3 : hour < 16 ? 2 : 1)));
+  return (state.data.knowledge?.mealIdeas || [])
+    .filter((i) => i.approx && dietOk(i.diet, diet) && (budget !== 'tight' || i.fixes.includes('cheap') || (i.costInr || 0) <= 60) && !exclude.includes(i.id))
+    .filter((i) => (lean ? (i.fixes.includes('low_kcal') || i.approx.kcal <= 220) && i.approx.p >= 10 : i.approx.p >= 14) && i.approx.kcal <= Math.max(0, left) + 60)
+    .map((i) => ({ i, s: (i.fixes.includes('protein') ? 3 : 0) + want.filter((w) => i.fixes.includes(w)).length * 3
+      + gapIds.filter((g) => i.fixes.includes(g) || (g === 'vitamin_b12' && i.fixes.includes('b12'))).length * 1.5
+      + (hour < 11 ? (BREAKFASTY.test(i.name) ? 3 : 0) - (HEAVY.test(i.name) ? 3 : 0) : 0) // mornings: breakfast food, not a curry
+      - Math.abs(i.approx.p - aim) / 12 + (hashStr(key + i.id) % 100) / 100 + (lean ? (i.approx.p / Math.max(60, i.approx.kcal)) * 6 : 0) }))
+    .sort((a, b) => b.s - a.s).slice(0, max).map((x) => x.i);
+}
+
+// Nutrients that were low over the last seven days, only when there is enough data to say so (3+ logged days with nutrient data).
+function gapList() {
+  let g = null;
+  try { g = nutritionGaps(7); } catch (e) { return []; }
+  const ma = microAverages(7);
+  if (!g || g.days < 3 || !ma || !Object.keys(ma.avg).length) return [];
+  return g.micros.filter((m) => m.status !== 'green' && m.id !== 'sodium' && m.rda).slice(0, 2)
+    .map((m) => ({ id: m.id, name: shortName(m.name), unit: m.unit, avg: m.avg, rda: m.rda, pct: m.pct, status: m.status, why: m.why, vegNote: m.vegNote, foods: m.foods || [], days: g.days }));
+}
+
+// What to say right now. full=false skips the slow parts (nutrient gaps) for the compact Food strip.
+export function coachFor(key, { full = true, now = new Date() } = {}) {
+  const t = state.targets || {}, p = state.profile || {}, diet = p.diet || 'veg', budget = p.budget;
+  if (!t.kcal) return null;
+  const tot = dayTotals(key), hour = now.getHours();
+  const left = rn(t.kcal - tot.kcal), pLeft = rn((t.p || 0) - tot.p), over = left < -Math.max(60, t.kcal * 0.04);
+  const gaps = full ? gapList() : [], gapIds = gaps.map((g) => g.id), when = whenWord(hour), late = hour >= 21;
+  const base = { diet, budget, hour, key, gapIds };
+  const out = { key, tot, t, left, pLeft, over, hour, when, diet, headline: null, ideas: [], rest: '', train: null, gaps, notes: [], ok: false };
+
+  if (!tot.n) {
+    out.headline = { kind: 'first', title: 'Log your first meal', body: `Nothing is logged yet, so I cannot tell what is missing. Today’s target is ${fmt(t.kcal)} kcal and ${fmt(t.p)} g protein.` };
+    out.ideas = pickIdeas({ ...base, left: t.kcal, pLeft: t.p, want: late ? ['late_night_light'] : [], max: 2 });
+  } else if (over) {
+    const lean = pLeft >= 15;
+    out.headline = { kind: 'over', title: `${fmt(-left)} kcal over your target`, body: `One day will not undo your week. Keep the rest of today to water, curd and salad.${lean ? ` Protein is still ${pLeft} g short, so pick something lean.` : ''}` };
+    if (lean) out.ideas = pickIdeas({ ...base, left: 220, pLeft, lean: true, max: 2 });
+  } else if (pLeft >= 12) {
+    const lean = left < 250;
+    out.ideas = pickIdeas({ ...base, left, pLeft, want: late ? ['late_night_light'] : [], lean, max: full ? 3 : 2 });
+    const first = out.ideas[0];
+    let body;
+    if (first) {
+      const used = [/egg/i.test(first.name) && 'egg', /paneer/i.test(first.name) && 'paneer', /chicken/i.test(first.name) && 'chicken', /soya|soy/i.test(first.name) && 'soya', /whey/i.test(first.name) && 'whey', /dal|chana|chole|rajma|sprout/i.test(first.name) && 'dal'].filter(Boolean); // do not top up with the same thing
+      const rem = pLeft - first.approx.p, more = rem >= 10 ? proteinIdea(Math.min(rem, 45), diet, 2, used) : '';
+      body = `${when}: ${first.name} gives about ${first.approx.p} g${more ? `, then ${more} for the rest` : ' and nearly closes it'}.`;
+      out.rest = more;
+    } else {
+      const idea = proteinIdeas(pLeft, diet);
+      body = idea ? `${when} that is ${idea}.` : `A glass of milk, curd or two eggs would help.`;
+    }
+    if (lean) body = `Only ${fmt(Math.max(0, left))} kcal left, so go lean. ${body}`;
+    out.headline = { kind: 'protein', title: `Protein: ${pLeft} g to go`, body };
+  } else if (pLeft > 6) {
+    out.headline = { kind: 'protein', title: `Protein: ${pLeft} g to go`, body: diet === 'vegan' ? 'A katori of dal or a handful of peanuts finishes it.' : 'A glass of milk, a katori of curd or two eggs finishes it.' };
+  } else {
+    out.headline = { kind: 'done', title: 'Protein target hit', body: `${rn(tot.p)} of ${rn(t.p)} g.${left > 250 ? ` ${fmt(left)} kcal left: spend it on dal, veg and fruit.` : ' Calories are about right too.'}` };
+  }
+
+  // before or after training
+  if (key === dateKey(now) && !state.active) {
+    const ws = workoutsOn(key);
+    let plan = null; try { plan = todayPlan(now); } catch (e) { plan = null; }
+    const ex = out.ideas.map((i) => i.id);
+    if (ws.length) {
+      const last = ws.reduce((a, w) => Math.max(a, w.end || w.start), 0);
+      if (now.getTime() - last < 4 * 3600e3 && !over) out.train = { phase: 'post', title: 'Just trained: refuel', text: '25–30 g protein and some carbs within about 2 hours.', idea: pickIdeas({ ...base, left, pLeft: Math.min(40, Math.max(20, pLeft)), want: ['post_workout'], max: 1, exclude: ex })[0] || null };
+    } else if (plan && plan.kind === 'train' && hour < 20) {
+      out.train = { phase: 'pre', title: `Train day${plan.label ? `: ${plan.label}` : ''}`, text: '30–40 g carbs + 20 g protein, 60–90 min before you train.', idea: pickIdeas({ ...base, left, pLeft: 25, want: ['pre_workout'], max: 1, exclude: ex })[0] || null };
+    }
+  }
+
+  // fibre and sugar, only when they are off
+  if (tot.n && full) {
+    if (t.fiber && hour >= 15 && tot.fiber < t.fiber * 0.6) out.notes.push({ kind: 'fibre', ico: 'leaf', text: `Fibre is ${rn(tot.fiber)} of ${rn(t.fiber)} g. A katori of dal, a fruit or a salad closes most of it.` });
+    const sugarCap = rn((t.kcal * 0.1) / 4);
+    if (tot.sugar > sugarCap) out.notes.push({ kind: 'sugar', ico: 'warn', text: `Sugar is ${rn(tot.sugar)} g, over the ${sugarCap} g guide (10% of calories). Check chai, sweets and juice.` });
+  }
+  if (out.train && out.ideas.length > 2) out.ideas.length = 2; // the train-day row carries a third idea
+  out.ok = !!tot.n && !over && pLeft <= 12 && !out.train && !gaps.length && !out.notes.length;
+  return out;
+}
+
+// One tap: add an idea to the diary as a Quick add entry (numbers are the idea's typical home portion), with Undo.
+export function logIdea(ctx, idea, key = ctx.date, meal = mealNow()) {
+  const a = idea.approx;
+  const e = logFood(key, { foodId: null, name: idea.name, cat: 'Quick add', qty: 1, unit: { label: 'Quick add', g: 0 }, g: 0, kcal: a.kcal, p: a.p, c: a.c, f: a.f, fiber: 0, sugar: 0, micro: null, triggers: [], meal, oilTsp: 0 });
+  haptic('success');
+  toast(`Logged ${shortName(idea.name)} · ${fmt(a.kcal)} kcal`, { kind: 'success', ms: 4000, undo: () => removeFood(key, e.id) });
+  return e;
+}
+
+const FIX_LABEL = { protein: 'High protein', cheap: 'Budget', fiber: 'Fibre', iron: 'Iron', calcium: 'Calcium', low_kcal: 'Light', late_night_light: 'Late-night friendly', post_workout: 'After training', pre_workout: 'Before training', vitamin_b12: 'B12', vitamin_c: 'Vitamin C', vitamin_d: 'Vitamin D' };
+
+// ---- the meal idea sheet: what is in it, how it fits today's numbers, one button to log it ----
+export function ideaSheet(ctx, idea, key = ctx.date) {
+  const a = idea.approx, T = state.targets || {}, tot = dayTotals(key), left = rn((T.kcal || 0) - tot.kcal), pLeft = rn((T.p || 0) - tot.p);
+  let meal = mealNow(), primary = null;
+  const tile = (k, label, c) => { const el = h('div', { class: 'fd-tile' + (k === 'kcal' ? ' kcal' : '') }, h('div', { class: 'lbl' }, c ? h('span', { class: 'dot ' + c }) : null, label), h('div', { class: 'val' }, h('span', { class: 'num' }, fmt(a[k])), k !== 'kcal' ? h('small', null, ' g') : null)); el.style.setProperty('--tc', k === 'kcal' ? 'var(--accent)' : `var(--${c})`); return el; };
+  const meter = (label, used, avail, unit, key2) => {
+    const pct = avail > 0 ? Math.min(100, (used / avail) * 100) : 100, bar = h('i', { class: used > avail ? 'bad' : '' });
+    setTimeout(() => fill(bar, pct, { key: key2, ms: 600 }), 180);
+    return h('div', { class: 'fd-fit' }, h('div', { class: 'fd-fit-top' }, h('span', null, label), h('b', { class: 'num' }, `${fmt(used)} / ${fmt(Math.max(0, avail))} ${unit}`)), h('div', { class: 'fd-fit-t' }, bar));
+  };
+  const chipsRow = [...new Set((idea.fixes || []).map((f) => FIX_LABEL[f]).filter(Boolean))].slice(0, 4);
+  const body = h('div', { class: 'stack fd-idea' },
+    h('div', { class: 'fd-prev n4' }, tile('kcal', 'kcal'), tile('p', 'Protein', 'p'), tile('c', 'Carbs', 'c'), tile('f', 'Fat', 'f')),
+    h('div', { class: 'fd-idea-items' }, icon('bowl', 18), h('span', null, idea.items)),
+    h('div', { class: 'fd-idea-meta' }, idea.prepMin ? h('span', { class: 'pill' }, icon('clock', 13), `${idea.prepMin} min`) : null, idea.costInr != null ? h('span', { class: 'pill accent' }, `₹${fmt(idea.costInr)}`) : null, chipsRow.map((c) => h('span', { class: 'pill' }, c))),
+    h('div', { class: 'fd-fits' }, meter('Of your calories left', a.kcal, left, 'kcal', 'idea:k'), pLeft > 0 ? meter('Of your protein to go', a.p, pLeft, 'g', 'idea:p') : null),
+    h('p', { class: 'micro muted' }, 'Numbers are for a typical home portion. Logged as a Quick add, so edit it in the diary if yours differs.'),
+    segmented(MEALS.map(({ id, label }) => ({ id, label })), meal, (id) => { meal = id; if (primary) primary.textContent = `Log to ${MEAL_LABEL[id]}`; }, 'fd-meals'));
+  const q = idea.name.split(/[+(]/)[0].trim();
+  return sheet({ title: idea.name, content: body, actions: (api) => [
+    h('button', { class: 'btn', onClick: () => { api.close(); ctx.go('food', { q, date: key }); } }, 'Find the foods'),
+    (primary = h('button', { class: 'btn primary', onClick: () => { api.close(); logIdea(ctx, idea, key, meal); } }, `Log to ${MEAL_LABEL[meal]}`))] });
+}
+
+// ---- a low nutrient: how low, why it matters, which foods fix it ----
+export function gapSheet(ctx, g) {
+  const pct = Math.min(100, Math.round(g.pct * 100)), bar = h('i', { class: g.status });
+  setTimeout(() => fill(bar, pct, { key: 'gap:' + g.id, ms: 700 }), 180);
+  const foods = g.foods.slice(0, 6);
+  const body = h('div', { class: 'stack fd-gapsheet' },
+    h('div', { class: 'fd-gap-hero' }, h('div', { class: 'fd-gap-pct' }, h('b', { class: 'num' }, `${pct}%`), h('span', null, 'of your daily need, averaged over the last 7 days')), h('div', { class: 'fd-fit-t' }, bar),
+      h('div', { class: 'micro muted' }, `${fmt(g.avg, g.unit === 'mcg' ? 1 : 0)} ${g.unit} a day on average, you need about ${fmt(g.rda, g.unit === 'mcg' ? 1 : 0)} ${g.unit}. Based on ${g.days} logged days.`)),
+    g.why ? h('p', { class: 'small' }, g.why) : null,
+    foods.length ? h('div', { class: 'fd-gap-foods' }, h('h3', null, 'Foods that help'), h('div', { class: 'list' }, foods.map((f) => h('div', { class: 'list-item fd-gap-food' }, h('div', { class: 'grow' }, h('div', { class: 'title ellipsis' }, f.name), h('div', { class: 'sub ellipsis' }, f.serving || '')), h('div', { class: 'trail' }, h('b', { class: 'num' }, fmt(f.perServing, 1)), ` ${g.unit}`))))) : null,
+    g.vegNote ? h('div', { class: 'callout info small' }, icon('info'), h('div', null, g.vegNote)) : null);
+  const q = foods[0] ? shortFood(foods[0].name) : '';
+  return sheet({ title: `${g.name} is low`, content: body, actions: (api) => [h('button', { class: 'btn', onClick: api.close }, 'Close'), q ? h('button', { class: 'btn primary', onClick: () => { api.close(); ctx.go('food', { q }); } }, `Find ${q}`) : null] });
+}
+
+// ---- "How your targets are set": the same arithmetic the app used, with this person's numbers ----
+export function targetsSheet(ctx) {
+  const p = state.profile || {}, T = state.targets || {}, manual = T.auto === false;
+  let calc = null; try { calc = defaultTargets(p); } catch (e) { calc = null; }
+  const act = ACTIVITY.find((x) => x.id === p.activity) || ACTIVITY[1], goal = GOALS.find((x) => x.id === p.goal) || GOALS[1];
+  const base = p.weightKg ? bmr({ sex: p.sex || 'male', weightKg: p.weightKg, heightCm: p.heightCm || 170, age: p.age || 28 }) : null;
+  const maint = p.tdeeOverride || (base ? Math.round(base * act.mult) : null);
+  const perKg = String(p.goal || 'cut').startsWith('cut') ? 2.0 : p.goal === 'bulk' ? 1.6 : 1.8;
+  const step = (op, tone, label, sub, val, unit) => h('div', { class: 'fd-tg-step ' + tone },
+    h('span', { class: 'fd-tg-op', 'aria-hidden': 'true' }, op), h('div', { class: 'grow' }, h('div', { class: 'fd-tg-l' }, label), sub ? h('div', { class: 'fd-tg-s' }, sub) : null),
+    h('b', { class: 'num fd-tg-n' }, val, unit ? h('small', null, unit) : null));
+  const chain = base && maint && calc ? h('div', { class: 'fd-tg-chain' },
+    step(icon('body', 16), 'a', 'Your body at rest', `Age ${p.age || '–'}, ${p.heightCm || '–'} cm, ${p.weightKg} kg. What you burn lying still.`, fmt(base), ' kcal'),
+    p.tdeeOverride ? step('=', 'b', 'Maintenance, set by you', 'You entered your own burn, so activity is not multiplied in.', fmt(maint), ' kcal')
+      : [step(icon('x', 14), 'a', 'Daily activity', act.label, String(act.mult)), step('=', 'b', 'Maintenance', 'Roughly what keeps your weight steady.', fmt(maint), ' kcal')],
+    step(goal.kcal < 0 ? icon('minus', 14) : goal.kcal > 0 ? icon('plus', 14) : '=', 'a', `Your goal: ${goal.label}`, goal.sub, `${goal.kcal < 0 ? '−' : goal.kcal > 0 ? '+' : ''}${fmt(Math.abs(goal.kcal))}`, ' kcal'),
+    step('=', 'total', 'Daily target', 'Rounded to the nearest 10, never below 1,200.', fmt(calc.kcal), ' kcal')) : h('p', { class: 'small muted' }, 'Add your age, height, weight and goal in Settings to see how the target is worked out.');
+  const mk = (k, label, g, how, cls, kcalPer) => ({ k, label, g, how, cls, kcal: g * kcalPer });
+  const m = [mk('p', 'Protein', T.p, `${perKg} g for each kg of body weight`, 'p', 4), mk('c', 'Carbs', T.c, 'Whatever calories are left', 'c', 4), mk('f', 'Fat', T.f, '25% of calories', 'f', 9)];
+  const tk = m.reduce((a, x) => a + x.kcal, 0) || 1;
+  const bars = h('div', { class: 'fd-tg-split', 'aria-hidden': 'true' }, m.map((x) => { const i = h('i', { class: x.cls }); setTimeout(() => fill(i, 100, { key: 'tg:' + x.k, ms: 650 }), 200); return h('span', { style: { flex: `${x.kcal} 1 0` } }, i); }));
+  const macroRows = h('div', { class: 'fd-tg-macros' }, m.map((x) => h('div', { class: 'fd-tg-m' }, h('i', { class: 'dot ' + x.cls }), h('div', { class: 'grow' }, h('div', { class: 'fd-tg-l' }, x.label), manual ? null : h('div', { class: 'fd-tg-s' }, x.how)), h('b', { class: 'num fd-tg-n' }, fmt(x.g), h('small', null, ' g')))),
+    h('div', { class: 'fd-tg-m' }, h('i', { class: 'dot fiber' }), h('div', { class: 'grow' }, h('div', { class: 'fd-tg-l' }, 'Fibre'), manual ? null : h('div', { class: 'fd-tg-s' }, '14 g for every 1,000 kcal')), h('b', { class: 'num fd-tg-n' }, fmt(T.fiber), h('small', null, ' g'))));
+  const body = h('div', { class: 'stack fd-tg' },
+    manual ? h('div', { class: 'callout' }, icon('sliders'), h('div', null, h('b', null, 'You set these by hand. '), `Your target is ${fmt(T.kcal)} kcal${calc ? `; the calculated number for your profile would be ${fmt(calc.kcal)}` : ''}. Tap Use auto in Settings to go back.`)) : null,
+    h('section', { class: 'fd-tg-sec' }, h('h3', null, manual ? 'How the calculated number works' : 'Calories'), chain),
+    h('section', { class: 'fd-tg-sec' }, h('h3', null, manual ? 'Your split' : 'Then the calories are split'), bars, macroRows),
+    h('div', { class: 'callout info small' }, icon('info'), h('div', null, h('b', null, 'To change it: '), 'Settings, then Daily targets. Pick Auto, or type your own numbers. Change your goal there and everything above follows.')));
+  return sheet({ title: 'How your targets are set', content: body, actions: (api) => [h('button', { class: 'btn', onClick: api.close }, 'Close'), h('button', { class: 'btn primary', onClick: () => { api.close(); ctx.go('settings'); } }, 'Open Settings')] });
+}
+
+// ---- the coach card ----
+// compact: a headline and a row of tappable ideas (top of Food). Otherwise the full card (Today).
+export function coachCard(ctx, key, { compact = false, fresh = false } = {}) {
+  let c = null;
+  try { c = coachFor(key, { full: !compact }); } catch (e) { console.error(e); return null; }
+  if (!c || !c.headline) return null;
+  const hl = c.headline, K = { first: ['plus', 'accent'], protein: ['target', 'p'], over: ['warn', 'warn'], done: ['check', 'good'] }[hl.kind];
+  const addBtn = (idea) => h('button', { class: 'fd-co-add', 'aria-label': `Log ${idea.name}`, onClick: (e) => { e.stopPropagation(); e.preventDefault(); logIdea(ctx, idea, key); } }, icon('plus', 18));
+  const meta = (a, idea, short) => `${fmt(a.kcal)} kcal · ${fmt(a.p)} g protein${idea.prepMin && !short ? ` · ${idea.prepMin} min` : ''}`;
+  const row = (idea, tag) => h('div', { class: 'fd-co-idea' },
+    h('button', { class: 'fd-co-main', onClick: () => ideaSheet(ctx, idea, key) }, h('span', { class: 'well ' + (tag ? 'train' : 'food') }, icon(tag ? 'dumbbell' : 'bowl')),
+      h('span', { class: 'fd-co-txt' }, h('span', { class: 'fd-co-in' }, idea.name), h('span', { class: 'fd-co-im' }, tag ? h('b', null, tag + ': ') : null, meta(idea.approx, idea)))),
+    addBtn(idea));
+  const card = h('div', { class: 'card fd-co' + (compact ? ' compact pad-s' : '') + (fresh ? ' fresh' : ''), 'data-coach': hl.kind });
+  const headRow = h('div', { class: 'fd-co-head' }, h('span', { class: 'fd-co-ic ' + K[1] }, icon(K[0], compact ? 18 : 20)),
+    h('div', { class: 'grow' }, h('div', { class: 'fd-co-title' }, hl.title), compact ? null : h('div', { class: 'fd-co-body' }, hl.body)));
+  card.append(headRow);
+  if (compact) {
+    if (c.ideas.length) card.append(h('div', { class: 'chips fd-co-cards' }, c.ideas.map((idea) => h('div', { class: 'fd-co-card' },
+      h('button', { class: 'fd-co-cmain', onClick: () => ideaSheet(ctx, idea, key) }, h('span', { class: 'fd-co-cn' }, idea.name), h('span', { class: 'fd-co-im' }, meta(idea.approx, idea, true))), addBtn(idea)))));
+    else if (hl.body) card.append(h('p', { class: 'fd-co-body' }, hl.body));
+    return card;
+  }
+  if (c.ideas.length) card.append(h('div', { class: 'fd-co-ideas' }, c.ideas.map((i) => row(i, null))));
+  if (c.train) {
+    const tr = c.train;
+    card.append(h('div', { class: 'fd-co-train' }, h('div', { class: 'fd-co-head sub' }, h('span', { class: 'fd-co-ic train' }, icon('dumbbell', 18)), h('div', { class: 'grow' }, h('div', { class: 'fd-co-title sm' }, tr.title), h('div', { class: 'fd-co-body' }, tr.text))),
+      tr.idea ? row(tr.idea, tr.phase === 'pre' ? 'Before training' : 'After training') : null));
+  }
+  if (c.notes.length) card.append(h('ul', { class: 'fd-co-notes' }, c.notes.map((n) => h('li', null, h('span', { class: 'fd-co-ic sm ' + (n.kind === 'sugar' ? 'warn' : 'good') }, icon(n.ico, 13)), h('span', null, n.text)))));
+  if (c.gaps.length) card.append(h('div', { class: 'fd-co-gaps' }, c.gaps.map((g) => { const foods = g.foods.slice(0, 3).map((f) => shortFood(f.name)).join(', ');
+    return h('button', { class: 'fd-co-gap ' + g.status, onClick: () => gapSheet(ctx, g) }, h('span', { class: 'fd-co-gd' }), h('span', { class: 'fd-co-gt' }, h('b', null, `${g.name} low this week`), foods ? h('span', null, `Try ${foods}`) : null), icon('right', 16)); })));
+  if (c.ok) card.append(h('div', { class: 'fd-co-ok' }, icon('check', 16), 'On track today. Nothing to fix right now.'));
+  return card;
+}
+
+// Gradient stroke for a ui.js ring(): accent to accent-2, drawn with an SVG linearGradient so it follows light, dark and the accent swap.
+export function gradientRing(rg, id) {
+  const NS = 'http://www.w3.org/2000/svg', svg = rg.querySelector('svg');
+  if (!svg || !rg.fillEl) return rg;
+  const defs = document.createElementNS(NS, 'defs'), g = document.createElementNS(NS, 'linearGradient');
+  g.setAttribute('id', id); g.setAttribute('x1', '0'); g.setAttribute('y1', '0'); g.setAttribute('x2', '1'); g.setAttribute('y2', '1');
+  [['0', 'var(--accent)'], ['1', 'var(--accent-2)']].forEach(([o, col]) => { const s = document.createElementNS(NS, 'stop'); s.setAttribute('offset', o); s.style.stopColor = col; g.append(s); });
+  defs.append(g); svg.prepend(defs);
+  rg.fillEl.style.stroke = `url(#${id})`;
+  return rg;
+}

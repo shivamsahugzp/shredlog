@@ -27,7 +27,7 @@ Dark-first "Iron & Haldi" look: warm graphite surfaces, one haldi-yellow accent 
 
 ## Data & privacy
 
-Everything is stored on the device (IndexedDB with a localStorage mirror). Export/import is a single JSON file. Nothing is sent anywhere.
+Everything is stored on the device (IndexedDB with a localStorage mirror, plus rolling daily safety copies you can restore from Settings). Export/import is a single JSON file. Nothing leaves the phone except what you ask for: a plate or packet photo goes to the AI provider whose key you pasted, and a packet barcode or product name is looked up on Open Food Facts.
 
 ## Development
 
@@ -38,3 +38,5 @@ Food values are based on the Indian Food Composition Tables (NIN 2017) and typic
 Exercise illustrations and step-by-step instructions: free-exercise-db (public domain, Unlicense); images load from GitHub when online.
 
 Icons: Phosphor Icons (MIT), vendored in `js/icons.js` (duotone weight, fill weight for the active tab).
+
+Nutrition data for packaged foods: Open Food Facts (ODbL).
